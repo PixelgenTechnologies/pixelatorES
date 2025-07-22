@@ -301,4 +301,3 @@ summarize_colocalization_scores_per_celltype <- function(
 
   return(summarized_data)
 }
-

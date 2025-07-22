@@ -6,3 +6,4 @@ Dockerfile
 .dockerignore
 .lintr
 experiment-summary
+LICENSE.md

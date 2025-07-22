@@ -185,16 +185,12 @@ test_that("File reading works as expected", {
         "pna-rnd-158plex-final",
         "pna-rnd-158plex-final"
       ), fastq_1 = c(
-        "s3://pixelgen-technologies-ngs/NextSeq2000/250314_VH00725_275_AACNHV5HV/Analysis/1/Data/fastq/PNA061_Sample1_S1_R1_001.fastq.gz",
-        "s3://pixelgen-technologies-ngs/NextSeq2000/250314_VH00725_275_AACNHV5HV/Analysis/1/Data/fastq/PNA061_Sample2_S2_R1_001.fastq.gz"
+        "s3://fastq/PNA061_Sample1_S1_R1_001.fastq.gz",
+        "s3://fastq/PNA061_Sample2_S2_R1_001.fastq.gz"
       ), fastq_2 = c(
-        "s3://pixelgen-technologies-ngs/NextSeq2000/250314_VH00725_275_AACNHV5HV/Analysis/1/Data/fastq/PNA061_Sample1_S1_R2_001.fastq.gz",
-        "s3://pixelgen-technologies-ngs/NextSeq2000/250314_VH00725_275_AACNHV5HV/Analysis/1/Data/fastq/PNA061_Sample2_S2_R2_001.fastq.gz"
-      ), sample_alias = c("S1", "S2"), condition = c("PBMC", "PHA"),
-      reference_condition = c(TRUE, FALSE), alternative_condition = c(
-        FALSE,
-        TRUE
-      )
+        "s3://fastq/PNA061_Sample1_S1_R2_001.fastq.gz",
+        "s3://fastq/PNA061_Sample2_S2_R2_001.fastq.gz"
+      ), sample_alias = c("S1", "S2"), condition = c("PBMC", "PHA")
     ), row.names = c(NA, -2L), class = c(
       "tbl_df", "tbl",
       "data.frame"
