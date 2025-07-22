@@ -1589,7 +1589,7 @@ component_annotation <-
       as_tibble(rownames = "marker") %>%
       pivot_longer(-marker, names_to = "cell_id", values_to = "normcount") %>%
       left_join(FetchData(object,
-                          vars = c("seurat_clusters", "l1_annotation_summary")
+        vars = c("seurat_clusters", "l1_annotation_summary")
       ) %>%
         as_tibble(rownames = "cell_id")) %>%
       group_by(seurat_clusters, cell_annotation = l1_annotation_summary, marker) %>%
@@ -1619,12 +1619,12 @@ component_annotation <-
 
     plot_data <-
       FetchData(object,
-                vars = c(
-                  "seurat_clusters",
-                  "l1_annotation_summary",
-                  "condition",
-                  "sample_alias"
-                )
+        vars = c(
+          "seurat_clusters",
+          "l1_annotation_summary",
+          "condition",
+          "sample_alias"
+        )
       ) %>%
       as_tibble(rownames = "cell_id") %>%
       group_by(sample_alias, condition, l1_annotation_summary) %>%
@@ -1644,7 +1644,7 @@ component_annotation <-
       ggplot(aes(sample_alias, frac, fill = l1_annotation_summary)) +
       geom_col(position = "stack") +
       geom_text(aes(label = scales::percent(frac)),
-                position = position_stack(vjust = 0.5), size = 2
+        position = position_stack(vjust = 0.5), size = 2
       ) +
       scale_fill_manual(values = cell_palette) +
       theme_bw() +
@@ -1672,9 +1672,9 @@ component_annotation <-
           ggplot(aes(l1_annotation_summary, n, fill = l1_annotation_summary)) +
           geom_col() +
           geom_text(aes(label = paste(n, scales::percent(frac), sep = "\n")),
-                    position = position_dodge(width = 0.9),
-                    vjust = -0.25,
-                    size = 2
+            position = position_dodge(width = 0.9),
+            vjust = -0.25,
+            size = 2
           ) +
           scale_fill_manual(values = cell_palette) +
           theme_bw() +
@@ -1709,9 +1709,9 @@ component_annotation <-
             fill = "#DAD6D7"
           ) +
           geom_text(aes(label = scales::percent(frac)),
-                    position = position_stack(vjust = 1),
-                    vjust = -0.5,
-                    size = 2
+            position = position_stack(vjust = 1),
+            vjust = -0.5,
+            size = 2
           ) +
           theme_bw() +
           scale_y_continuous(
