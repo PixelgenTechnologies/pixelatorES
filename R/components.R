@@ -530,10 +530,13 @@ component_cell_recovery <-
       mutate(type = str_extract(type, "pre|post") %>%
         str_to_sentence() %>%
         paste("filtering") %>%
-        factor(c("Pre filtering", "Post filtering"))) %>%
+        factor(c("Pre filtering", "Post filtering")),
+        label = ifelse(n > 1e5,
+                       compact_num(n, size = "M"),
+                       as.character(n))) %>%
       ggplot(aes(sample_alias, n)) +
       geom_col(fill = "#DAD6D7") +
-      geom_text(aes(label = n),
+      geom_text(aes(label = label),
         vjust = -.1,
         size = 3
       ) +
