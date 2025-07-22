@@ -143,7 +143,6 @@ compact_num <-
     n,
     size = c("k", "M"),
     decimals = 1) {
-
     pixelatorR:::assert_vector(n, "numeric", n = 1)
     pixelatorR:::assert_vector(size, "character", n = 1)
     pixelatorR:::assert_single_value(decimals, "numeric")
@@ -161,5 +160,4 @@ compact_num <-
     n <- paste0(n, size)
 
     return(n)
-
   }

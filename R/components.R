@@ -527,13 +527,16 @@ component_cell_recovery <-
         cols = c("component_n_pre_filtering", "component_n_post_filtering"),
         names_to = "type", values_to = "n"
       ) %>%
-      mutate(type = str_extract(type, "pre|post") %>%
-        str_to_sentence() %>%
-        paste("filtering") %>%
-        factor(c("Pre filtering", "Post filtering")),
+      mutate(
+        type = str_extract(type, "pre|post") %>%
+          str_to_sentence() %>%
+          paste("filtering") %>%
+          factor(c("Pre filtering", "Post filtering")),
         label = ifelse(n > 1e5,
-                       compact_num(n, size = "M"),
-                       as.character(n))) %>%
+          compact_num(n, size = "M"),
+          as.character(n)
+        )
+      ) %>%
       ggplot(aes(sample_alias, n)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = label),
