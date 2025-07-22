@@ -1,0 +1,21 @@
+{
+    "sample_id": "S01_PBMC_unstimulated_S1",
+    "product_id": "single-cell-pna",
+    "report_type": "demux",
+    "input_reads": 365731022,
+    "output_reads": 359952911,
+    "failed_reads": 5778111,
+    "output_exact_reads": 353656358,
+    "output_corrected_reads": 6296553,
+    "invalid_pid1_reads": 2619734,
+    "invalid_pid2_reads": 3130728,
+    "invalid_pid1_pid2_reads": 27649,
+    "pid1_matches_distance_distribution": {
+        "0": 353656358,
+        "1": 6598192
+    },
+    "pid2_matches_distance_distribution": {
+        "0": 353656358
+    },
+    "fraction_failed_reads": 0.01579879926073102
+}

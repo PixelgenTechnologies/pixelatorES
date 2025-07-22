@@ -1536,3 +1536,224 @@ component_dimred_plots <-
       })
   }
 
+
+#' Create the component annotation summary
+#'
+#' This function creates a component that visualizes the annotation summary
+#' for l1 and l2 annotations in the specified reduction.
+#'
+#' @param object A Seurat object containing the processed data.
+#' @param heatmap_gradient A color gradient for the heatmap.
+#' @param reduction Optional character specifying the reduction to use. If NULL, the first preferred reduction is used.
+#'
+#' @return A list of ggplot objects visualizing the l1 and l2 annotation summaries.
+#'
+#' @export
+#'
+component_annotation <-
+  function(
+    object,
+    heatmap_gradient,
+    reduction = NULL
+  ) {
+    if (is.null(reduction)) {
+      reduction <- preferred_dimred_order(Reductions(object))[1]
+    }
+    p1 <-
+      plot_embedding(
+        object,
+        reduction,
+        metavars = "l1_annotation_summary",
+        pal = cell_palette,
+        label = TRUE,
+        legend_position = "none",
+        xaxis_title = TRUE,
+        yaxis_title = TRUE
+      )
+    p2 <-
+      plot_embedding(
+        object,
+        reduction,
+        metavars = "l2_annotation_summary",
+        pal = cell_palette,
+        label = TRUE,
+        legend_position = "none",
+        xaxis_title = TRUE,
+        yaxis_title = TRUE
+      )
+
+
+    plot_data <-
+      object %>%
+      LayerData("data") %>%
+      as_tibble(rownames = "marker") %>%
+      pivot_longer(-marker, names_to = "cell_id", values_to = "normcount") %>%
+      left_join(FetchData(object,
+                          vars = c("seurat_clusters", "l1_annotation_summary")
+      ) %>%
+        as_tibble(rownames = "cell_id")) %>%
+      group_by(seurat_clusters, cell_annotation = l1_annotation_summary, marker) %>%
+      summarise(median = median(normcount)) %>%
+      unite(id, seurat_clusters, cell_annotation) %>%
+      pivot_wider(names_from = marker, values_from = median, values_fill = 0) %>%
+      column_to_rownames("id") %>%
+      as.matrix()
+
+    plot_legend <-
+      max(abs(plot_data))
+
+    p3 <-
+      plot_data %>%
+      t() %>%
+      pheatmap(
+        color = heatmap_gradient,
+        breaks = seq(-0, plot_legend, length.out = 100),
+        clustering_method = "ward.D2",
+        cellwidth = 7,
+        cellheight = 7,
+        fontsize = 7,
+        heatmap_legend_param = list(title = "Median Norm.\nAbundance"),
+        main = "Cluster marker abundance"
+      ) %>%
+      as.ggplot()
+
+    plot_data <-
+      FetchData(object,
+                vars = c(
+                  "seurat_clusters",
+                  "l1_annotation_summary",
+                  "condition",
+                  "sample_alias"
+                )
+      ) %>%
+      as_tibble(rownames = "cell_id") %>%
+      group_by(sample_alias, condition, l1_annotation_summary) %>%
+      count() %>%
+      group_by(sample_alias, condition) %>%
+      mutate(frac = n / sum(n)) %>%
+      ungroup() %>%
+      complete(
+        nesting(sample_alias, condition),
+        l1_annotation_summary,
+        fill = list(n = 0, frac = 0)
+      ) %>%
+      group_by(sample_alias)
+
+    p4 <-
+      plot_data %>%
+      ggplot(aes(sample_alias, frac, fill = l1_annotation_summary)) +
+      geom_col(position = "stack") +
+      geom_text(aes(label = scales::percent(frac)),
+                position = position_stack(vjust = 0.5), size = 2
+      ) +
+      scale_fill_manual(values = cell_palette) +
+      theme_bw() +
+      scale_y_continuous(
+        expand = expansion(0),
+        labels = scales::percent
+      ) +
+      theme(
+        axis.text.x = element_text(angle = 60, hjust = 1),
+        panel.grid = element_blank()
+      ) +
+      labs(
+        x = "Sample",
+        y = "% cells",
+        fill = "Cell type",
+        title = "Cell type composition"
+      )
+
+    barplots1 <-
+      plot_data %>%
+      group_split() %>%
+      set_names(group_keys(plot_data)$sample_alias) %>%
+      lapply(function(g_data) {
+        g_data %>%
+          ggplot(aes(l1_annotation_summary, n, fill = l1_annotation_summary)) +
+          geom_col() +
+          geom_text(aes(label = paste(n, scales::percent(frac), sep = "\n")),
+                    position = position_dodge(width = 0.9),
+                    vjust = -0.25,
+                    size = 2
+          ) +
+          scale_fill_manual(values = cell_palette) +
+          theme_bw() +
+          scale_y_continuous(expand = expansion(c(0, 0.2))) +
+          theme(
+            axis.text.x = element_text(angle = 60, hjust = 1),
+            panel.grid = element_blank()
+          ) +
+          labs(
+            x = "Cell type",
+            y = "Number of cells",
+            fill = "Cell type",
+            title = "Number of cells per annotation",
+            subtitle = unique(g_data$sample_alias)
+          )
+      })
+
+    plot_data <-
+      plot_data %>%
+      arrange(l1_annotation_summary) %>%
+      group_by(l1_annotation_summary)
+
+    barplots2 <-
+      plot_data %>%
+      group_split() %>%
+      set_names(group_keys(plot_data)$l1_annotation_summary) %>%
+      lapply(function(g_data) {
+        g_data %>%
+          ggplot(aes(sample_alias, frac)) +
+          geom_col(
+            show.legend = FALSE,
+            fill = "#DAD6D7"
+          ) +
+          geom_text(aes(label = scales::percent(frac)),
+                    position = position_stack(vjust = 1),
+                    vjust = -0.5,
+                    size = 2
+          ) +
+          theme_bw() +
+          scale_y_continuous(
+            expand = expansion(0), limits = c(0, 1),
+            labels = scales::percent
+          ) +
+          theme(
+            axis.text.x = element_text(angle = 60, hjust = 1),
+            panel.grid = element_blank()
+          ) +
+          labs(
+            x = "Sample",
+            y = "% cells",
+            title = paste(
+              "Fraction of",
+              unique(g_data$l1_annotation_summary),
+              "cells per sample"
+            )
+          )
+      })
+
+    tabl <-
+      plot_data %>%
+      ungroup() %>%
+      mutate(frac = scales::percent(frac, accuracy = 0.1)) %>%
+      select(
+        `Sample ID` = sample_alias,
+        `Cell annotation` = l1_annotation_summary,
+        frac
+      ) %>%
+      pivot_wider(names_from = `Cell annotation`, values_from = frac) %>%
+      style_table(caption = "Cell type composition [%]", interactive = FALSE)
+
+    return(list(
+      dimred_plots = list(
+        "Level 1 annotation" = p1,
+        "Level 2 annotation" = p2
+      ),
+      heatmap = p3,
+      celltype_composition = p4,
+      celltype_composition_barplots1 = barplots1,
+      celltype_composition_barplots2 = barplots2,
+      celltype_composition_table = tabl
+    ))
+  }

@@ -1,0 +1,21 @@
+{
+    "sample_id": "S02_PHA_S2",
+    "product_id": "single-cell-pna",
+    "report_type": "demux",
+    "input_reads": 191764100,
+    "output_reads": 188742157,
+    "failed_reads": 3021943,
+    "output_exact_reads": 185726149,
+    "output_corrected_reads": 3016008,
+    "invalid_pid1_reads": 1362129,
+    "invalid_pid2_reads": 1647312,
+    "invalid_pid1_pid2_reads": 12502,
+    "pid1_matches_distance_distribution": {
+        "0": 185726149,
+        "1": 3164734
+    },
+    "pid2_matches_distance_distribution": {
+        "0": 185726149
+    },
+    "fraction_failed_reads": 0.01575864825585185
+}

@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(pixelatorESinternal)
+library(pixelatorES)
 
-test_check("pixelatorESinternal")
+test_check("pixelatorES")

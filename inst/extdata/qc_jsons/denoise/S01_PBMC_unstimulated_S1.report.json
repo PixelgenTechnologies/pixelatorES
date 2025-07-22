@@ -1,0 +1,9 @@
+{
+    "sample_id": "S01_PBMC_unstimulated_S1",
+    "product_id": "single-cell-pna",
+    "report_type": "denoise",
+    "number_of_umis_removed": 1621394,
+    "ratio_of_umis_removed": 0.026703215325073817,
+    "number_of_disqualified_components": 0,
+    "ratio_of_disqualified_components": 0.0
+}

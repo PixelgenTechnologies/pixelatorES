@@ -147,14 +147,14 @@ read_annotation_reference <-
   function() {
     cell_annotation <-
       system.file("extdata", "PBMC_cell_annotation.csv",
-        package = "pixelatorESinternal"
+        package = "pixelatorES"
       ) %>%
       read_csv(col_types = "c") %>%
       column_to_rownames("sample_component")
 
     counts <-
       system.file("extdata", "PBMC_cell_counts.csv",
-        package = "pixelatorESinternal"
+        package = "pixelatorES"
       ) %>%
       read_csv(col_types = cols(
         sample_component = col_character(),

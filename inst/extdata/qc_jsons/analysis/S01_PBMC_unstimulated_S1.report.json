@@ -1,0 +1,12 @@
+{
+    "sample_id": "S01_PBMC_unstimulated_S1",
+    "product_id": "single-cell-pna",
+    "report_type": "analysis",
+    "proximity": {},
+    "k_cores": {
+        "median_average_k_core": 2.46464841860915
+    },
+    "svd": {
+        "median_variance_explained_3d": 0.12821486822913897
+    }
+}

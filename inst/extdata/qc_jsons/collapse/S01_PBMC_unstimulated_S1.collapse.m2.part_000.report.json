@@ -1,0 +1,34 @@
+{
+    "sample_id": "S01_PBMC_unstimulated_S1",
+    "product_id": "single-cell-pna",
+    "report_type": "collapse-umi",
+    "region_id": "umi-2",
+    "input_reads": 5402929,
+    "input_molecules": 3559595,
+    "input_unique_umis": 779302,
+    "output_unique_umis": 702897,
+    "corrected_unique_umis": 76405,
+    "corrected_reads": 82421,
+    "processed_files": [
+        {
+            "path": "S01_PBMC_unstimulated_S1.demux.m2.part_000.parquet",
+            "file_size": 77946166,
+            "molecule_count": 3559595
+        }
+    ],
+    "markers": [
+        {
+            "marker": "CD2",
+            "region_id": "umi-2",
+            "input_reads": 5402929,
+            "input_molecules": 3559595,
+            "input_unique_umis": 779302,
+            "corrected_reads": 82421,
+            "corrected_unique_umis": 76405,
+            "output_unique_umis": 702897,
+            "output_reads": 5402929,
+            "corrected_reads_fraction": 0.015254873791604517,
+            "corrected_unique_umis_fraction": 0.0980428639988092
+        }
+    ]
+}

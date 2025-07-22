@@ -402,3 +402,34 @@ read_samplesheet <-
   }
 
 
+#' Get the path to the test samplesheet
+#'
+#' Returns the path to the test samplesheet CSV file included in the package.
+#'
+#' @return A character string with the path to the test samplesheet CSV file.
+#'
+#' @export
+#'
+test_samplesheet <-
+  function() {
+    system.file(
+      "extdata", "test_samplesheet.csv",
+      package = "pixelatorESinternal"
+    )
+  }
+
+#' Get the path to the test data folder
+#'
+#' Returns the path to the test data folder containing QC JSON files included in the package.
+#'
+#' @return A character string with the path to the test data folder.
+#'
+#' @export
+#'
+test_data_folder <-
+  function() {
+    system.file(
+      "extdata", "qc_jsons",
+      package = "pixelatorESinternal"
+    )
+  }

@@ -60,7 +60,7 @@ process_data <-
     if (annotate_cells && !test_mode) {
       object <-
         object %>%
-        pixelatorESinternal::annotate_cells(
+        pixelatorES::annotate_cells(
           reference = read_annotation_reference(),
           reference_assay = "PNA",
           query_assay = "PNA",
