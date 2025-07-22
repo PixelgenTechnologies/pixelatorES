@@ -1,0 +1,54 @@
+Package: pixelatorES
+Title: Experiment Summary
+Version: 0.1.0
+Authors@R: 
+    c(
+    person("Max", "Karlsson", , "max.karlsson@pixelgen.com", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-7000-4416")),
+    person("Ludvig", "Larsson", , "ludvig.larsson@pixelgen.com", role = c("aut"),
+           comment = c(ORCID = "0000-0003-4209-2911"))
+    )
+Description: 
+    The Experiment Summary (ES) generates a self-contained `.html` report summarizing a 
+    multi-sample experiment, including QC metrics, statistics, and visualizations.
+License: GPL (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.1)
+Imports:
+    pixelatorR,
+    Seurat,
+    harmony,
+    cli,
+    rlang,
+    dplyr,
+    tidyr,
+    stringr,
+    purrr,
+    ggplot2,
+    ggplotify,
+    RcppSimdJson,
+    ComplexHeatmap,
+    SeuratObject,
+    tibble,
+    grid,
+    readr,
+    knitr,
+    sessioninfo,
+    tidyselect,
+    DT,
+    scales,
+    methods, 
+    pcaMethods
+Remotes: 
+    PixelgenTechnologies/pixelatorR
+Suggests: 
+    testthat (>= 3.0.0),
+    DBI,
+    duckdb,
+    fs,
+    rstudioapi,
+    quarto
+Config/testthat/edition: 3

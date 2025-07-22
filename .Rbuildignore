@@ -1,0 +1,8 @@
+^pixelatorES\.Rproj$
+^\.Rproj\.user$
+CHANGELOG.md
+^\.github$
+Dockerfile
+.dockerignore
+.lintr
+experiment-summary
