@@ -4,13 +4,10 @@
 \alias{component_molecule_plot}
 \title{Create the component for molecule plot}
 \usage{
-component_molecule_plot(pg_data, params, sample_palette)
+component_molecule_plot(pg_data, sample_palette)
 }
 \arguments{
 \item{pg_data}{A Seurat object containing the data to be plotted.}
-
-\item{params}{A list of parameters, including \code{molecule_rank_cutoff}, which
-is used to draw a horizontal line in the plot.}
 
 \item{sample_palette}{A named vector of colors for the samples.}
 }

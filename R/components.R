@@ -268,8 +268,6 @@ component_qc_molecule_rank_plot <- function(
 #' of molecules per sample, with a horizontal line indicating the molecule count cutoff.
 #'
 #' @param pg_data A Seurat object containing the data to be plotted.
-#' @param params A list of parameters, including `molecule_rank_cutoff`, which
-#' is used to draw a horizontal line in the plot.
 #' @param sample_palette A named vector of colors for the samples.
 #'
 #' @return A ggplot object representing the violin plot of molecule counts.
@@ -278,7 +276,6 @@ component_qc_molecule_rank_plot <- function(
 #'
 component_molecule_plot <- function(
   pg_data,
-  params,
   sample_palette) {
   p <- pg_data[[]] %>%
     plot_violin(
@@ -290,9 +287,7 @@ component_molecule_plot <- function(
       use_log10 = TRUE,
       palette = sample_palette,
       alpha = 1
-    ) +
-    geom_hline(yintercept = params$molecule_rank_cutoff, linetype = "dashed", color = "#E05573")
-
+    )
   return(p)
 }
 
