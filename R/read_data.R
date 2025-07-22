@@ -433,3 +433,32 @@ test_data_folder <-
       package = "pixelatorES"
     )
   }
+
+#' Get test QC metrics
+#'
+#' Reads the test samplesheet and retrieves QC metrics from the test data folder.
+#'
+#' @return A list of QC metrics for each sample, where each element is a named list of metrics.
+#'
+#' @export
+#'
+get_test_qc_metrics <-
+  function() {
+    sample_sheet <- read_samplesheet(test_samplesheet())
+
+    data_paths <-
+      get_file_paths(
+        data_folder = test_data_folder(),
+        metadata = sample_sheet,
+        sample_aliases = sample_sheet %>%
+          select(sample, sample_alias) %>%
+          deframe()
+      )
+
+    sample_qc_metrics <-
+      read_qc_files(data_paths$qc_files, sample_sheet)
+
+    sample_qc_metrics <- read_qc_files(data_paths$qc_files, sample_sheet)
+
+    return(sample_qc_metrics)
+  }

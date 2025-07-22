@@ -145,6 +145,125 @@ component_molecule_rank_plot <- function(
   return(plots)
 }
 
+#' Create the component for molecule rank plots from qc metrics list
+#'
+#' This function generates a list of ggplot objects, each representing the
+#' molecule rank plot for a specific sample in the provided Seurat object.
+#'
+#' @param sample_qc_metrics A list of sample QC metrics.
+#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
+#'
+#' @return A list of ggplot objects, each corresponding to a sample's molecule
+#' rank plot.
+#'
+#' @export
+#'
+component_qc_molecule_rank_plot <- function(
+    sample_qc_metrics,
+    sample_levels = NULL
+    ) {
+
+  plot_data_thresholds <-
+    extract_sample_qc_metrics(
+      sample_qc_metrics,
+      c(
+        min_size_theshold =
+          "component_size_min_filtering_threshold",
+        max_size_theshold =
+          "component_size_max_filtering_threshold"
+      ),
+      "graph"
+    )
+
+  plot_data <-
+    sample_qc_metrics %>%
+    map(. %>%
+          {
+            .$graph$pre_filtering_component_sizes
+          } %>%
+          unlist() %>%
+          enframe("nodes", "n") %>%
+          mutate(nodes = as.integer(nodes))) %>%
+    bind_rows(.id = "sample_alias") %>%
+    filter(nodes >= 20) %>%
+    group_by_all() %>%
+    reframe(rep = seq_len(n)) %>%
+    arrange(sample_alias, -nodes) %>%
+    group_by(sample_alias) %>%
+    mutate(rank = row_number()) %>%
+    ungroup()
+
+
+  if (!is.null(sample_levels)) {
+    plot_data <-
+      plot_data %>%
+      mutate(sample_alias = factor(sample_alias, sample_levels))
+  } else {
+    plot_data <-
+      plot_data %>%
+      mutate(sample_alias = factor(sample_alias))
+  }
+
+  plots <-
+    plot_data %>%
+    pull(sample_alias) %>%
+    levels() %>%
+    set_names() %>%
+    lapply(function(x) {
+
+      x_thresh <-
+        plot_data_thresholds %>%
+        filter(sample_alias == x)
+
+      plot_data %>%
+        arrange(sample_alias == x) %>%
+        ggplot(aes(rank, nodes, color = sample_alias == x)) +
+        geom_point(size = 0.1, show.legend = FALSE) +
+        geom_hline(
+          data = x_thresh,
+          aes(yintercept = min_size_theshold),
+          linetype = "dashed"
+        ) +
+        geom_text(
+          data = x_thresh,
+          aes(
+            x = 1,
+            y = min_size_theshold,
+            label = min_size_theshold
+          ),
+          vjust = -0.5,
+          hjust = 0
+        ) +
+        geom_hline(
+          data = x_thresh,
+          aes(yintercept = max_size_theshold),
+          linetype = "dashed"
+        ) +
+        geom_text(
+          data = x_thresh,
+          aes(
+            x = 1,
+            y = max_size_theshold,
+            label = max_size_theshold
+          ),
+          vjust = -0.5,
+          hjust = 0
+        ) +
+        scale_x_log10() +
+        scale_y_log10() +
+        scale_color_manual(values = c("TRUE" = "black", "FALSE" = "gray80")) +
+        theme_bw() +
+        theme(legend.position = "none") +
+        labs(
+          x = "Component rank (by number of molecules)",
+          y = "Number of molecules",
+          title = "Molecule rank plot"
+        )
+    })
+
+  return(plots)
+}
+
 #' Create the component for molecule plot
 #'
 #' This function generates a violin plot showing the distribution of the number
@@ -366,6 +485,7 @@ component_sequencing_reads_per_cell <-
     ))
   }
 
+
 #' Create the component cell recovery
 #'
 #' This function creates a component that visualizes the cell recovery
@@ -415,14 +535,14 @@ component_cell_recovery <-
         names_to = "type", values_to = "n"
       ) %>%
       mutate(type = str_extract(type, "pre|post") %>%
-        str_to_sentence() %>%
-        paste("filtering") %>%
-        factor(c("Pre filtering", "Post filtering"))) %>%
+               str_to_sentence() %>%
+               paste("filtering") %>%
+               factor(c("Pre filtering", "Post filtering"))) %>%
       ggplot(aes(sample_alias, n)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = n),
-        vjust = -.1,
-        size = 3
+                vjust = -.1,
+                size = 3
       ) +
       facet_wrap(~type, scales = "free", nrow = 1) +
       scale_y_continuous(expand = expansion(c(0, 0.2))) +
@@ -434,61 +554,11 @@ component_cell_recovery <-
       labs(x = NULL, y = "Number of components")
 
 
-    plot_data2 <-
-      sample_qc_metrics %>%
-      map(. %>%
-        {
-          .$graph$pre_filtering_component_sizes
-        } %>%
-        unlist() %>%
-        enframe("nodes", "n") %>%
-        mutate(nodes = as.integer(nodes))) %>%
-      bind_rows(.id = "sample_alias") %>%
-      filter(nodes >= 20) %>%
-      group_by_all() %>%
-      reframe(rep = seq_len(n)) %>%
-      arrange(sample_alias, -nodes) %>%
-      group_by(sample_alias) %>%
-      mutate(rank = row_number()) %>%
-      ungroup()
-
-
-    if (!is.null(sample_levels)) {
-      plot_data2 <-
-        plot_data2 %>%
-        mutate(sample_alias = factor(sample_alias, sample_levels))
-    }
-
-
     p2 <-
-      plot_data2 %>%
-      ggplot(aes(rank, nodes)) +
-      geom_point(size = 0.1) +
-      geom_hline(
-        data = plot_data1,
-        aes(yintercept = min_size_theshold),
-        linetype = "dashed"
-      ) +
-      geom_text(
-        data = plot_data1,
-        aes(
-          x = 1,
-          y = min_size_theshold,
-          label = min_size_theshold
-        ),
-        vjust = -0.5,
-        hjust = 0
-      ) +
-      geom_hline(
-        data = plot_data1,
-        aes(yintercept = max_size_theshold),
-        linetype = "dashed"
-      ) +
-      facet_wrap(~sample_alias) +
-      scale_x_log10() +
-      scale_y_log10() +
-      theme_bw() +
-      labs(x = "Component rank", y = "Component size (#nodes)")
+      component_qc_molecule_rank_plot(
+        sample_qc_metrics,
+        sample_levels
+      )
 
     tabl1 <-
       plot_data1 %>%
@@ -515,7 +585,6 @@ component_cell_recovery <-
       table = list(tabl1, tabl2)
     ))
   }
-
 
 #' Create the component node and edge count
 #'
