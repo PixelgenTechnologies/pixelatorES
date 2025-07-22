@@ -159,10 +159,9 @@ component_molecule_rank_plot <- function(
 #' @export
 #'
 component_qc_molecule_rank_plot <- function(
-    sample_qc_metrics,
-    sample_levels = NULL
-    ) {
-
+  sample_qc_metrics,
+  sample_levels = NULL
+) {
   plot_data_thresholds <-
     extract_sample_qc_metrics(
       sample_qc_metrics,
@@ -178,12 +177,12 @@ component_qc_molecule_rank_plot <- function(
   plot_data <-
     sample_qc_metrics %>%
     map(. %>%
-          {
-            .$graph$pre_filtering_component_sizes
-          } %>%
-          unlist() %>%
-          enframe("nodes", "n") %>%
-          mutate(nodes = as.integer(nodes))) %>%
+      {
+        .$graph$pre_filtering_component_sizes
+      } %>%
+      unlist() %>%
+      enframe("nodes", "n") %>%
+      mutate(nodes = as.integer(nodes))) %>%
     bind_rows(.id = "sample_alias") %>%
     filter(nodes >= 20) %>%
     group_by_all() %>%
@@ -210,7 +209,6 @@ component_qc_molecule_rank_plot <- function(
     levels() %>%
     set_names() %>%
     lapply(function(x) {
-
       x_thresh <-
         plot_data_thresholds %>%
         filter(sample_alias == x)
@@ -535,14 +533,14 @@ component_cell_recovery <-
         names_to = "type", values_to = "n"
       ) %>%
       mutate(type = str_extract(type, "pre|post") %>%
-               str_to_sentence() %>%
-               paste("filtering") %>%
-               factor(c("Pre filtering", "Post filtering"))) %>%
+        str_to_sentence() %>%
+        paste("filtering") %>%
+        factor(c("Pre filtering", "Post filtering"))) %>%
       ggplot(aes(sample_alias, n)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = n),
-                vjust = -.1,
-                size = 3
+        vjust = -.1,
+        size = 3
       ) +
       facet_wrap(~type, scales = "free", nrow = 1) +
       scale_y_continuous(expand = expansion(c(0, 0.2))) +
