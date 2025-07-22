@@ -414,7 +414,7 @@ test_samplesheet <-
   function() {
     system.file(
       "extdata", "test_samplesheet.csv",
-      package = "pixelatorESinternal"
+      package = "pixelatorES"
     )
   }
 
@@ -430,6 +430,6 @@ test_data_folder <-
   function() {
     system.file(
       "extdata", "qc_jsons",
-      package = "pixelatorESinternal"
+      package = "pixelatorES"
     )
   }
