@@ -13,5 +13,4 @@ test_that("`component_node_degree` works as expected", {
 
   expect_s3_class(component$plot, "ggplot")
   expect_s3_class(component$table, "datatables")
-
-  })
+})

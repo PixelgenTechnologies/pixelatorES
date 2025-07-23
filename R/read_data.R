@@ -502,4 +502,3 @@ get_test_data <-
 
     return(seur)
   }
-

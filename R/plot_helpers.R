@@ -388,31 +388,31 @@ plot_embeddings_samplewise <-
 #' @export
 #'
 plot_violin <- function(
-    plot_data,
-    x,
-    y,
-    fill = NULL,
-    palette = NULL,
-    title = NULL,
-    subtitle = NULL,
-    x_label = NULL,
-    y_label = NULL,
-    fill_label = NULL,
-    summarize = TRUE,
-    round = 1,
-    use_pct = FALSE,
-    use_1k = FALSE,
-    expand = NULL,
-    use_log10 = FALSE,
-    alpha = 1,
-    color = NA,
-    draw_quantiles = 0.5,
-    facet_var = NULL,
-    use_grid = FALSE,
-    use_jitter = FALSE,
-    jitter_size = 0.1,
-    jitter_alpha = 0.5
-    ) {
+  plot_data,
+  x,
+  y,
+  fill = NULL,
+  palette = NULL,
+  title = NULL,
+  subtitle = NULL,
+  x_label = NULL,
+  y_label = NULL,
+  fill_label = NULL,
+  summarize = TRUE,
+  round = 1,
+  use_pct = FALSE,
+  use_1k = FALSE,
+  expand = NULL,
+  use_log10 = FALSE,
+  alpha = 1,
+  color = NA,
+  draw_quantiles = 0.5,
+  facet_var = NULL,
+  use_grid = FALSE,
+  use_jitter = FALSE,
+  jitter_size = 0.1,
+  jitter_alpha = 0.5
+) {
   pixelatorR:::assert_class(plot_data, "data.frame")
   pixelatorR:::assert_single_value(x, type = "string", allow_null = TRUE)
   pixelatorR:::assert_single_value(y, type = "string", allow_null = TRUE)
@@ -580,7 +580,6 @@ draw_quantiles <-
     color = "gray20",
     ...
   ) {
-
     build <- ggplot_build(p)
     violin_data <- build$data[[1]]
 
@@ -589,20 +588,25 @@ draw_quantiles <-
       group_by(x) %>%
       group_split() %>%
       lapply(function(violin_data) {
-
         # Get density distribution
-        dens <- cumsum(violin_data$density)/sum(violin_data$density)
+        dens <- cumsum(violin_data$density) / sum(violin_data$density)
         # Create approximate cumulative density to actual density function
         ecdf <- stats::approxfun(dens, violin_data$y, ties = "ordered")
         # Get density at quantile
         ys <- ecdf(draw_quantiles)
 
         # Get violin width at quantile and coordinates
-        tibble(y = ys,
-               violinwidth = with(violin_data,
-                                  stats::approxfun(y,
-                                                   violinwidth *
-                                                     (xmax-xmin)))(ys)) %>%
+        tibble(
+          y = ys,
+          violinwidth = with(
+            violin_data,
+            stats::approxfun(
+              y,
+              violinwidth *
+                (xmax - xmin)
+            )
+          )(ys)
+        ) %>%
           mutate(
             x = violin_data$x[1],
             xmin = violin_data$x[1] - violinwidth / 2,
