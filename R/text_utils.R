@@ -130,9 +130,7 @@ preferred_dimred_order <-
 #' or millions (M), with a specified number of decimal places.
 #'
 #' @param n A numeric value to be formatted.
-#' @param size A character string indicating the size unit, either "k" for thousands
-#' or "M" for millions.
-#' @param decimals An integer specifying the number of decimal places to include in the formatted output.
+#' @param accuracy A numeric value specifying the accuracy of the formatting.
 #'
 #' @return A character string representing the formatted number with the specified size unit.
 #'
@@ -141,23 +139,17 @@ preferred_dimred_order <-
 compact_num <-
   function(
     n,
-    size = c("k", "M"),
-    decimals = 1) {
+    accuracy = 0.1
+    ) {
     pixelatorR:::assert_vector(n, "numeric", n = 1)
-    pixelatorR:::assert_vector(size, "character", n = 1)
-    pixelatorR:::assert_single_value(decimals, "numeric")
+    pixelatorR:::assert_single_value(accuracy, "numeric")
 
-    size <- match.arg(size, c("k", "M"))
+    format_func <-
+      scales::label_number(
+        accuracy = accuracy,
+        scale_cut = c(0, "k" = 1000, "M" = 1e+06, "B" = 1e+09, "T" = 1e+12)
+      )
 
-    if (size == "k") {
-      n <- n / 1000
-    } else if (size == "M") {
-      n <- n / 1e6
-    }
-
-    n <- formatC(n, format = "f", digits = decimals)
-
-    n <- paste0(n, size)
-
-    return(n)
+    return(format_func(n))
   }
+
