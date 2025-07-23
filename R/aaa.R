@@ -37,7 +37,8 @@ globalVariables(
     "top_markers", "top3_fraction", "top5_fraction", "total_edges_in",
     "total_reads", "type", "V1", "V2", "valid_reads", "valid_reads_saturation",
     "value", "z", "Cell annotation", "cell_annotation",
-    "doublet_prediction", "frac", "normcount", "seurat_clusters"
+    "doublet_prediction", "frac", "normcount", "seurat_clusters", "violinwidth",
+    "y", "xmin", "xmax"
   ),
   package = "pixelatorES",
   add = TRUE
