@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `get_test_qc_metrics` to get qc metrics quickly for testing.
+- `component_qc_molecule_rank_plot` to make the molecule rank plot from qc data.
+
+### Updated
+- `component_cell_recovery` now returns a tabsetted Molecule Rank Plot.
+
+### Fixed
+- Overlapping text in `component_cell_recovery` plots. 
+
 ## [0.1.0] 2025-07-22
 
 ### Added

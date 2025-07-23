@@ -5,9 +5,6 @@
 default_params <-
   list(
     control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
-    molecule_rank_cutoff = 10000,
-    gini_dispersion_cutoff = 0.7,
-    control_score_cutoff = 1.5,
     do_harmonize = FALSE,
     harmonization_vars = "condition",
     norm_method = "CLR",

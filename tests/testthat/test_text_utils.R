@@ -1,4 +1,4 @@
-test_that("order_cd_markers works as expected", {
+test_that("`order_cd_markers` works as expected", {
   markers <- c(
     "CD3", "CD4", "CD8", "CD14", "CD16", "CD19", "CD20", "CD34",
     "Control1", "Control2", "ABC", "WTF"
@@ -35,6 +35,16 @@ test_that("order_cd_markers works as expected", {
     c(
       "PC 1", "PC 1", "PC 1", "PC1", "PC1", "UMAP 1", "UMAP 1", "UMAP 1",
       "UMAP1", "UMAP1", "HARMONY 1", "HARMONY 1", "HARMONY 1", "HARMONY 1"
+    )
+  )
+})
+
+test_that("`compact_num` works as expected", {
+  expect_equal(
+    compact_num(c(1, 12, 123, 1234, 12345, 123456, 1234567, 12345678, 123456789)),
+    c(
+      "1.0", "12.0", "123.0", "1.2k", "12.3k", "123.5k", "1.2M",
+      "12.3M", "123.5M"
     )
   )
 })

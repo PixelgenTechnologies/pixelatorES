@@ -123,3 +123,32 @@ preferred_dimred_order <-
 
     return(reductions_ordered)
   }
+
+#' Compact number formatting
+#'
+#' This function formats a numeric value into a compact representation, either in thousands (k)
+#' or millions (M), with a specified number of decimal places.
+#'
+#' @param n A numeric value to be formatted.
+#' @param accuracy A numeric value specifying the accuracy of the formatting.
+#'
+#' @return A character string representing the formatted number with the specified size unit.
+#'
+#' @export
+#'
+compact_num <-
+  function(
+    n,
+    accuracy = 0.1
+  ) {
+    pixelatorR:::assert_vector(n, "numeric", n = 1)
+    pixelatorR:::assert_single_value(accuracy, "numeric")
+
+    format_func <-
+      scales::label_number(
+        accuracy = accuracy,
+        scale_cut = c(0, "k" = 1000, "M" = 1e+06, "B" = 1e+09, "T" = 1e+12)
+      )
+
+    return(format_func(n))
+  }
