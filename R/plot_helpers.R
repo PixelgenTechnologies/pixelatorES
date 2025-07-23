@@ -354,6 +354,7 @@ plot_embeddings_samplewise <-
   }
 
 
+
 #' Make a violin plot
 #'
 #' @param plot_data A data frame containing the data to plot.
@@ -374,6 +375,8 @@ plot_embeddings_samplewise <-
 #' @param expand Optional expansion factor for the y-axis.
 #' @param use_log10 Logical indicating whether to use a log10 scale for the y-axis.
 #' @param alpha Transparency level for the violin fill.
+#' @param color Color for the violin outline.
+#' @param draw_quantiles Numeric vector of quantiles to draw on the violin plot (default is 0.5 for median).
 #' @param facet_var Optional variable to facet the plot by.
 #' @param use_grid Logical indicating whether to use a grid layout for the plot.
 #' @param use_jitter Logical indicating whether to add jittered data points.
@@ -385,28 +388,31 @@ plot_embeddings_samplewise <-
 #' @export
 #'
 plot_violin <- function(
-  plot_data,
-  x,
-  y,
-  fill = NULL,
-  palette = NULL,
-  title = NULL,
-  subtitle = NULL,
-  x_label = NULL,
-  y_label = NULL,
-  fill_label = NULL,
-  summarize = TRUE,
-  round = 1,
-  use_pct = FALSE,
-  use_1k = FALSE,
-  expand = NULL,
-  use_log10 = FALSE,
-  alpha = 1,
-  facet_var = NULL,
-  use_grid = FALSE,
-  use_jitter = FALSE,
-  jitter_size = 0.1,
-  jitter_alpha = 0.5) {
+    plot_data,
+    x,
+    y,
+    fill = NULL,
+    palette = NULL,
+    title = NULL,
+    subtitle = NULL,
+    x_label = NULL,
+    y_label = NULL,
+    fill_label = NULL,
+    summarize = TRUE,
+    round = 1,
+    use_pct = FALSE,
+    use_1k = FALSE,
+    expand = NULL,
+    use_log10 = FALSE,
+    alpha = 1,
+    color = NA,
+    draw_quantiles = 0.5,
+    facet_var = NULL,
+    use_grid = FALSE,
+    use_jitter = FALSE,
+    jitter_size = 0.1,
+    jitter_alpha = 0.5
+    ) {
   pixelatorR:::assert_class(plot_data, "data.frame")
   pixelatorR:::assert_single_value(x, type = "string", allow_null = TRUE)
   pixelatorR:::assert_single_value(y, type = "string", allow_null = TRUE)
@@ -445,8 +451,8 @@ plot_violin <- function(
           geom_violin(
             position = position_dodge(width = 0.9),
             alpha = alpha,
+            color = color,
             scale = "width",
-            draw_quantiles = 0.5,
             drop = FALSE
           )
       } else {
@@ -454,13 +460,18 @@ plot_violin <- function(
           geom_violin(
             position = position_dodge(width = 0.9),
             alpha = alpha,
+            color = color,
             scale = "width",
-            draw_quantiles = 0.5,
             fill = "#DAD6D7",
             drop = FALSE
           )
       }
     }
+  if (!is.null(draw_quantiles)) {
+    p <-
+      p +
+      draw_quantiles(p)
+  }
   if (use_pct && !use_log10) {
     p <- p +
       scale_y_continuous(labels = scales::percent, expand = expand)
@@ -543,3 +554,71 @@ plot_violin <- function(
 
   return(p)
 }
+
+
+
+#' Draw quantiles on a violin plot
+#'
+#' This function adds quantile lines to a violin plot created with ggplot2.
+#' It calculates the quantiles for each violin and draws horizontal lines at those quantiles.
+#'
+#' @param p A ggplot object representing the violin plot.
+#' @param draw_quantiles A numeric vector of quantiles to draw (default is 0.5, which represents the median).
+#' @param linewidth The width of the quantile lines (default is 1).
+#' @param color The color of the quantile lines (default is "gray20").
+#' @param ... Additional arguments passed to `geom_segment`.
+#'
+#' @return A ggplot object with quantile lines added to the violin plot.
+#'
+#' @export
+#'
+draw_quantiles <-
+  function(
+    p,
+    draw_quantiles = 0.5,
+    linewidth = 1,
+    color = "gray20",
+    ...
+  ) {
+
+    build <- ggplot_build(p)
+    violin_data <- build$data[[1]]
+
+    quantile_data <-
+      violin_data %>%
+      group_by(x) %>%
+      group_split() %>%
+      lapply(function(violin_data) {
+
+        # Get density distribution
+        dens <- cumsum(violin_data$density)/sum(violin_data$density)
+        # Create approximate cumulative density to actual density function
+        ecdf <- stats::approxfun(dens, violin_data$y, ties = "ordered")
+        # Get density at quantile
+        ys <- ecdf(draw_quantiles)
+
+        # Get violin width at quantile and coordinates
+        tibble(y = ys,
+               violinwidth = with(violin_data,
+                                  stats::approxfun(y,
+                                                   violinwidth *
+                                                     (xmax-xmin)))(ys)) %>%
+          mutate(
+            x = violin_data$x[1],
+            xmin = violin_data$x[1] - violinwidth / 2,
+            xmax = violin_data$x[1] + violinwidth / 2,
+          )
+      }) %>%
+      bind_rows() %>%
+      select(x, y, xmin, xmax)
+
+
+    geom_segment(
+      data = quantile_data,
+      aes(x = xmin, y = y, xend = xmax, yend = y),
+      inherit.aes = FALSE,
+      linewidth = linewidth,
+      color = color,
+      ...
+    )
+  }

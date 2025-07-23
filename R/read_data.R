@@ -462,3 +462,44 @@ get_test_qc_metrics <-
 
     return(sample_qc_metrics)
   }
+
+
+
+#' Get test data
+#'
+#' Generates a minimal Seurat object for testing purposes.
+#'
+#' @return A Seurat object containing test data with normalized and scaled data, PCA results, and merged layers.
+#'
+#' @export
+#'
+get_test_data <-
+  function() {
+    seur <-
+      minimal_pna_pxl_file() %>%
+      ReadPNA_Seurat(load_proximity_scores = FALSE)
+
+    seur <-
+      merge(
+        seur,
+        y = list(seur, seur, seur, seur, seur)
+      ) %>%
+      JoinLayers(verbose = FALSE)
+
+    seur[[]]$sample_alias <-
+      "S1"
+
+    seur <-
+      seur %>%
+      NormalizeData(verbose = FALSE) %>%
+      ScaleData(verbose = FALSE) %>%
+      RunPCA(
+        features = rownames(.)[1:10],
+        npcs = 2,
+        verbose = FALSE,
+        approx = TRUE
+      )
+
+    return(seur)
+  }
+

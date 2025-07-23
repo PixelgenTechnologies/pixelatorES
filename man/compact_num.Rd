@@ -4,15 +4,12 @@
 \alias{compact_num}
 \title{Compact number formatting}
 \usage{
-compact_num(n, size = c("k", "M"), decimals = 1)
+compact_num(n, accuracy = 0.1)
 }
 \arguments{
 \item{n}{A numeric value to be formatted.}
 
-\item{size}{A character string indicating the size unit, either "k" for thousands
-or "M" for millions.}
-
-\item{decimals}{An integer specifying the number of decimal places to include in the formatted output.}
+\item{accuracy}{A numeric value specifying the accuracy of the formatting.}
 }
 \value{
 A character string representing the formatted number with the specified size unit.

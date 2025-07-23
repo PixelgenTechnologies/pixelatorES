@@ -22,6 +22,8 @@ plot_violin(
   expand = NULL,
   use_log10 = FALSE,
   alpha = 1,
+  color = NA,
+  draw_quantiles = 0.5,
   facet_var = NULL,
   use_grid = FALSE,
   use_jitter = FALSE,
@@ -64,6 +66,10 @@ above the 0.5 quantile.}
 \item{use_log10}{Logical indicating whether to use a log10 scale for the y-axis.}
 
 \item{alpha}{Transparency level for the violin fill.}
+
+\item{color}{Color for the violin outline.}
+
+\item{draw_quantiles}{Numeric vector of quantiles to draw on the violin plot (default is 0.5 for median).}
 
 \item{facet_var}{Optional variable to facet the plot by.}
 
