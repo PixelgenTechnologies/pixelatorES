@@ -471,7 +471,8 @@ plot_violin <- function(
     p <-
       p +
       draw_quantiles(p,
-                     draw_quantiles = draw_quantiles)
+        draw_quantiles = draw_quantiles
+      )
   }
   if (use_pct && !use_log10) {
     p <- p +
