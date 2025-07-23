@@ -533,7 +533,7 @@ component_cell_recovery <-
           paste("filtering") %>%
           factor(c("Pre filtering", "Post filtering")),
         label = ifelse(n > 1e5,
-          compact_num(n, size = "M"),
+          compact_num(n),
           as.character(n)
         )
       ) %>%
