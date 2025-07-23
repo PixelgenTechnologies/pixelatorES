@@ -140,7 +140,7 @@ compact_num <-
   function(
     n,
     accuracy = 0.1
-    ) {
+  ) {
     pixelatorR:::assert_vector(n, "numeric", n = 1)
     pixelatorR:::assert_single_value(accuracy, "numeric")
 
@@ -152,4 +152,3 @@ compact_num <-
 
     return(format_func(n))
   }
-
