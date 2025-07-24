@@ -533,7 +533,7 @@ component_cell_recovery <-
           paste("filtering") %>%
           factor(c("Pre filtering", "Post filtering")),
         label = ifelse(n > 1e5,
-          compact_num(n, size = "M"),
+          compact_num(n),
           as.character(n)
         )
       ) %>%
@@ -1185,7 +1185,11 @@ component_proximity_selected <- function(
         ) %>%
         ggplot(aes(x = sample_alias, y = !!sym(proximity_score))) +
         geom_hline(yintercept = 0) +
-        geom_violin(aes(fill = condition), draw_quantiles = 0.5, drop = FALSE) +
+        geom_violin(aes(fill = condition),
+          draw_quantiles = 0.5,
+          drop = FALSE,
+          scale = "width"
+        ) +
         geom_jitter(
           size = 0.1,
           position = position_jitter(height = 0),
