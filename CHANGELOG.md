@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- nav-pills to style tabsets
 - `get_test_qc_metrics` to get qc metrics quickly for testing.
 - `component_qc_molecule_rank_plot` to make the molecule rank plot from qc data.
 - `get_test_data` to make a small Seurat object for testing components.

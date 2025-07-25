@@ -47,7 +47,7 @@ tabset_plotlist <- function(plots, level = 2) {
   for (plot in plots) pixelatorR:::assert_class(plot, c("ggplot", "datatables"))
 
   # Start the tabset
-  cat("::: {.panel-tabset}\n")
+  cat("::: {.panel-tabset .nav-pills}\n")
 
   title_plotlist(plots, level)
 
@@ -81,7 +81,7 @@ tabset_nested_plotlist <- function(plots, level = 2) {
 
   # Start the tabset
   cat("\n\n")
-  cat("::: {.panel-tabset}\n")
+  cat("::: {.panel-tabset .nav-pills}\n")
 
   for (tab in seq_len(length(plots))) {
     if (inherits(plots[[tab]], "list")) {
@@ -127,7 +127,7 @@ tabset_figure_table <- function(figure, table, level = 2,
     )
 
   # Start the tabset
-  cat("::: {.panel-tabset}\n")
+  cat("::: {.panel-tabset .nav-pills}\n")
 
   cat(paste0(strrep("#", level), " Figure\n\n"))
 
