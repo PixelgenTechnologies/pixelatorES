@@ -25,7 +25,8 @@ title_plotlist <- function(plots, level = 2) {
     msg <- try(print(plots[[tab]]))
     if (inherits(msg, "try-error")) {
       print(
-        ggplot() + geom_blank()
+        ggplot() +
+          geom_blank()
       )
     }
     cat("\n\n")

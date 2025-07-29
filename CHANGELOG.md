@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `component_umi_bias` to visualize the UMI1/UMI2 degree and protein composition bias. 
 - nav-pills to style tabsets
 - `get_test_qc_metrics` to get qc metrics quickly for testing.
 - `component_qc_molecule_rank_plot` to make the molecule rank plot from qc data.

@@ -1829,3 +1829,119 @@ component_annotation <-
       celltype_composition_table = tabl
     ))
   }
+
+#' Create the component for umi bias
+#'
+#' This function creates a plot the average umi1 and umi2 degree across samples.
+#'
+#' @param object A Seurat object containing the processed data.
+#' @param sample_palette A named character vector specifying the colors for each sample.
+#' @param heatmap_gradient A character vector specifying the colors for the heatmap gradient.
+#' @param min_cells An integer specifying the minimum number of cells required to include a sample in the analysis.
+#'
+#' @return A list of ggplot objects:
+#' - `p_degree_bias` : violin plot of the umi1 and umi2 degrees
+#' - `p_protein_bias` : heatmap of the correlation in abundance for each protein between umi1 and umi2
+#'
+#' @export
+#'
+component_umi_bias <- function(
+  object,
+  sample_palette,
+  heatmap_gradient,
+  min_cells = 50
+) {
+
+  pixelatorR:::assert_class(object, "Seurat")
+  pixelatorR:::assert_class(sample_palette, "character")
+  pixelatorR:::assert_class(heatmap_gradient, "character")
+  pixelatorR:::assert_single_value(min_cells, "integer")
+  el <- Edgelists(object, meta_data_columns = "sample_alias")
+
+  # Compute umi1 / umi2 node degree
+  umi1_degree <- el %>%
+    select(sample_alias, component, umi1) %>%
+    group_by(sample_alias, component, umi1) %>%
+    count(name = "degree") %>%
+    group_by(sample_alias, component) %>%
+    summarize(avg_degree = mean(degree, na.rm = TRUE), .groups = "drop") %>%
+    collect() %>%
+    mutate(type = "umi1")
+  umi2_degree <- el %>%
+    select(sample_alias, component, umi2) %>%
+    group_by(sample_alias, component, umi2) %>%
+    count(name = "degree") %>%
+    group_by(sample_alias, component) %>%
+    summarize(avg_degree = mean(degree, na.rm = TRUE), .groups = "drop") %>%
+    collect() %>%
+    mutate(type = "umi2")
+
+  plot_data <- bind_rows(umi1_degree, umi2_degree)
+
+  p_degree_bias <- plot_violin(
+    plot_data,
+    x = "sample_alias",
+    y = "avg_degree",
+    fill = "type",
+    palette = sample_palette,
+    title = "Average UMI degree bias",
+    y_label = "Average degree"
+  )
+
+  el <- Edgelists(object, meta_data_columns = "sample_alias")
+  marker_1_props <- el %>%
+    select(sample_alias, component, umi1, marker_1) %>%
+    distinct() %>%
+    group_by(sample_alias, component, marker_1) %>%
+    count(name = "count") %>%
+    group_by(sample_alias, component) %>%
+    mutate(pct = count / sum(count, na.rm = FALSE)) %>%
+    filter(pct >= 0.001) %>%
+    select(sample_alias, component, pct, marker = marker_1) %>%
+    collect()
+
+  marker_2_props <- el %>%
+    select(sample_alias, component, umi2, marker_2) %>%
+    distinct() %>%
+    group_by(sample_alias, component, marker_2) %>%
+    count(name = "count") %>%
+    group_by(sample_alias, component) %>%
+    mutate(pct = count / sum(count, na.rm = FALSE)) %>%
+    filter(pct >= 0.001) %>%
+    select(sample_alias, component, pct, marker = marker_2) %>%
+    collect()
+
+  plot_data <- inner_join(marker_1_props, marker_2_props, by = c("sample_alias", "component", "marker")) %>%
+    group_by(sample_alias, marker) %>%
+    filter(n() >= min_cells) %>%
+    summarize(slope = lm(pct.y ~ pct.x)$coefficients[2], .groups = "drop") %>%
+    mutate(slope = if_else(slope > 2, 2, slope))
+
+  marker_ordered <- plot_data %>%
+    group_by(marker) %>%
+    summarize(max_slope = max(slope, na.rm = TRUE), groups = "drop") %>%
+    arrange(desc(max_slope)) %>%
+    pull(marker)
+
+  plot_data <- plot_data %>%
+    mutate(marker = factor(marker, levels = marker_ordered))
+
+  p_protein_bias <- ggplot(plot_data, aes(marker, sample_alias, fill = slope)) +
+    geom_tile() +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    scale_fill_gradientn(colours = heatmap_gradient, limits = c(0, 2)) +
+    labs(
+      x = "", y = "", title = "UMI protein bias based on linear regression",
+      subtitle = glue::glue(
+        "Slope = 1 indicates perfect correlation between UMI1 and UMI2\n",
+        "Only proteins detected in at least {min_cells} cells per sample are shown"
+      ),
+      fill = "Slope\n(UMI2 / UMI1)"
+    )
+
+  return(list(
+    p_degree_bias = p_degree_bias,
+    p_protein_bias = p_protein_bias
+  ))
+}
