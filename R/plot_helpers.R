@@ -472,7 +472,7 @@ plot_violin <- function(
           )
       }
     }
-  if (!is.null(draw_quantiles)) {
+  if (!is.null(draw_quantiles) && is.null(facet_var)) {
     p <-
       p +
       draw_quantiles(p,
@@ -599,6 +599,7 @@ draw_quantiles <-
         dens <- cumsum(violin_data$density) / sum(violin_data$density)
         # Create approximate cumulative density to actual density function
         ecdf <- stats::approxfun(dens, violin_data$y, ties = "ordered")
+
         # Get density at quantile
         ys <- ecdf(draw_quantiles)
 
@@ -622,7 +623,6 @@ draw_quantiles <-
       }) %>%
       bind_rows() %>%
       select(x, y, xmin, xmax)
-
 
     geom_segment(
       data = quantile_data,
