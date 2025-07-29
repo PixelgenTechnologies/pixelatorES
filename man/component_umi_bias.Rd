@@ -4,7 +4,7 @@
 \alias{component_umi_bias}
 \title{Create the component for umi bias}
 \usage{
-component_umi_bias(object, sample_palette, heatmap_gradient)
+component_umi_bias(object, sample_palette, heatmap_gradient, min_cells = 50)
 }
 \arguments{
 \item{object}{A Seurat object containing the processed data.}
@@ -12,6 +12,8 @@ component_umi_bias(object, sample_palette, heatmap_gradient)
 \item{sample_palette}{A named character vector specifying the colors for each sample.}
 
 \item{heatmap_gradient}{A character vector specifying the colors for the heatmap gradient.}
+
+\item{min_cells}{An integer specifying the minimum number of cells required to include a sample in the analysis.}
 }
 \value{
 A list of ggplot objects:
