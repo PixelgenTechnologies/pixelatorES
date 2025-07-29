@@ -1924,12 +1924,14 @@ component_umi_bias <- function(
     theme_bw() +
     theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
     scale_fill_gradientn(colours = heatmap_gradient, limits = c(0, 2)) +
-    labs(x = "", y = "", title = "UMI protein bias based on linear regression",
-         subtitle = glue::glue(
-           "Slope = 1 indicates perfect correlation between UMI1 and UMI2\n",
-           "Only proteins detected in at least 50 cells per sample are shown"
-         ),
-         fill = "Slope\n(UMI2 / UMI1)")
+    labs(
+      x = "", y = "", title = "UMI protein bias based on linear regression",
+      subtitle = glue::glue(
+        "Slope = 1 indicates perfect correlation between UMI1 and UMI2\n",
+        "Only proteins detected in at least 50 cells per sample are shown"
+      ),
+      fill = "Slope\n(UMI2 / UMI1)"
+    )
 
   return(list(
     p_degree_bias = p_degree_bias,

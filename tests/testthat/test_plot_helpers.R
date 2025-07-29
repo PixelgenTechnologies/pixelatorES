@@ -18,13 +18,17 @@ test_that("Tab setting and title setting work as expected", {
 
   expect_equal(
     capture.output(tabset_plotlist(plot_list)),
-    c("::: {.panel-tabset .nav-pills}", "## a", "", "", "", "## b",
-      "", "", "", "## c", "", "", "", ":::")
+    c(
+      "::: {.panel-tabset .nav-pills}", "## a", "", "", "", "## b",
+      "", "", "", "## c", "", "", "", ":::"
+    )
   )
   expect_equal(
     capture.output(tabset_plotlist(plot_list, level = 3)),
-    c("::: {.panel-tabset .nav-pills}", "### a", "", "", "", "### b",
-      "", "", "", "### c", "", "", "", ":::")
+    c(
+      "::: {.panel-tabset .nav-pills}", "### a", "", "", "", "### b",
+      "", "", "", "### c", "", "", "", ":::"
+    )
   )
 
 
@@ -37,10 +41,12 @@ test_that("Tab setting and title setting work as expected", {
 
   expect_equal(
     capture.output(tabset_nested_plotlist(nested_plot_list, level = 3)),
-    c("", "", "::: {.panel-tabset .nav-pills}", "### a", "", "",
+    c(
+      "", "", "::: {.panel-tabset .nav-pills}", "### a", "", "",
       "", "### b", "", "", "", "### c", "", "", "", "### plot_list",
       "", "", "::: {.panel-tabset .nav-pills}", "#### a", "", "", "",
-      "#### b", "", "", "", "#### c", "", "", "", ":::", ":::")
+      "#### b", "", "", "", "#### c", "", "", "", ":::", ":::"
+    )
   )
 })
 
