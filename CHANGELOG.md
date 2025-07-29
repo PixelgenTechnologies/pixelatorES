@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `violin_plot` is now borderless by default.
 
 ### Fixed
+- Disabled the `draw_quantile` option when a `facet_var` is provided to `plot_violin`. Otherwise, the medians are placed incorrectly.
 - `title_plotlist` now returns an empty plot if the render fails.
 - Overlapping text in `component_cell_recovery` plots.
 - All violin plots are now using `scale = "width"`.
