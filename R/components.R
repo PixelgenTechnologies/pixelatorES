@@ -1886,7 +1886,8 @@ component_umi_bias <- function(
     palette = sample_palette,
     title = "Average UMI degree bias",
     y_label = "Average degree"
-  )
+  ) &
+    scale_y_continuous(limits = c(0, NA))
 
   el <- Edgelists(object, meta_data_columns = "sample_alias")
   marker_1_props <- el %>%
