@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get_test_data` to make a small Seurat object for testing components.
 
 ### Updated
+- `process_data` now uses the public `AnnotateCells` function from `pixelatorR`. `process_data` can now switch annotation method to "nmf" by specifying `params$annotation_method = "nmf"`.
 - `component_cell_recovery` now returns a tabsetted Molecule Rank Plot.
 - `violin_plot` is now borderless by default.
 
