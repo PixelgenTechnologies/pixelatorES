@@ -4,30 +4,14 @@
 \alias{process_data}
 \title{Process data for clustering and dimensionality reduction}
 \usage{
-process_data(
-  object,
-  norm_method = "CLR",
-  clustering_resolution = 1,
-  do_harmonize = FALSE,
-  harmonization_vars = NULL,
-  annotate_cells = TRUE,
-  test_mode = FALSE
-)
+process_data(object, params, annotate_cells = TRUE)
 }
 \arguments{
 \item{object}{A Seurat object containing the data to be processed.}
 
-\item{norm_method}{A string specifying the normalization method to use (default is "CLR").}
+\item{params}{A list of parameters.}
 
-\item{clustering_resolution}{A numeric value specifying the resolution for clustering (default is 1).}
-
-\item{do_harmonize}{A boolean indicating whether to perform data harmonization (default is FALSE).}
-
-\item{harmonization_vars}{A character vector specifying the variables to use for harmonization (default is NULL).}
-
-\item{annotate_cells}{A boolean indicating whether to annotate cells using a reference dataset (default is TRUE).}
-
-\item{test_mode}{A boolean indicating whether to run in test mode (default is FALSE).}
+\item{annotate_cells}{A boolean indicating whether to annotate cells.}
 }
 \value{
 A Seurat object with processed data, including PCA, UMAP, and clustering results.

@@ -4,12 +4,8 @@
 #' running PCA, and UMAP, and optionally harmonizing the data before clustering.
 #'
 #' @param object A Seurat object containing the data to be processed.
-#' @param norm_method A string specifying the normalization method to use (default is "CLR").
-#' @param clustering_resolution A numeric value specifying the resolution for clustering (default is 1).
-#' @param do_harmonize A boolean indicating whether to perform data harmonization (default is FALSE).
-#' @param harmonization_vars A character vector specifying the variables to use for harmonization (default is NULL).
-#' @param annotate_cells A boolean indicating whether to annotate cells using a reference dataset (default is TRUE).
-#' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
+#' @param params A list of parameters.
+#' @param annotate_cells A boolean indicating whether to annotate cells.
 #'
 #' @return A Seurat object with processed data, including PCA, UMAP, and clustering results.
 #'
@@ -18,29 +14,25 @@
 process_data <-
   function(
     object,
-    norm_method = "CLR",
-    clustering_resolution = 1,
-    do_harmonize = FALSE,
-    harmonization_vars = NULL,
-    annotate_cells = TRUE,
-    test_mode = FALSE
+    params,
+    annotate_cells = TRUE
   ) {
-    max_dims <- ifelse(test_mode, 5, 20)
-    npcs <- ifelse(test_mode, 5, 50)
-    n_neighbors <- ifelse(test_mode, 5, 30)
+    max_dims <- ifelse(params$test_mode, 5, 20)
+    npcs <- ifelse(params$test_mode, 5, 50)
+    n_neighbors <- ifelse(params$test_mode, 5, 30)
     object <-
       object %>%
-      NormalizeData(normalization.method = norm_method, margin = 2) %>%
+      NormalizeData(normalization.method = params$norm_method, margin = 2) %>%
       ScaleData() %>%
       RunPCA(npcs = npcs) %>%
       RunUMAP(reduction = "pca", dims = 1:max_dims, n.neighbors = n_neighbors)
 
 
-    if (do_harmonize) {
+    if (params$do_harmonize) {
       object <-
         object %>%
         RunHarmony(
-          group.by.vars = harmonization_vars,
+          group.by.vars = params$harmonization_vars,
           plot_convergence = FALSE,
         ) %>%
         RunUMAP(
@@ -49,22 +41,27 @@ process_data <-
           n.neighbors = n_neighbors
         ) %>%
         FindNeighbors(reduction = "harmony", dims = 1:max_dims) %>%
-        FindClusters(random.seed = 1, resolution = clustering_resolution)
+        FindClusters(random.seed = 1, resolution = params$clustering_resolution)
     } else {
       object <-
         object %>%
         FindNeighbors(reduction = "pca", dims = 1:max_dims) %>%
-        FindClusters(random.seed = 1, resolution = clustering_resolution)
+        FindClusters(random.seed = 1, resolution = params$clustering_resolution)
     }
 
-    if (annotate_cells && !test_mode) {
+    if (annotate_cells && !params$test_mode) {
+      reference <- read_annotation_reference()
+      reference$l1_annotation <- reference$celltype.l1
+      reference$l2_annotation <- reference$celltype.l2
       object <-
         object %>%
-        pixelatorES::annotate_cells(
-          reference = read_annotation_reference(),
+        AnnotateCells(
+          reference = reference,
+          reference_groups = c("l1_annotation", "l2_annotation"),
           reference_assay = "PNA",
           query_assay = "PNA",
-          summarize_by_column = "seurat_clusters"
+          summarize_by_column = "seurat_clusters",
+          method = params$annotation_method
         )
     }
 

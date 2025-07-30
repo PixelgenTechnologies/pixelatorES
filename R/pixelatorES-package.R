@@ -85,6 +85,7 @@
 #' @importFrom knitr kable
 #' @importFrom methods as
 #' @importFrom parallel mclapply
+#' @importFrom pixelatorR AnnotateCells
 #' @importFrom pixelatorR ColocalizationHeatmap
 #' @importFrom pixelatorR Edgelists
 #' @importFrom pixelatorR FilterProximityScores
