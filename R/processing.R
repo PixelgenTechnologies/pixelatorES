@@ -61,6 +61,7 @@ process_data <-
           reference_assay = "PNA",
           query_assay = "PNA",
           summarize_by_column = "seurat_clusters",
+          normalization_method = ifelse(params$annotation_method == "Seurat", "LogNormalize", "CLR"),
           method = params$annotation_method
         )
     }
