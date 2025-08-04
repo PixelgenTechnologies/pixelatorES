@@ -5,7 +5,7 @@
 \alias{default_params}
 \title{Default parameters for the ES}
 \format{
-An object of class \code{list} of length 9.
+An object of class \code{list} of length 10.
 }
 \usage{
 default_params

@@ -9,10 +9,11 @@ default_params <-
     harmonization_vars = "condition",
     norm_method = "CLR",
     clustering_resolution = 1,
-    run_proximity_analysis = TRUE,
     proximity_count_cutoff = 25,
-    run_qc_metrics = TRUE,
-    debug_mode = FALSE
+    annotation_method = "Seurat",
+    mc_cores = 1,
+    debug_mode = FALSE,
+    test_mode = FALSE
   )
 
 #' Print analysis parameters

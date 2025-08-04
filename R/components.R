@@ -787,7 +787,7 @@ component_crossing_edges <-
   function(qc_metrics_tables, sample_levels = NULL) {
     plot_data <-
       qc_metrics_tables$crossing_edges %>%
-      mutate(label = paste0(edges, "\n", round(percent, 3), " %"))
+      mutate(label = paste0(round(percent, 2), "%"))
 
     if (!is.null(sample_levels)) {
       plot_data <-
@@ -831,8 +831,7 @@ component_crossing_edges <-
           x = unclass(factor(sample_alias)) + 0.45,
           y = 100 * removed_total / total_edges_in,
           label = paste0(
-            removed_total, "\n",
-            round(100 * removed_total / total_edges_in, 3), " %"
+            round(100 * removed_total / total_edges_in, 2), "%"
           )
         ),
         vjust = -0.1,
@@ -1805,7 +1804,7 @@ component_annotation <-
           )
       })
 
-    tabl <-
+    tabl1 <-
       plot_data %>%
       ungroup() %>%
       mutate(frac = scales::percent(frac, accuracy = 0.1)) %>%
@@ -1814,8 +1813,19 @@ component_annotation <-
         `Cell annotation` = l1_annotation_summary,
         frac
       ) %>%
-      pivot_wider(names_from = `Cell annotation`, values_from = frac) %>%
+      pivot_wider(names_from = `Cell annotation`, values_from = frac, values_fill = "0.0%") %>%
       style_table(caption = "Cell type composition [%]", interactive = FALSE)
+
+    tabl2 <-
+      plot_data %>%
+      ungroup() %>%
+      select(
+        `Sample ID` = sample_alias,
+        `Cell annotation` = l1_annotation_summary,
+        n
+      ) %>%
+      pivot_wider(names_from = `Cell annotation`, values_from = n, values_fill = 0) %>%
+      style_table(caption = "Cell type composition", interactive = FALSE)
 
     return(list(
       dimred_plots = list(
@@ -1826,6 +1836,7 @@ component_annotation <-
       celltype_composition = p4,
       celltype_composition_barplots1 = barplots1,
       celltype_composition_barplots2 = barplots2,
-      celltype_composition_table = tabl
+      celltype_composition_table = tabl1,
+      celltype_numbers_table = tabl2
     ))
   }

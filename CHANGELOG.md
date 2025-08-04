@@ -7,16 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] 2025-08-04
+
 ### Added
 - nav-pills to style tabsets
 - `get_test_qc_metrics` to get qc metrics quickly for testing.
 - `component_qc_molecule_rank_plot` to make the molecule rank plot from qc data.
 - `get_test_data` to make a small Seurat object for testing components.
+- `Graph Nodes [M]` and `Graph Edges [M]` to the key metrics table.
 
 ### Updated
 - `process_data` now uses the public `AnnotateCells` function from `pixelatorR`. `process_data` can now switch annotation method to "nmf" by specifying `params$annotation_method = "nmf"`.
 - `component_cell_recovery` now returns a tabsetted Molecule Rank Plot.
 - `violin_plot` is now borderless by default.
+- `component_crossing_edges` now returns a plot without absolute numbers and with fewer decimals to avoid overplotting.
+- `component_annotation` now outputs an additional `celltype_numbers_table` with a table of cell type numbers per sample.
 
 ### Fixed
 - Disabled the `draw_quantile` option when a `facet_var` is provided to `plot_violin`. Otherwise, the medians are placed incorrectly.

@@ -323,12 +323,16 @@ key_metric_table <-
       qc_metrics_tables$seq_saturation %>%
         mutate(
           total_reads = total_reads / 1e6,
-          valid_reads = valid_reads / 1e6
+          valid_reads = valid_reads / 1e6,
+          graph_proteins = graph_proteins / 1e6,
+          graph_edges = graph_edges / 1e6
         ) %>%
         select(
           `Sample ID` = sample_alias,
           `Total reads [M]` = total_reads,
           `Valid reads [M]` = valid_reads,
+          `Graph Nodes [M]` = graph_proteins,
+          `Graph Edges [M]` = graph_edges,
           `Graph node saturation` = graph_node_saturation,
           `Graph edge saturation` = graph_edge_saturation,
           `Valid reads saturation` = valid_reads_saturation,
