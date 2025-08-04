@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get_test_qc_metrics` to get qc metrics quickly for testing.
 - `component_qc_molecule_rank_plot` to make the molecule rank plot from qc data.
 - `get_test_data` to make a small Seurat object for testing components.
+- `Graph Nodes [M]` and `Graph Edges [M]` to the key metrics table.
 
 ### Updated
 - `process_data` now uses the public `AnnotateCells` function from `pixelatorR`. `process_data` can now switch annotation method to "nmf" by specifying `params$annotation_method = "nmf"`.
