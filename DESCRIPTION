@@ -40,8 +40,7 @@ Imports:
     tidyselect,
     DT,
     scales,
-    methods,
-    pcaMethods
+    methods
 Remotes: 
     PixelgenTechnologies/pixelatorR
 Suggests: 

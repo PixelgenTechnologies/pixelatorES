@@ -13,7 +13,7 @@ default_params <-
     annotation_method = "Seurat",
     mc_cores = 1,
     debug_mode = FALSE,
-    test_mode = FALSE,
+    test_mode = FALSE
   )
 
 #' Print analysis parameters
