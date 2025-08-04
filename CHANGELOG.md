@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `process_data` now uses the public `AnnotateCells` function from `pixelatorR`. `process_data` can now switch annotation method to "nmf" by specifying `params$annotation_method = "nmf"`.
 - `component_cell_recovery` now returns a tabsetted Molecule Rank Plot.
 - `violin_plot` is now borderless by default.
+- `component_crossing_edges` now returns a plot without absolute numbers and with fewer decimals to avoid overplotting.
 
 ### Fixed
 - Disabled the `draw_quantile` option when a `facet_var` is provided to `plot_violin`. Otherwise, the medians are placed incorrectly.
