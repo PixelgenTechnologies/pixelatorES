@@ -1804,7 +1804,7 @@ component_annotation <-
           )
       })
 
-    tabl <-
+    tabl1 <-
       plot_data %>%
       ungroup() %>%
       mutate(frac = scales::percent(frac, accuracy = 0.1)) %>%
@@ -1813,8 +1813,19 @@ component_annotation <-
         `Cell annotation` = l1_annotation_summary,
         frac
       ) %>%
-      pivot_wider(names_from = `Cell annotation`, values_from = frac) %>%
+      pivot_wider(names_from = `Cell annotation`, values_from = frac, values_fill = "0.0%") %>%
       style_table(caption = "Cell type composition [%]", interactive = FALSE)
+
+    tabl2 <-
+      plot_data %>%
+      ungroup() %>%
+      select(
+        `Sample ID` = sample_alias,
+        `Cell annotation` = l1_annotation_summary,
+        n
+      ) %>%
+      pivot_wider(names_from = `Cell annotation`, values_from = n, values_fill = 0) %>%
+      style_table(caption = "Cell type composition", interactive = FALSE)
 
     return(list(
       dimred_plots = list(
@@ -1825,6 +1836,7 @@ component_annotation <-
       celltype_composition = p4,
       celltype_composition_barplots1 = barplots1,
       celltype_composition_barplots2 = barplots2,
-      celltype_composition_table = tabl
+      celltype_composition_table = tabl1,
+      celltype_numbers_table = tabl2
     ))
   }
