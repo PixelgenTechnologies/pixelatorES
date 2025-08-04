@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] 2025-08-04
+
 ### Added
 - nav-pills to style tabsets
 - `get_test_qc_metrics` to get qc metrics quickly for testing.
