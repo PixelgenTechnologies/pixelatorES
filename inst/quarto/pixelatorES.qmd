@@ -1,0 +1,25 @@
+---
+title: "Experiment Summary"
+subtitle: "v0.2.0" 
+format:
+  html:
+    theme: cerulean
+    page-layout: full
+    embed-resources: true
+    code_folding: show
+    fig-width: 8
+    fig-height: 5
+    fig-dpi: 150
+    css: styles.css
+knitr:
+  opts_chunk:
+    out.width: "100%"
+date: "`r Sys.Date()`"
+editor_options: 
+  chunk_output_type: console
+execute:
+  execute-dir: dir
+  echo: false
+  warning: false
+  message: false
+---

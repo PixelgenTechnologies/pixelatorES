@@ -1,0 +1,16 @@
+.panel-tabset {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.panel-tabset,
+.panel-tabset > .nav-tabs,
+.panel-tabset > .tab-content {
+  border: none !important;
+}
+
+/* 2. Add back ONLY the top border on the content pane */
+.panel-tabset > .tab-content {
+  border-top: 1px solid #dee2e6 !important; /* Uses Bootstrap's default border color */
+}
