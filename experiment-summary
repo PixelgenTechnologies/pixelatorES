@@ -1,0 +1,5 @@
+#!/bin/bash
+pushd ./inst/quarto
+set -x
+quarto render pixelatorES.qmd "$@"
+popd
