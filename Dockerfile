@@ -1,4 +1,4 @@
-FROM ghcr.io/pixelgentechnologies/pixelatorr:0.14.0
+FROM ghcr.io/pixelgentechnologies/pixelatorr:v0.14.0
 ARG QUARTO_VERSION="1.5.54"
 ARG GITHUB_PAT=
 # Set the environment variable for the GitHub Personal Access Token
