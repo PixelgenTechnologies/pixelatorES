@@ -28,7 +28,7 @@ jobs:
         with:
           images: |
             ghcr.io/pixelgentechnologies/pixelatorES
-            890888997283.dkr.ecr.eu-north-1.amazonaws.com/pixelatorES
+            890888997283.dkr.ecr.eu-north-1.amazonaws.com/experiment-summary
           tags: |
             type=ref,event=branch
             type=ref,event=pr

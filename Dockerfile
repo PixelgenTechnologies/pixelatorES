@@ -1,4 +1,4 @@
-FROM ghcr.io/pixelgentechnologies/pixelatorr:main
+FROM ghcr.io/pixelgentechnologies/pixelatorr:0.14.0
 ARG QUARTO_VERSION="1.5.54"
 ARG GITHUB_PAT=
 # Set the environment variable for the GitHub Personal Access Token
@@ -28,4 +28,4 @@ COPY NAMESPACE /workspace/NAMESPACE
 RUN R -e "devtools::install()"
 
 # Setup runable entrypoint
-COPY experiment-summary /usr/local/bin/experiment-summary 
+COPY experiment-summary /usr/local/bin/experiment-summary
