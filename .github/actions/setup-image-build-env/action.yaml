@@ -6,7 +6,7 @@ inputs:
     default: "arn:aws:iam::890888997283:role/GithubActionsRole"
   aws-role-session-name:
     description: "The name of the AWS IAM role session"
-    default: "GitHubActions-pixelator-internal"
+    default: "GitHubActions-pixelatorES"
   aws-registry:
     description: "The AWS ECR registry to authenticate with"
     default: "890888997283.dkr.ecr.eu-north-1.amazonaws.com"
