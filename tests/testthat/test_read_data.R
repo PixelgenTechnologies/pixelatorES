@@ -375,4 +375,3 @@ test_that("File reading works as expected", {
     c("sample_alias", "a", "b")
   )
 })
-
