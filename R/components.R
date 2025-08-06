@@ -1833,8 +1833,8 @@ component_sequencing_saturation <-
       ggplot(aes(sample_alias, fraction_valid_reads)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = paste0(round(fraction_valid_reads, 3), " %")),
-                vjust = -.1,
-                size = 3
+        vjust = -.1,
+        size = 3
       ) +
       scale_y_continuous(
         expand = expansion(c(0, 0.15)),
@@ -1858,8 +1858,8 @@ component_sequencing_saturation <-
       ggplot(aes(sample_alias, fraction_graph_reads)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = paste0(round(fraction_graph_reads, 3), " %")),
-                vjust = -.1,
-                size = 3
+        vjust = -.1,
+        size = 3
       ) +
       scale_y_continuous(
         expand = expansion(c(0, 0.15)),
@@ -1883,8 +1883,8 @@ component_sequencing_saturation <-
       ggplot(aes(sample_alias, valid_reads_saturation)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = paste0(round(valid_reads_saturation, 3), " %")),
-                vjust = -.1,
-                size = 3
+        vjust = -.1,
+        size = 3
       ) +
       scale_y_continuous(
         expand = expansion(c(0, 0.15)),
@@ -1901,10 +1901,10 @@ component_sequencing_saturation <-
         title = "Valid read saturation",
         subtitle = "Redundancy in valid reads",
         caption = expression(~ italic("Saturation" == 1 -
-                                        frac(
-                                          "# Deduped valid reads",
-                                          "# Valid reads"
-                                        )))
+          frac(
+            "# Deduped valid reads",
+            "# Valid reads"
+          )))
       )
 
     p4 <-
@@ -1912,8 +1912,8 @@ component_sequencing_saturation <-
       ggplot(aes(sample_alias, graph_edge_saturation)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = paste0(round(graph_edge_saturation, 3), " %")),
-                vjust = -.1,
-                size = 3
+        vjust = -.1,
+        size = 3
       ) +
       scale_y_continuous(
         expand = expansion(c(0, 0.15)),
@@ -1930,10 +1930,10 @@ component_sequencing_saturation <-
         title = "Graph edge saturation",
         subtitle = "Redundancy in graph reads",
         caption = expression(~ italic("Saturation" == 1 -
-                                        frac(
-                                          "# Graph edges",
-                                          "# Graph reads"
-                                        )))
+          frac(
+            "# Graph edges",
+            "# Graph reads"
+          )))
       )
 
     p5 <-
@@ -1941,8 +1941,8 @@ component_sequencing_saturation <-
       ggplot(aes(sample_alias, graph_node_saturation)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = paste0(round(graph_node_saturation, 3), " %")),
-                vjust = -.1,
-                size = 3
+        vjust = -.1,
+        size = 3
       ) +
       scale_y_continuous(
         expand = expansion(c(0, 0.15)),
@@ -1959,10 +1959,10 @@ component_sequencing_saturation <-
         title = "Graph node saturation",
         subtitle = "Redundancy in graph proteins",
         caption = expression(~ italic("Saturation" == 1 -
-                                        frac(
-                                          "# Graph proteins",
-                                          "# Graph reads"
-                                        )))
+          frac(
+            "# Graph proteins",
+            "# Graph reads"
+          )))
       )
 
     tabl <-
