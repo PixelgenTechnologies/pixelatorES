@@ -666,5 +666,3 @@ set_sample_levels <-
 
     return(df)
   }
-
-
