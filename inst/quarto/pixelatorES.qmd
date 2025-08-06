@@ -22,4 +22,574 @@ execute:
   echo: false
   warning: false
   message: false
+params: 
+  
+  sample_sheet: "../../../ES_test_data/test_samplesheet.csv"
+  data_folder: "../../../ES_test_data/"
+  control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
+  do_harmonize: FALSE
+  harmonization_vars: ["condition"]
+  norm_method: "CLR"
+  clustering_resolution: 1
+  annotation_method: "Seurat"
+  mc_cores: 1
+  debug_mode: FALSE
+  test_mode: FALSE
 ---
+
+# 
+
+::: {.panel-tabset .nav-pills}
+
+```{r load_packages, include = FALSE}
+library(pixelatorES)
+library(pixelatorR)
+library(Seurat)
+library(dplyr)
+library(tibble)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(ggplotify)
+library(purrr)
+```
+  
+## Samples 
+
+Here, we set the sample name and the path to the data files. 
+
+
+```{r}
+#| label: samples
+#| results: 'asis'
+sample_sheet <-
+  read_samplesheet(params$sample_sheet)
+
+sample_aliases <-
+  sample_sheet %>%
+  select(sample, sample_alias) %>%
+  deframe()
+
+print_metadata_table(sample_sheet)
+```
+
+
+```{r}
+#| label: theme
+#| include: false
+heatmap_gradient <-
+  PixelgenGradient(100, "BluesCherry")
+
+cherry_gradient <-
+  PixelgenGradient(100, "Cherry")
+
+sample_palette <- create_sample_palette(sample_sheet$condition)
+```
+
+```{r}
+#| label: read_counts
+file_paths <- get_file_paths(
+  data_folder = params$data_folder,
+  sample_aliases = sample_aliases
+)
+
+data_files <- file_paths$data_files
+qc_files <- file_paths$qc_files
+
+pg_data <-
+  load_pxl_data_list(params$data_folder, data_files, sample_sheet) %>%
+  merge_data(sample_sheet)
+
+if (params$debug_mode) {
+  pg_data <-
+    downsample_data(pg_data,
+      control_markers = params$control_markers,
+      n_cells = 50,
+      n_markers = 21
+    )
+}
+```
+
+## Quality metrics
+
+```{r}
+#| label: read_qc_metrics
+#| results: 'asis'
+sample_qc_metrics <-
+  read_qc_files(qc_files, sample_sheet)
+
+qc_metrics_tables <-
+  get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)
+```
+
+### Key metrics
+
+```{r}
+#| label: key_metrics
+#| results: 'asis'
+key_metric_table(qc_metrics_tables)
+```
+
+
+### Sequencing
+#### Reads and molecules 
+
+Here we review the number of reads per stage of the `pixelator` pipeline, and the number of molecules that they are 
+mapped to.
+
+```{r}
+#| label: qc_metrics_reads
+#| fig-height: 4
+#| results: 'asis'
+component <-
+  component_sequencing_reads_and_molecules(sample_qc_metrics)
+
+tabset_figure_table(
+  component$plots,
+  component$tabl,
+  level = 5
+)
+close_tabset()
+```
+
+#### Sequencing saturation 
+
+Sequencing saturation is the fraction of a library's complexity that has been 
+captured through sequencing.
+
+```{r}
+#| label: qc_metrics_sequencing_saturation
+#| results: 'asis'
+
+component <-
+  component_sequencing_saturation(
+    qc_metrics_tables,
+    sample_levels = sample_aliases
+  )
+
+tabset_figure_table(
+  component$plots,
+  component$tabl,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```
+
+### Cell recovery
+
+#### Number of components 
+
+```{r}
+#| label: qc_metrics_component_count
+#| results: 'asis'
+component <-
+  component_cell_recovery(sample_qc_metrics,
+    sample_levels = sample_aliases
+  )
+
+tabset_figure_table(
+  component$plot[[1]],
+  component$table[[1]],
+  level = 5
+)
+close_tabset()
+```
+
+
+```{r}
+#| label: qc_metrics_molecule_count
+#| results: 'asis'
+component_molecule_plot(pg_data, sample_palette)
+```
+
+
+```{r}
+#| label: qc_metrics_molrank_plot
+#| results: 'asis'
+tabset_figure_table(
+  component$plot[[2]],
+  component$table[[2]],
+  level = 5
+)
+close_tabset()
+```
+
+
+### Graph metrics
+
+#### A/B node degree 
+
+The mean degree of A and B nodes. 
+
+```{r}
+#| label: qc_metrics_ab_node_degree
+#| results: 'asis'
+component <-
+  component_node_degree(pg_data,
+    sample_levels = sample_aliases
+  )
+
+tabset_figure_table(
+  component$plot,
+  component$table,
+  level = 5
+)
+close_tabset()
+```
+
+#### Crossing edges 
+
+In the `graph` stage of the `pixelator` pipeline, components corresponding to 
+cells are identified by finding parts of the graph with high intraconnectivity. 
+These components recovered from the graph by removing a low number of presumed 
+random edges that are known as "crossing edges".
+
+```{r}
+#| label: qc_metrics_crossing_edges
+#| results: 'asis'
+component <-
+  component_crossing_edges(qc_metrics_tables,
+    sample_levels = sample_aliases
+  )
+
+tabset_figure_table(
+  component$plot,
+  component$tabl,
+  level = 5
+)
+close_tabset()
+```
+
+#### k-coreness 
+
+k-coreness is a measure of the connectivity of a node in a graph. A node with a 
+high k-coreness is well connected to 
+other nodes in the graph.
+
+```{r}
+#| label: qc_metrics_nodes_kcore
+#| results: 'asis'
+component <-
+  component_coreness(qc_metrics_tables)
+
+tabset_figure_table(
+  component$plots,
+  component$tabl,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```
+
+
+```{r}
+#| label: qc_metrics_nodes_kcore_heatmap
+#| fig-height: 3
+#| results: 'asis'
+tabset_plotlist(component$heatmap_plots, level = 5)
+```
+
+### Bleedover noise
+
+```{r}
+#| label: qc_metrics_bleedover_ratio
+#| results: 'asis'
+component_bleedover_noise(qc_metrics_tables) %>% print()
+```
+
+### Control markers 
+
+```{r}
+#| label: qc_metrics_frac_control
+#| results: 'asis'
+component <- component_control_markers(pg_data)
+
+tabset_figure_table(
+  list(component$p1, component$p2),
+  component$tabl,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```
+
+```{r}
+#| label: qc_metrics_cleanup
+rm(sample_qc_metrics)
+```
+
+### Dispersion
+
+Dispersion scores like Gini and Tau are measures of how the counts within a cell are distributed across markers. If a 
+cell only express a single marker, the dispersion will be 1, and if a cell expresses all markers and an exact equal 
+level, the dispersion will be 0. Dispersion scores can be used to assess the quality of the data and to identify 
+potential artifacts such as antibody aggregates. 
+
+
+```{r}
+#| label: dispersion_plot
+pg_data <- dispersion_calculation(pg_data)
+component_dispersion_plot(pg_data, params)
+```
+
+## Cell annotation
+
+```{r}
+#| label: dimred_plots
+#| fig-height: 4
+#| results: 'asis'
+component <-
+  component_dimred_plots(
+    pg_data_processed,
+    plot_reductions = preferred_dimred_order(Reductions(pg_data_processed)),
+    sample_palette = sample_palette,
+    cluster_palette = unname(cell_palette),
+    sample_plots = FALSE
+  )
+
+tabset_nested_plotlist(component, level = 3)
+```
+
+We run an automatic annotation using an annotated reference dataset. This allows
+us to put a few simple labels on cell populations, which can be useful for 
+downstream analysis. We visualize the annotation using UMAPs 
+(integrated and not).
+
+::: {.panel-tabset .nav-pills}
+
+### Automated annotation
+
+```{r}
+#| label: annotation_dimred
+#| results: 'asis'
+component <-
+  component_annotation(pg_data_processed,
+    heatmap_gradient = cherry_gradient
+  )
+
+tabset_plotlist(component$dimred_plots, level = 4)
+```
+
+
+```{r}
+#| label: annotation_dimred_heatmap
+#| fig-height: 16
+#| results: 'asis'
+component$heatmap
+```
+
+### Summary
+
+```{r}
+#| label: annotation_summary
+#| fig-height: 4
+#| results: 'asis'
+component$celltype_composition
+```
+
+
+```{r}
+#| label: annotation_summary2
+#| fig-height: 4
+#| results: 'asis'
+tabset_plotlist(component$celltype_composition_barplots1, level = 4)
+```
+
+
+```{r}
+#| label: annotation_summary3
+#| fig-height: 4
+#| results: 'asis'
+tabset_plotlist(component$celltype_composition_barplots2, level = 4)
+```
+
+
+```{r}
+#| label: annotation_summary4
+#| fig-height: 4
+#| results: 'asis'
+component$celltype_composition_table
+```
+
+:::
+
+## Abundance 
+
+This plot summarizes the partitioning of variance in marker abundance across cell types and
+samples. For each marker, omega squared (ω²) quantifies the proportion of variance explained 
+by cell type identity (x-axis) and sample-related effects (y-axis, including sample and 
+sample × cell type interaction). A high ω² value for the cell type identity indicates that there
+are large differences in marker abundance between cell types, while a high ω² value for the 
+sample-related effects indicates that there are large differences in marker abundance between 
+samples; either for the whole sample, or for certain cell types. The dashed line represents the 
+boundary, as total ω² cannot exceed 1.
+
+```{r}
+#| label: abundance_anova
+#| results: 'asis'
+component <-
+  component_abundance_anova(pg_data_processed, params$mc_cores)
+
+tabset_figure_table(
+  component$variance_partition_plot,
+  component$anova_table,
+  level = 3
+)
+close_tabset()
+```
+
+::: {.panel-tabset .nav-pills}
+
+### Global 
+
+```{r}
+#| label: global_abundance_per_marker
+#| fig-height: 4
+#| results: 'asis'
+plots <- component_abundance_per_sample(pg_data_processed, params, sample_palette, sample_aliases, params$test_mode)
+
+tabset_plotlist(plots, level = 5)
+```
+
+### Per celltype 
+
+```{r}
+#| label: per_celltype_abundance
+#| fig-height: 4
+#| results: 'asis'
+plots <- component_abundance_per_celltype(pg_data_processed, params, sample_palette, params$test_mode)
+
+tabset_plotlist(plots, level = 5)
+```
+
+:::
+
+
+## Proximity
+
+::: {.panel-tabset .nav-pills}
+
+```{r}
+#| label: global_proximity_load
+#| results: 'asis'
+proximity_scores <- filter_proximity_scores(pg_data_processed, params, sample_levels = sample_aliases)
+```
+
+### Self-proximity 
+
+This plot summarizes the partitioning of variance in marker proximity score across cell types and
+samples. For each marker, omega squared (ω²) quantifies the proportion of variance explained 
+by cell type identity (x-axis) and sample-related effects (y-axis, including sample and 
+sample × cell type interaction). A high ω² value for the cell type identity indicates that there
+are large differences in marker proximity score between cell types, while a high ω² value for the 
+sample-related effects indicates that there are large differences in marker proximity score between 
+samples; either for the whole sample, or for certain cell types. The dashed line represents the 
+boundary, as total ω² cannot exceed 1.
+
+```{r}
+#| label: proximity_anova
+#| results: 'asis'
+component <-
+  component_proximity_anova(proximity_scores, params$mc_cores)
+
+tabset_figure_table(
+  component$variance_partition_plot,
+  component$anova_table,
+  level = 4
+)
+close_tabset()
+```
+::: {.panel-tabset .nav-pills}
+
+#### Per marker
+
+```{r}
+#| label: global_proximity_per_marker
+#| fig-height: 4
+#| results: 'asis'
+processed_data <-
+  proximity_scores %>%
+  filter(as.character(marker_1) == as.character(marker_2)) %>%
+  group_by(marker_1)
+```
+
+```{r}
+#| label: global_proximity_per_marker_logratio
+#| fig-height: 4
+#| results: 'asis'
+plots <- component_proximity_per_marker(processed_data, "log2_ratio", sample_palette, params$test_mode)
+tabset_plotlist(plots, level = 5)
+```
+
+#### Per celltype 
+
+```{r}
+#| label: polarity_summary
+#| fig-width: 16
+#| fig-height: 6
+plots <- component_clustering_summary(proximity_scores, heatmap_gradient, params$test_mode)
+print(plots$log2_ratio)
+```
+
+:::
+
+
+### Colocalization 
+::: {.panel-tabset .nav-pills}
+
+#### Global 
+
+```{r}
+#| label: coloc_global_summary
+#| results: 'asis'
+processed_data <- summarize_colocalization_scores_per_sample(proximity_scores, params$test_mode)
+```
+
+```{r}
+#| label: coloc_global_summary_heatmap_logratio
+#| fig-width: 14
+#| fig-height: 10
+#| results: 'asis'
+plots <- component_proximity_heatmap_sample(processed_data, heatmap_gradient, "log2_ratio")
+tabset_plotlist(plots, level = 5)
+```
+
+
+
+#### Per Celltype 
+
+```{r}
+#| label: coloc_celltype_summary
+#| fig-width: 14
+#| fig-height: 10
+#| results: 'asis'
+processed_data <- summarize_colocalization_scores_per_celltype(proximity_scores, params$test_mode)
+```
+
+```{r}
+#| label: coloc_celltype_summary_heatmap_logratio
+#| fig-width: 14
+#| fig-height: 10
+#| results: 'asis'
+plots <- component_proximity_heatmap_celltype(processed_data, heatmap_gradient, "log2_ratio")
+tabset_plotlist(plots, level = 5)
+```
+
+:::
+
+:::
+
+## Run settings
+
+```{r}
+#| label: run_settings
+# Print parameters
+print_params(params)
+
+# Print session info
+print_session_info()
+```
+
+
+:::
