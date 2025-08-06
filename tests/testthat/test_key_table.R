@@ -9,7 +9,6 @@ test_that("get_top_markers works as expected", {
   data_paths <-
     get_file_paths(
       data_folder = test_data_folder(),
-      metadata = sample_sheet,
       sample_aliases = sample_sheet %>%
         select(sample, sample_alias) %>%
         deframe()

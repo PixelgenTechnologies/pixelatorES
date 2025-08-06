@@ -58,10 +58,9 @@ find_stage <-
 #' @export
 #'
 get_file_paths <-
-  function(data_folder = NULL, file_paths = NULL, metadata, sample_aliases) {
+  function(data_folder = NULL, file_paths = NULL, sample_aliases) {
     pixelatorR:::assert_single_value(data_folder, type = "string", allow_null = TRUE)
     pixelatorR:::assert_vector(file_paths, "character", allow_null = TRUE)
-    pixelatorR:::assert_class(metadata, "data.frame")
     pixelatorR:::assert_vector(sample_aliases, "character", allow_null = TRUE)
     pixelatorR:::assert_vector(names(sample_aliases), "character", allow_null = FALSE)
 
@@ -443,7 +442,6 @@ get_test_qc_metrics <-
     data_paths <-
       get_file_paths(
         data_folder = test_data_folder(),
-        metadata = sample_sheet,
         sample_aliases = sample_sheet %>%
           select(sample, sample_alias) %>%
           deframe()

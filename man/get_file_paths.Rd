@@ -4,7 +4,7 @@
 \alias{get_file_paths}
 \title{Get file paths for data and QC files}
 \usage{
-get_file_paths(data_folder = NULL, file_paths = NULL, metadata, sample_aliases)
+get_file_paths(data_folder = NULL, file_paths = NULL, sample_aliases)
 }
 \arguments{
 \item{data_folder}{A character string specifying the path to the data folder.}
