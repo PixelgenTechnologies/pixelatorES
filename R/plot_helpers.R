@@ -634,3 +634,37 @@ draw_quantiles <-
       ...
     )
   }
+
+#' Set sample levels in a data frame
+#'
+#' This function sets the levels of the `sample_alias` factor in a data frame.
+#'
+#' @param df A data frame containing a `sample_alias` column.
+#' @param sample_levels A vector of sample levels to set for the `sample_alias` column (default is NULL).
+#'
+#' @return A data frame with the `sample_alias` column set to the specified levels.
+#'
+#' @export
+#'
+set_sample_levels <-
+  function(
+    df,
+    sample_levels = NULL
+  ) {
+    pixelatorR:::assert_class(df, "data.frame")
+    pixelatorR:::assert_vector(sample_levels, "character", n = 1, allow_null = TRUE)
+
+    if (!is.null(sample_levels)) {
+      df <-
+        df %>%
+        mutate(sample_alias = factor(sample_alias, sample_levels))
+    } else {
+      df <-
+        df %>%
+        mutate(sample_alias = factor(sample_alias))
+    }
+
+    return(df)
+  }
+
+

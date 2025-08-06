@@ -192,16 +192,7 @@ component_qc_molecule_rank_plot <- function(
     mutate(rank = row_number()) %>%
     ungroup()
 
-
-  if (!is.null(sample_levels)) {
-    plot_data <-
-      plot_data %>%
-      mutate(sample_alias = factor(sample_alias, sample_levels))
-  } else {
-    plot_data <-
-      plot_data %>%
-      mutate(sample_alias = factor(sample_alias))
-  }
+  plot_data <- set_sample_levels(plot_data, sample_levels)
 
   plots <-
     plot_data %>%
@@ -367,11 +358,7 @@ component_sequencing_reads_and_molecules <-
       select(-value) %>%
       group_by(sample_alias)
 
-    if (!is.null(sample_levels)) {
-      plot_data <-
-        plot_data %>%
-        mutate(sample_alias = factor(sample_alias, sample_levels))
-    }
+    plot_data <- set_sample_levels(plot_data, sample_levels)
 
     plot_range <-
       max(plot_data$M_reads)
@@ -510,11 +497,7 @@ component_cell_recovery <-
       )
 
 
-    if (!is.null(sample_levels)) {
-      plot_data1 <-
-        plot_data1 %>%
-        mutate(sample_alias = factor(sample_alias, sample_levels))
-    }
+    plot_data1 <- set_sample_levels(plot_data1, sample_levels)
 
     p1 <-
       plot_data1 %>%
@@ -611,12 +594,7 @@ component_node_edge_count <-
         "graph"
       )
 
-    if (!is.null(sample_levels)) {
-      plot_data <-
-        plot_data %>%
-        mutate(sample_alias = factor(sample_alias, sample_levels))
-    }
-
+    plot_data <- set_sample_levels(plot_data, sample_levels)
 
     p1 <-
       plot_data %>%
@@ -730,12 +708,7 @@ component_node_degree <-
       ) %>%
       mutate(type = str_remove(type, "_nodes_mean_degree"))
 
-
-    if (!is.null(sample_levels)) {
-      plot_data <-
-        plot_data %>%
-        mutate(sample_alias = factor(sample_alias, sample_levels))
-    }
+    plot_data <- set_sample_levels(plot_data, sample_levels)
 
     p <-
       plot_data %>%
@@ -789,11 +762,8 @@ component_crossing_edges <-
       qc_metrics_tables$crossing_edges %>%
       mutate(label = paste0(round(percent, 2), "%"))
 
-    if (!is.null(sample_levels)) {
-      plot_data <-
-        plot_data %>%
-        mutate(sample_alias = factor(sample_alias, sample_levels))
-    }
+    plot_data <- set_sample_levels(plot_data, sample_levels)
+
     p <-
       plot_data %>%
       ggplot(aes(sample_alias, percent, fill = type)) +
@@ -998,8 +968,8 @@ component_coreness <-
 #'
 #' @param object A processed data object containing marker abundance data.
 #' @param params A list of parameters, including control markers.
-#' @param metadata A metadata object containing sample information.
 #' @param sample_palette A color palette for the samples.
+#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots.
@@ -1009,8 +979,8 @@ component_coreness <-
 component_abundance_per_sample <- function(
   object,
   params,
-  metadata,
   sample_palette,
+  sample_levels = NULL,
   test_mode = FALSE
 ) {
   plot_data <-
@@ -1036,10 +1006,11 @@ component_abundance_per_sample <- function(
       marker = factor(marker, order_cd_markers(
         unique(marker),
         params$control_markers
-      )),
-      sample_alias = factor(sample_alias, levels = metadata$sample_alias)
+      ))
     ) %>%
     group_by(marker)
+
+  plot_data <- set_sample_levels(plot_data, sample_levels)
 
   plots <-
     plot_data %>%

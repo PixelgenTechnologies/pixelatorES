@@ -51,7 +51,6 @@ find_stage <-
 #'
 #' @param data_folder A character string specifying the path to the data folder.
 #' @param file_paths A character vector with file paths including all data files.
-#' @param metadata A data frame containing metadata with a column `sample_alias`.
 #' @param sample_aliases A named character vector mapping sample aliases to their actual names.
 #'
 #' @return A list containing two data frames: `data_files` and `qc_files`.
@@ -89,11 +88,6 @@ get_file_paths <-
         mutate(sample_alias = sample_aliases[sample_alias]) %>%
         filter(!is.na(sample_alias))
     }
-
-    all_files <-
-      all_files %>%
-      filter(sample_alias %in% metadata$sample_alias)
-
 
     # Filter for data and QC files
     data_files <-

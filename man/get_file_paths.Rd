@@ -11,8 +11,6 @@ get_file_paths(data_folder = NULL, file_paths = NULL, metadata, sample_aliases)
 
 \item{file_paths}{A character vector with file paths including all data files.}
 
-\item{metadata}{A data frame containing metadata with a column \code{sample_alias}.}
-
 \item{sample_aliases}{A named character vector mapping sample aliases to their actual names.}
 }
 \value{
