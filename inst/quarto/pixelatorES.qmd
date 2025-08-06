@@ -319,18 +319,13 @@ close_tabset()
 rm(sample_qc_metrics)
 ```
 
-### Dispersion
-
-Dispersion scores like Gini and Tau are measures of how the counts within a cell are distributed across markers. If a 
-cell only express a single marker, the dispersion will be 1, and if a cell expresses all markers and an exact equal 
-level, the dispersion will be 0. Dispersion scores can be used to assess the quality of the data and to identify 
-potential artifacts such as antibody aggregates. 
-
-
 ```{r}
-#| label: dispersion_plot
-pg_data <- dispersion_calculation(pg_data)
-component_dispersion_plot(pg_data, params)
+#| label: cell_processing
+#| include: false
+
+pg_data_processed <- process_data(pg_data, params)
+
+rm(pg_data)
 ```
 
 ## Cell annotation
@@ -416,29 +411,6 @@ component$celltype_composition_table
 
 ## Abundance 
 
-This plot summarizes the partitioning of variance in marker abundance across cell types and
-samples. For each marker, omega squared (ω²) quantifies the proportion of variance explained 
-by cell type identity (x-axis) and sample-related effects (y-axis, including sample and 
-sample × cell type interaction). A high ω² value for the cell type identity indicates that there
-are large differences in marker abundance between cell types, while a high ω² value for the 
-sample-related effects indicates that there are large differences in marker abundance between 
-samples; either for the whole sample, or for certain cell types. The dashed line represents the 
-boundary, as total ω² cannot exceed 1.
-
-```{r}
-#| label: abundance_anova
-#| results: 'asis'
-component <-
-  component_abundance_anova(pg_data_processed, params$mc_cores)
-
-tabset_figure_table(
-  component$variance_partition_plot,
-  component$anova_table,
-  level = 3
-)
-close_tabset()
-```
-
 ::: {.panel-tabset .nav-pills}
 
 ### Global 
@@ -478,28 +450,6 @@ proximity_scores <- filter_proximity_scores(pg_data_processed, params, sample_le
 
 ### Self-proximity 
 
-This plot summarizes the partitioning of variance in marker proximity score across cell types and
-samples. For each marker, omega squared (ω²) quantifies the proportion of variance explained 
-by cell type identity (x-axis) and sample-related effects (y-axis, including sample and 
-sample × cell type interaction). A high ω² value for the cell type identity indicates that there
-are large differences in marker proximity score between cell types, while a high ω² value for the 
-sample-related effects indicates that there are large differences in marker proximity score between 
-samples; either for the whole sample, or for certain cell types. The dashed line represents the 
-boundary, as total ω² cannot exceed 1.
-
-```{r}
-#| label: proximity_anova
-#| results: 'asis'
-component <-
-  component_proximity_anova(proximity_scores, params$mc_cores)
-
-tabset_figure_table(
-  component$variance_partition_plot,
-  component$anova_table,
-  level = 4
-)
-close_tabset()
-```
 ::: {.panel-tabset .nav-pills}
 
 #### Per marker
