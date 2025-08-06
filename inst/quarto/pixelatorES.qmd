@@ -5,11 +5,16 @@ format:
   html:
     theme: cerulean
     page-layout: full
+    toc: true
+    toc-location: left
+    toc-depth: 4
     embed-resources: true
-    code_folding: show
+    code-folding: show
     fig-width: 8
     fig-height: 5
     fig-dpi: 150
+    grid:
+      body-width: 900px
     css: styles.css
 knitr:
   opts_chunk:
