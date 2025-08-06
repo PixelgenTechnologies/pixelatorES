@@ -76,7 +76,7 @@ process_data <-
 #'
 #' @param pg_data_processed A Seurat object.
 #' @param params A list of parameters for filtering, including control markers.
-#' @param metadata A data frame containing metadata for the samples.
+#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #'
 #' @return A data frame of filtered proximity scores with additional metadata.
 #'
@@ -85,7 +85,7 @@ process_data <-
 filter_proximity_scores <- function(
   pg_data_processed,
   params,
-  metadata
+  sample_levels = NULL
 ) {
   # Set proximity score cutoff
   background_threshold_pct <-
@@ -118,10 +118,10 @@ filter_proximity_scores <- function(
       marker_2 = factor(marker_2, order_cd_markers(
         unique(marker_2),
         params$control_markers
-      )),
-      sample_alias = factor(sample_alias, levels = metadata$sample_alias),
-      condition = factor(condition, levels = unique(metadata$condition))
+      ))
     )
+
+  proximity_scores <- set_sample_levels(proximity_scores, sample_levels)
 
   return(proximity_scores)
 }

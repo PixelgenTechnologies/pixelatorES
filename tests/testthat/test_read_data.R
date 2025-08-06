@@ -29,12 +29,6 @@ test_that("File location works as expected", {
       "run_folder/pixelator/post_analysis/A_sample_S2.report.json"
     )
 
-  metadata <-
-    tibble(
-      sample_alias = c("S1", "S2"),
-      condition = c("cond1", "cond2")
-    )
-
   sample_aliases <-
     c(
       "A_sample_S1" = "S1",
@@ -65,7 +59,6 @@ test_that("File location works as expected", {
 
   expect_no_error(res <- get_file_paths(
     file_paths = file_paths,
-    metadata = metadata,
     sample_aliases = sample_aliases
   ))
 
@@ -240,7 +233,6 @@ test_that("File reading works as expected", {
   expect_no_error(data_paths <-
     get_file_paths(
       data_folder = test_data_folder(),
-      metadata = sample_sheet,
       sample_aliases = sample_sheet %>%
         select(sample, sample_alias) %>%
         deframe()

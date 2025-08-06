@@ -7,8 +7,8 @@
 component_abundance_per_sample(
   object,
   params,
-  metadata,
   sample_palette,
+  sample_levels = NULL,
   test_mode = FALSE
 )
 }
@@ -17,9 +17,9 @@ component_abundance_per_sample(
 
 \item{params}{A list of parameters, including control markers.}
 
-\item{metadata}{A metadata object containing sample information.}
-
 \item{sample_palette}{A color palette for the samples.}
+
+\item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
 
 \item{test_mode}{A boolean indicating whether to run in test mode (default is FALSE).}
 }

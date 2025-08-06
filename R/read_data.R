@@ -51,7 +51,6 @@ find_stage <-
 #'
 #' @param data_folder A character string specifying the path to the data folder.
 #' @param file_paths A character vector with file paths including all data files.
-#' @param metadata A data frame containing metadata with a column `sample_alias`.
 #' @param sample_aliases A named character vector mapping sample aliases to their actual names.
 #'
 #' @return A list containing two data frames: `data_files` and `qc_files`.
@@ -59,10 +58,9 @@ find_stage <-
 #' @export
 #'
 get_file_paths <-
-  function(data_folder = NULL, file_paths = NULL, metadata, sample_aliases) {
+  function(data_folder = NULL, file_paths = NULL, sample_aliases) {
     pixelatorR:::assert_single_value(data_folder, type = "string", allow_null = TRUE)
     pixelatorR:::assert_vector(file_paths, "character", allow_null = TRUE)
-    pixelatorR:::assert_class(metadata, "data.frame")
     pixelatorR:::assert_vector(sample_aliases, "character", allow_null = TRUE)
     pixelatorR:::assert_vector(names(sample_aliases), "character", allow_null = FALSE)
 
@@ -89,11 +87,6 @@ get_file_paths <-
         mutate(sample_alias = sample_aliases[sample_alias]) %>%
         filter(!is.na(sample_alias))
     }
-
-    all_files <-
-      all_files %>%
-      filter(sample_alias %in% metadata$sample_alias)
-
 
     # Filter for data and QC files
     data_files <-
@@ -449,7 +442,6 @@ get_test_qc_metrics <-
     data_paths <-
       get_file_paths(
         data_folder = test_data_folder(),
-        metadata = sample_sheet,
         sample_aliases = sample_sheet %>%
           select(sample, sample_alias) %>%
           deframe()
