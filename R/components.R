@@ -1811,3 +1811,196 @@ component_annotation <-
       celltype_numbers_table = tabl2
     ))
   }
+
+
+
+#' Create the component sequencing saturation
+#'
+#' This function creates a component that visualizes the sequencing saturation
+#' for each sample.
+#'
+#' @param qc_metrics_tables A list of QC metrics tables.
+#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
+#'
+#' @return A list containing plots and a table summarizing the sequencing saturation.
+#'
+#' @export
+#'
+component_sequencing_saturation <-
+  function(qc_metrics_tables, sample_levels = NULL) {
+    p1 <-
+      qc_metrics_tables$seq_saturation %>%
+      ggplot(aes(sample_alias, fraction_valid_reads)) +
+      geom_col(fill = "#DAD6D7") +
+      geom_text(aes(label = paste0(round(fraction_valid_reads, 3), " %")),
+        vjust = -.1,
+        size = 3
+      ) +
+      scale_y_continuous(
+        expand = expansion(c(0, 0.15)),
+        limits = c(0, 100),
+        breaks = c(0, 25, 50, 75, 100)
+      ) +
+      theme_bw() +
+      theme(
+        axis.text.x = element_text(angle = 60, hjust = 1),
+        panel.grid = element_blank()
+      ) +
+      labs(
+        x = NULL, y = "Valid reads [%]",
+        title = "Fraction of valid reads",
+        subtitle = "Valid reads from total reads",
+        caption = expression(~ italic(frac("# Valid reads", "# Total reads")))
+      )
+
+    p2 <-
+      qc_metrics_tables$seq_saturation %>%
+      ggplot(aes(sample_alias, fraction_graph_reads)) +
+      geom_col(fill = "#DAD6D7") +
+      geom_text(aes(label = paste0(round(fraction_graph_reads, 3), " %")),
+        vjust = -.1,
+        size = 3
+      ) +
+      scale_y_continuous(
+        expand = expansion(c(0, 0.15)),
+        limits = c(0, 100),
+        breaks = c(0, 25, 50, 75, 100)
+      ) +
+      theme_bw() +
+      theme(
+        axis.text.x = element_text(angle = 60, hjust = 1),
+        panel.grid = element_blank()
+      ) +
+      labs(
+        x = NULL, y = "Graph reads [%]",
+        title = "Fraction of graph reads",
+        subtitle = "Reads in valid components from total reads",
+        caption = expression(~ italic(frac("# Graph reads", "# Total reads")))
+      )
+
+    p3 <-
+      qc_metrics_tables$seq_saturation %>%
+      ggplot(aes(sample_alias, valid_reads_saturation)) +
+      geom_col(fill = "#DAD6D7") +
+      geom_text(aes(label = paste0(round(valid_reads_saturation, 3), " %")),
+        vjust = -.1,
+        size = 3
+      ) +
+      scale_y_continuous(
+        expand = expansion(c(0, 0.15)),
+        limits = c(0, 100),
+        breaks = c(0, 25, 50, 75, 100)
+      ) +
+      theme_bw() +
+      theme(
+        axis.text.x = element_text(angle = 60, hjust = 1),
+        panel.grid = element_blank()
+      ) +
+      labs(
+        x = NULL, y = "Sequencing saturation [%]",
+        title = "Valid read saturation",
+        subtitle = "Redundancy in valid reads",
+        caption = expression(~ italic("Saturation" == 1 -
+          frac(
+            "# Deduped valid reads",
+            "# Valid reads"
+          )))
+      )
+
+    p4 <-
+      qc_metrics_tables$seq_saturation %>%
+      ggplot(aes(sample_alias, graph_edge_saturation)) +
+      geom_col(fill = "#DAD6D7") +
+      geom_text(aes(label = paste0(round(graph_edge_saturation, 3), " %")),
+        vjust = -.1,
+        size = 3
+      ) +
+      scale_y_continuous(
+        expand = expansion(c(0, 0.15)),
+        limits = c(0, 100),
+        breaks = c(0, 25, 50, 75, 100)
+      ) +
+      theme_bw() +
+      theme(
+        axis.text.x = element_text(angle = 60, hjust = 1),
+        panel.grid = element_blank()
+      ) +
+      labs(
+        x = NULL, y = "Sequencing saturation [%]",
+        title = "Graph edge saturation",
+        subtitle = "Redundancy in graph reads",
+        caption = expression(~ italic("Saturation" == 1 -
+          frac(
+            "# Graph edges",
+            "# Graph reads"
+          )))
+      )
+
+    p5 <-
+      qc_metrics_tables$seq_saturation %>%
+      ggplot(aes(sample_alias, graph_node_saturation)) +
+      geom_col(fill = "#DAD6D7") +
+      geom_text(aes(label = paste0(round(graph_node_saturation, 3), " %")),
+        vjust = -.1,
+        size = 3
+      ) +
+      scale_y_continuous(
+        expand = expansion(c(0, 0.15)),
+        limits = c(0, 100),
+        breaks = c(0, 25, 50, 75, 100)
+      ) +
+      theme_bw() +
+      theme(
+        axis.text.x = element_text(angle = 60, hjust = 1),
+        panel.grid = element_blank()
+      ) +
+      labs(
+        x = NULL, y = "Sequencing saturation [%]",
+        title = "Graph node saturation",
+        subtitle = "Redundancy in graph proteins",
+        caption = expression(~ italic("Saturation" == 1 -
+          frac(
+            "# Graph proteins",
+            "# Graph reads"
+          )))
+      )
+
+    tabl <-
+      qc_metrics_tables$seq_saturation %>%
+      arrange(sample_alias) %>%
+      mutate(across(c(
+        valid_reads_saturation, graph_node_saturation,
+        graph_edge_saturation, fraction_valid_reads,
+        fraction_graph_reads
+      ), ~ round(., 3))) %>%
+      mutate(across(
+        c(
+          graph_proteins, total_reads, valid_reads,
+          deduped_valid_reads, graph_edges
+        ),
+        . %>%
+          `/`(1e6) %>%
+          round(3)
+      )) %>%
+      select(
+        `Sample ID` = sample_alias,
+        `Protein molecules [M]` = graph_proteins,
+        `Total reads [M]` = total_reads,
+        `Valid reads [M]` = valid_reads,
+        `Deduped valid reads [M]` = deduped_valid_reads,
+        `Total edges [M]` = graph_edges,
+        `Fraction valid reads [%]` = fraction_valid_reads,
+        `Fraction graph reads [%]` = fraction_graph_reads,
+        `Valid reads saturation [%]` = valid_reads_saturation,
+        `Graph edge saturation [%]` = graph_edge_saturation,
+        `Graph node saturation [%]` = graph_node_saturation
+      ) %>%
+      style_table(caption = "Sequencing saturation", interactive = FALSE)
+
+    return(list(
+      plots = list(
+        p1, p2, p3, p4, p5
+      ),
+      table = tabl
+    ))
+  }
