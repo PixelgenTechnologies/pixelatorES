@@ -10,6 +10,7 @@ draw_quantiles(
   linewidth = 1,
   color = "gray20",
   facet_var = NULL,
+  use_real_quantile = TRUE,
   ...
 )
 }
@@ -23,6 +24,8 @@ draw_quantiles(
 \item{color}{The color of the quantile lines (default is "gray20").}
 
 \item{facet_var}{An optional variable to facet the plot by (default is NULL).}
+
+\item{use_real_quantile}{Logical indicating whether to use the actual quantile values (default is TRUE).}
 
 \item{...}{Additional arguments passed to \code{geom_segment}.}
 }

@@ -485,10 +485,6 @@ plot_violin <- function(
     p <- p +
       scale_y_continuous(expand = expand)
   }
-  if (use_log10) {
-    p <- p +
-      scale_y_log10(expand = expand)
-  }
   if (summarize) {
     plot_data_sum <-
       plot_data %>%
@@ -536,6 +532,10 @@ plot_violin <- function(
         facet_var = facet_var
       )
   }
+  if (use_log10) {
+    p <- p +
+      scale_y_log10(expand = expand)
+  }
 
 
   p <- p +
@@ -576,6 +576,7 @@ plot_violin <- function(
 #' @param linewidth The width of the quantile lines (default is 1).
 #' @param color The color of the quantile lines (default is "gray20").
 #' @param facet_var An optional variable to facet the plot by (default is NULL).
+#' @param use_real_quantile Logical indicating whether to use the actual quantile values (default is TRUE).
 #' @param ... Additional arguments passed to `geom_segment`.
 #'
 #' @return A ggplot object with quantile lines added to the violin plot.
@@ -589,6 +590,7 @@ draw_quantiles <-
     linewidth = 1,
     color = "gray20",
     facet_var = NULL,
+    use_real_quantile = TRUE,
     ...
   ) {
     pixelatorR:::assert_class(p, "ggplot")
@@ -598,6 +600,7 @@ draw_quantiles <-
     pixelatorR:::assert_single_value(color, "string")
     pixelatorR:::assert_valid_color(color)
     pixelatorR:::assert_single_value(facet_var, "string", allow_null = TRUE)
+    pixelatorR:::assert_single_value(use_real_quantile, "bool")
 
     build <- ggplot_build(p)
     violin_data <- build$data[[1]]
@@ -613,8 +616,29 @@ draw_quantiles <-
         # Create approximate cumulative density to actual density function
         ecdf <- stats::approxfun(dens, .x$y, ties = "ordered")
 
-        # Get density at quantile
-        ys <- ecdf(draw_quantiles)
+        # Get quantile
+        if (use_real_quantile) {
+          # Use the actual quantile values
+          mask <-
+            unclass(factor(p$data[[as_label(p$mapping$x)]])) == .y$x
+
+          if (!is.null(facet_var)) {
+            mask <-
+              mask &&
+              unclass(factor(p$data[[facet_var]])) == .y$PANEL
+          }
+
+          ys <-
+            stats::quantile(
+              p$data[[as_label(p$mapping$y)]][mask],
+              probs = draw_quantiles,
+              na.rm = TRUE
+            )
+        } else {
+          # Use the quantiles from the density distribution
+          ys <- ecdf(draw_quantiles)
+        }
+
 
         # Get violin width at quantile and coordinates
         bind_cols(

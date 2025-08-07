@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `draw_quantiles` now works with `facet_var` in `plot_violin`.
 - `read_samplesheet` will now work when a sample consists of concatenated fastq files.
+- `draw_quantiles` now works with log scale.
+- `draw_quantiles` now plots the quantile at the quantile of the data rather than of the density function (note: which is default of ggplot2).
 
 ## [0.3.0] 2025-08-06
 
