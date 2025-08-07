@@ -3,7 +3,7 @@
 # Exit on error
 set -e
 
-CONTAINER_IMAGE="ghcr.io/pixelgentechnologies/pixelatorES:main" # Default container image
+CONTAINER_IMAGE="ghcr.io/pixelgentechnologies/pixelatores:main" # Default container image
 MOUNT_DIRS=()
 OUTPUT_PATH=""
 CSV_FILE=""
