@@ -532,8 +532,8 @@ plot_violin <- function(
     p <-
       p +
       draw_quantiles(p,
-                     draw_quantiles = draw_quantiles,
-                     facet_var = facet_var
+        draw_quantiles = draw_quantiles,
+        facet_var = facet_var
       )
   }
 
@@ -606,7 +606,6 @@ draw_quantiles <-
       violin_data %>%
       group_by(x, PANEL) %>%
       group_map(~ {
-
         .x <-
           bind_cols(.y, .x)
         # Get density distribution
@@ -618,22 +617,23 @@ draw_quantiles <-
         ys <- ecdf(draw_quantiles)
 
         # Get violin width at quantile and coordinates
-        bind_cols(.y,
-                  tibble(
-                    y = ys,
-                    violinwidth = with(
-                      .x,
-                      stats::approxfun(
-                        y,
-                        violinwidth *
-                          (xmax - xmin)
-                      )
-                    )(ys)
-                  ) %>%
-                    mutate(
-                      xmin = .x$x[1] - violinwidth / 2,
-                      xmax = .x$x[1] + violinwidth / 2,
-                    )
+        bind_cols(
+          .y,
+          tibble(
+            y = ys,
+            violinwidth = with(
+              .x,
+              stats::approxfun(
+                y,
+                violinwidth *
+                  (xmax - xmin)
+              )
+            )(ys)
+          ) %>%
+            mutate(
+              xmin = .x$x[1] - violinwidth / 2,
+              xmax = .x$x[1] + violinwidth / 2,
+            )
         )
       }) %>%
       bind_rows() %>%
@@ -643,8 +643,10 @@ draw_quantiles <-
       # If a facet variable is provided, add it to the quantile data
       quantile_data <-
         quantile_data %>%
-        mutate(facet = factor(levels(p$data[[facet_var]])[PANEL],
-                              levels(p$data[[facet_var]]))) %>%
+        mutate(facet = factor(
+          levels(p$data[[facet_var]])[PANEL],
+          levels(p$data[[facet_var]])
+        )) %>%
         rename(!!facet_var := facet)
     }
 

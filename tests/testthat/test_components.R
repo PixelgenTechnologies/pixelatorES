@@ -2,7 +2,6 @@ pg_data <- get_test_data()
 sample_qc_metrics <- get_test_qc_metrics()
 
 test_that("Components work as expected", {
-
   # component_cell_recovery
   expect_no_error(component <- component_cell_recovery(sample_qc_metrics, sample_levels = NULL))
 
@@ -43,7 +42,9 @@ test_that("Components work as expected", {
 
   temp[["l1_annotation_summary"]] <- sample(
     c("CD4 T", "CD8 T", "B"),
-    ncol(temp), replace = TRUE)
+    ncol(temp),
+    replace = TRUE
+  )
   temp[["seurat_clusters"]] <- 1
 
   expect_no_error(
@@ -52,9 +53,9 @@ test_that("Components work as expected", {
       params = list(
         control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
       ),
-      sample_palette = c("red", "black"))
+      sample_palette = c("red", "black")
+    )
   )
 
   expect_s3_class(component[[1]], "ggplot")
-
 })
