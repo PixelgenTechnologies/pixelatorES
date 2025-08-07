@@ -215,10 +215,6 @@ test_that("File reading works as expected", {
     structure(
       list(
         sample = c("S01_PBMC_unstimulated_S1", "S02_PHA_S2"),
-        design = c(NA, NA),
-        panel = c(NA, NA),
-        fastq_1 = c(NA, NA),
-        fastq_2 = c(NA, NA),
         sample_alias = c("S1", "S2"),
         condition = c("PBMC", "PHA")
       ),
