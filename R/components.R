@@ -443,7 +443,7 @@ component_sequencing_reads_per_cell <-
       plot_violin(
         x = "sample_alias",
         y = "reads_in_component",
-        y_label = "Reads per cell",
+        y_label = "Reads per cell (After filtering)",
         round = 1,
         use_1k = TRUE
       )
@@ -1080,6 +1080,7 @@ component_abundance_per_celltype <- function(
         as_tibble(rownames = "cell_id"),
       by = "cell_id"
     ) %>%
+    filter(l1_annotation_summary %in% displayed_cell_types) %>%
     mutate(
       marker = factor(marker, order_cd_markers(
         unique(marker),
@@ -1137,8 +1138,9 @@ component_proximity_selected <- function(
 ) {
   plots <-
     processed_data %>%
+    filter(l1_annotation_summary %in% displayed_cell_types) %>%
     group_split() %>%
-    set_names(group_keys(processed_data)$contrast) %>%
+    set_names(group_keys(processed_data)$marker_1) %>%
     {
       if (test_mode) {
         head(., n = 3)
@@ -1150,7 +1152,7 @@ component_proximity_selected <- function(
       g_data %>%
         complete(
           sample_alias = levels(g_data$sample_alias),
-          l1_annotation_summary = c("CD4 T", "CD8 T", "NK", "Mono", "B"),
+          l1_annotation_summary = displayed_cell_types,
           fill = setNames(list(NA), proximity_score)
         ) %>%
         ggplot(aes(x = sample_alias, y = !!sym(proximity_score))) +
@@ -1181,7 +1183,7 @@ component_proximity_selected <- function(
           panel.grid = element_blank()
         ) +
         labs(
-          title = g_data$contrast[1],
+          title = g_data$marker_1[1],
           x = "Sample ID",
           y = ifelse(proximity_score == "join_count_z",
             "Z-score",

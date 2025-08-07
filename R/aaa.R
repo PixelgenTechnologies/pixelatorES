@@ -38,7 +38,7 @@ globalVariables(
     "total_reads", "type", "V1", "V2", "valid_reads", "valid_reads_saturation",
     "value", "z", "Cell annotation", "cell_annotation",
     "doublet_prediction", "frac", "normcount", "seurat_clusters", "violinwidth",
-    "y", "xmin", "xmax", "x"
+    "y", "xmin", "xmax", "x", "facet", "PANEL"
   ),
   package = "pixelatorES",
   add = TRUE

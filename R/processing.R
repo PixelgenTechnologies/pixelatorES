@@ -49,7 +49,7 @@ process_data <-
         FindClusters(random.seed = 1, resolution = params$clustering_resolution)
     }
 
-    if (annotate_cells && !params$test_mode) {
+    if (annotate_cells) {
       reference <- read_annotation_reference()
       reference$l1_annotation <- reference$celltype.l1
       reference$l2_annotation <- reference$celltype.l2

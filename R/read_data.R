@@ -391,7 +391,9 @@ read_samplesheet <-
         condition = col_character()
       )
     ) %>%
-      mutate(sample_alias = ifelse(is.na(sample_alias), sample, sample_alias))
+      select(sample, sample_alias, condition) %>%
+      mutate(sample_alias = ifelse(is.na(sample_alias), sample, sample_alias)) %>%
+      distinct()
   }
 
 
@@ -461,22 +463,28 @@ get_test_qc_metrics <-
 #'
 #' Generates a minimal Seurat object for testing purposes.
 #'
+#' @param concatenate A logical indicating whether to concatenate the data 6 times (default is TRUE).
+#'
 #' @return A Seurat object containing test data with normalized and scaled data, PCA results, and merged layers.
 #'
 #' @export
 #'
 get_test_data <-
-  function() {
+  function(
+    concatenate = TRUE
+  ) {
     seur <-
       minimal_pna_pxl_file() %>%
       ReadPNA_Seurat(load_proximity_scores = FALSE)
 
-    seur <-
-      merge(
-        seur,
-        y = list(seur, seur, seur, seur, seur)
-      ) %>%
-      JoinLayers(verbose = FALSE)
+    if (concatenate) {
+      seur <-
+        merge(
+          seur,
+          y = list(seur, seur, seur, seur, seur)
+        ) %>%
+        JoinLayers(verbose = FALSE)
+    }
 
     seur[[]]$sample_alias <-
       "S1"
