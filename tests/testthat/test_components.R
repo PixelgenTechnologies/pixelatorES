@@ -35,4 +35,26 @@ test_that("Components work as expected", {
   expect_s3_class(component$plot, "ggplot")
   expect_s3_class(component$table, "datatables")
 
+  # component_abundance_per_celltype
+
+  temp <-
+    pg_data %>%
+    subset(features = rownames(pg_data)[1:3])
+
+  temp[["l1_annotation_summary"]] <- sample(
+    c("CD4 T", "CD8 T", "B"),
+    ncol(temp), replace = TRUE)
+  temp[["seurat_clusters"]] <- 1
+
+  expect_no_error(
+    component <- component_abundance_per_celltype(
+      temp,
+      params = list(
+        control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
+      ),
+      sample_palette = c("red", "black"))
+  )
+
+  expect_s3_class(component[[1]], "ggplot")
+
 })

@@ -4,7 +4,14 @@
 \alias{draw_quantiles}
 \title{Draw quantiles on a violin plot}
 \usage{
-draw_quantiles(p, draw_quantiles = 0.5, linewidth = 1, color = "gray20", ...)
+draw_quantiles(
+  p,
+  draw_quantiles = 0.5,
+  linewidth = 1,
+  color = "gray20",
+  facet_var = NULL,
+  ...
+)
 }
 \arguments{
 \item{p}{A ggplot object representing the violin plot.}
@@ -14,6 +21,8 @@ draw_quantiles(p, draw_quantiles = 0.5, linewidth = 1, color = "gray20", ...)
 \item{linewidth}{The width of the quantile lines (default is 1).}
 
 \item{color}{The color of the quantile lines (default is "gray20").}
+
+\item{facet_var}{An optional variable to facet the plot by (default is NULL).}
 
 \item{...}{Additional arguments passed to \code{geom_segment}.}
 }

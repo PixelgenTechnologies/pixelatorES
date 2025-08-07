@@ -473,12 +473,9 @@ plot_violin <- function(
           )
       }
     }
-  if (!is.null(draw_quantiles) && is.null(facet_var)) {
-    p <-
-      p +
-      draw_quantiles(p,
-        draw_quantiles = draw_quantiles
-      )
+
+  if (!is.null(facet_var)) {
+    p <- p + facet_grid(as.formula(paste("~", facet_var)))
   }
   if (use_pct && !use_log10) {
     p <- p +
@@ -527,11 +524,19 @@ plot_violin <- function(
         size = 3
       )
   }
-
   if (!is.null(fill)) {
     p <- p +
       scale_fill_manual(values = palette)
   }
+  if (!is.null(draw_quantiles)) {
+    p <-
+      p +
+      draw_quantiles(p,
+                     draw_quantiles = draw_quantiles,
+                     facet_var = facet_var
+      )
+  }
+
 
   p <- p +
     theme_bw() +
@@ -556,10 +561,6 @@ plot_violin <- function(
       )
   }
 
-  if (!is.null(facet_var)) {
-    p <- p + facet_grid(as.formula(paste("~", facet_var)))
-  }
-
   return(p)
 }
 
@@ -574,6 +575,7 @@ plot_violin <- function(
 #' @param draw_quantiles A numeric vector of quantiles to draw (default is 0.5, which represents the median).
 #' @param linewidth The width of the quantile lines (default is 1).
 #' @param color The color of the quantile lines (default is "gray20").
+#' @param facet_var An optional variable to facet the plot by (default is NULL).
 #' @param ... Additional arguments passed to `geom_segment`.
 #'
 #' @return A ggplot object with quantile lines added to the violin plot.
@@ -586,44 +588,65 @@ draw_quantiles <-
     draw_quantiles = 0.5,
     linewidth = 1,
     color = "gray20",
+    facet_var = NULL,
     ...
   ) {
+    pixelatorR:::assert_class(p, "ggplot")
+    pixelatorR:::assert_single_value(draw_quantiles, "numeric", allow_null = TRUE)
+    pixelatorR:::assert_single_value(linewidth, "numeric")
+    pixelatorR:::assert_within_limits(linewidth, c(0, Inf))
+    pixelatorR:::assert_single_value(color, "string")
+    pixelatorR:::assert_valid_color(color)
+    pixelatorR:::assert_single_value(facet_var, "string", allow_null = TRUE)
+
     build <- ggplot_build(p)
     violin_data <- build$data[[1]]
 
     quantile_data <-
       violin_data %>%
-      group_by(x) %>%
-      group_split() %>%
-      lapply(function(violin_data) {
+      group_by(x, PANEL) %>%
+      group_map(~ {
+
+        .x <-
+          bind_cols(.y, .x)
         # Get density distribution
-        dens <- cumsum(violin_data$density) / sum(violin_data$density)
+        dens <- cumsum(.x$density) / sum(.x$density)
         # Create approximate cumulative density to actual density function
-        ecdf <- stats::approxfun(dens, violin_data$y, ties = "ordered")
+        ecdf <- stats::approxfun(dens, .x$y, ties = "ordered")
 
         # Get density at quantile
         ys <- ecdf(draw_quantiles)
 
         # Get violin width at quantile and coordinates
-        tibble(
-          y = ys,
-          violinwidth = with(
-            violin_data,
-            stats::approxfun(
-              y,
-              violinwidth *
-                (xmax - xmin)
-            )
-          )(ys)
-        ) %>%
-          mutate(
-            x = violin_data$x[1],
-            xmin = violin_data$x[1] - violinwidth / 2,
-            xmax = violin_data$x[1] + violinwidth / 2,
-          )
+        bind_cols(.y,
+                  tibble(
+                    y = ys,
+                    violinwidth = with(
+                      .x,
+                      stats::approxfun(
+                        y,
+                        violinwidth *
+                          (xmax - xmin)
+                      )
+                    )(ys)
+                  ) %>%
+                    mutate(
+                      xmin = .x$x[1] - violinwidth / 2,
+                      xmax = .x$x[1] + violinwidth / 2,
+                    )
+        )
       }) %>%
       bind_rows() %>%
-      select(x, y, xmin, xmax)
+      select(x, y, PANEL, xmin, xmax)
+
+    if (!is.null(facet_var)) {
+      # If a facet variable is provided, add it to the quantile data
+      quantile_data <-
+        quantile_data %>%
+        mutate(facet = factor(levels(p$data[[facet_var]])[PANEL],
+                              levels(p$data[[facet_var]]))) %>%
+        rename(!!facet_var := facet)
+    }
 
     geom_segment(
       data = quantile_data,
