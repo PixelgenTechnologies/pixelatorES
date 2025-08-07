@@ -1,6 +1,6 @@
 Package: pixelatorES
 Title: Experiment Summary
-Version: 0.3.0
+Version: 0.3.1
 Authors@R: 
     c(
     person("Max", "Karlsson", , "max.karlsson@pixelgen.com", role = c("aut", "cre"),

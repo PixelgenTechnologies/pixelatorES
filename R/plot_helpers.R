@@ -624,8 +624,8 @@ draw_quantiles <-
 
           if (!is.null(facet_var)) {
             mask <-
-              mask &&
-                unclass(factor(p$data[[facet_var]])) == .y$PANEL
+              mask &
+                (unclass(factor(p$data[[facet_var]])) == .y$PANEL)
           }
 
           ys <-
