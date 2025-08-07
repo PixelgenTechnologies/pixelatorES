@@ -10,6 +10,7 @@
 
 # Test data
 data/
+/tests/testthat/Rplots.pdf
 
 # User-specific files
 .Ruserdata
