@@ -1,3 +1,4 @@
+library(dplyr)
 pg_data <- get_test_data()
 pg_data_small <- get_test_data(concatenate = FALSE)
 sample_qc_metrics <- get_test_qc_metrics()
