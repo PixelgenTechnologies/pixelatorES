@@ -7,7 +7,6 @@ qc_metrics_tables <-
   get_qc_metrics(pg_data, sample_qc_metrics[1], sample_sheet)
 
 test_that("Components work as expected", {
-
   # component_control_markers
   expect_no_error(
     component <- component_control_markers(pg_data)
