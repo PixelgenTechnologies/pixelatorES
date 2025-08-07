@@ -472,7 +472,7 @@ get_test_qc_metrics <-
 get_test_data <-
   function(
     concatenate = TRUE
-    ) {
+  ) {
     seur <-
       minimal_pna_pxl_file() %>%
       ReadPNA_Seurat(load_proximity_scores = FALSE)

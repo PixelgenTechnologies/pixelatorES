@@ -73,11 +73,12 @@ test_that("Components work as expected", {
   temp[["condition"]] <- "good"
 
   proximity_scores <-
-
-    filter_proximity_scores(temp,
-                            list(
-                              control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
-                            )) %>%
+    filter_proximity_scores(
+      temp,
+      list(
+        control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
+      )
+    ) %>%
     filter(as.character(marker_1) == as.character(marker_2)) %>%
     group_by(marker_1)
   expect_no_error(
@@ -99,5 +100,4 @@ test_that("Components work as expected", {
   )
 
   expect_s3_class(component[[1]], "ggplot")
-
 })

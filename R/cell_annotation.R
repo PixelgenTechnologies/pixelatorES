@@ -1,4 +1,3 @@
-
 #' Cell types to display
 #'
 #' This vector contains the cell types to be displayed in the ES, when filtering is applied.
