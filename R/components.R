@@ -443,7 +443,7 @@ component_sequencing_reads_per_cell <-
       plot_violin(
         x = "sample_alias",
         y = "reads_in_component",
-        y_label = "Reads per cell",
+        y_label = "Reads per cell (After filtering)",
         round = 1,
         use_1k = TRUE
       )

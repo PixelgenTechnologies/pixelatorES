@@ -21,4 +21,10 @@ test_that("Components work as expected", {
 
   for (plot in component$plots) expect_s3_class(plot, "ggplot")
   expect_s3_class(component$table, "datatables")
+
+  # component_sequencing_reads_per_cell
+  expect_no_error(component <- component_sequencing_reads_per_cell(pg_data))
+  expect_s3_class(component$plot, "ggplot")
+  expect_s3_class(component$table, "datatables")
+
 })
