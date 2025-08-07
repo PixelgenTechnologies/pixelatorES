@@ -14,6 +14,14 @@ test_that("Components work as expected", {
   expect_s3_class(component$plot, "ggplot")
   expect_s3_class(component$table, "datatables")
 
+  # component_node_edge_count
+  expect_no_error(
+    component <- component_node_edge_count(sample_qc_metrics, sample_levels = NULL)
+  )
+
+  for (plot in component$plots) expect_s3_class(plot, "ggplot")
+  expect_s3_class(component$table, "datatables")
+
   # component_sequencing_saturation
   expect_no_error(
     component <- component_sequencing_saturation(qc_metrics_tables, sample_levels = NULL)
