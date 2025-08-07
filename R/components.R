@@ -1138,6 +1138,7 @@ component_proximity_selected <- function(
 ) {
   plots <-
     processed_data %>%
+    filter(l1_annotation_summary %in% displayed_cell_types) %>%
     group_split() %>%
     set_names(group_keys(processed_data)$contrast) %>%
     {
@@ -1151,7 +1152,7 @@ component_proximity_selected <- function(
       g_data %>%
         complete(
           sample_alias = levels(g_data$sample_alias),
-          l1_annotation_summary = c("CD4 T", "CD8 T", "NK", "Mono", "B"),
+          l1_annotation_summary = displayed_cell_types,
           fill = setNames(list(NA), proximity_score)
         ) %>%
         ggplot(aes(x = sample_alias, y = !!sym(proximity_score))) +

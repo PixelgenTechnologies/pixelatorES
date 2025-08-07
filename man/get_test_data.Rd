@@ -4,7 +4,10 @@
 \alias{get_test_data}
 \title{Get test data}
 \usage{
-get_test_data()
+get_test_data(concatenate = TRUE)
+}
+\arguments{
+\item{concatenate}{A logical indicating whether to concatenate the data 6 times (default is TRUE).}
 }
 \value{
 A Seurat object containing test data with normalized and scaled data, PCA results, and merged layers.

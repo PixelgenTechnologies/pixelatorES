@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `displayed_cell_types` vector to hold cell type levels to plot, when plotted cell types should be restricted to a smaller selection.
+
+### Updates
+- `component_proximity_selected` and `component_abundance_per_celltype` now only plot the displayed cell types.
+
+### Fixed
+- `draw_quantiles` now works with `facet_var` in `plot_violin`.
+- `read_samplesheet` will now work when a sample consists of concatenated fastq files.
+
 ## [0.3.0] 2025-08-06
 
 ### Added

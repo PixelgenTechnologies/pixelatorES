@@ -6,7 +6,7 @@
 #' @export
 #'
 displayed_cell_types <-
-  c("B", "CD4 T", "CD8 T", "Mono", "NK")
+  c("CD4 T", "CD8 T", "NK", "Mono", "B")
 
 #' Annotate cells in a Seurat object using a reference dataset
 #'
