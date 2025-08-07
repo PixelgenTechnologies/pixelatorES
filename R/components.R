@@ -1080,6 +1080,7 @@ component_abundance_per_celltype <- function(
         as_tibble(rownames = "cell_id"),
       by = "cell_id"
     ) %>%
+    filter(l1_annotation_summary %in% displayed_cell_types) %>%
     mutate(
       marker = factor(marker, order_cd_markers(
         unique(marker),

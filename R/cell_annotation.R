@@ -1,3 +1,13 @@
+
+#' Cell types to display
+#'
+#' This vector contains the cell types to be displayed in the ES, when filtering is applied.
+#'
+#' @export
+#'
+displayed_cell_types <-
+  c("B", "CD4 T", "CD8 T", "Mono", "NK")
+
 #' Annotate cells in a Seurat object using a reference dataset
 #'
 #' This function annotates cells in a Seurat object using a reference dataset.
