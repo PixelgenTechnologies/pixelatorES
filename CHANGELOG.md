@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] 2025-08-07
+
 ### Added
 - `displayed_cell_types` vector to hold cell type levels to plot, when plotted cell types should be restricted to a smaller selection.
 
@@ -16,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `draw_quantiles` now works with `facet_var` in `plot_violin`.
 - `read_samplesheet` will now work when a sample consists of concatenated fastq files.
+- `draw_quantiles` now works with log scale.
+- `draw_quantiles` now plots the quantile at the quantile of the data rather than of the density function (note: which is default of ggplot2).
+- `pixelatorES.qmd` file is now runnable with the output of `nf-core/pixelator`.
 
 ## [0.3.0] 2025-08-06
 

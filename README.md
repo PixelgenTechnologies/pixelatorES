@@ -123,7 +123,7 @@ If data files are located in multiple separate folders, you can specify multiple
 bash run_ES_docker.sh -d <data directory 1> -d <data directory 2> -n <output name> -s <sample sheet>
 ```
 
-If you want to run with a specific container image you can use the `-i` flag to specify the image name (e.g. `ghcr.io/pixelgentechnologies/pixelatorES:pr-15`):
+If you want to run with a specific container image you can use the `-i` flag to specify the image name (e.g. `ghcr.io/pixelgentechnologies/pixelatores:pr-15`):
 
 ```
 bash run_ES_docker.sh -d <data directory> -n <output name> -s <sample sheet> -i <image name>

@@ -7,6 +7,15 @@ qc_metrics_tables <-
   get_qc_metrics(pg_data, sample_qc_metrics[1], sample_sheet)
 
 test_that("Components work as expected", {
+  # component_control_markers
+  expect_no_error(
+    component <- component_control_markers(pg_data)
+  )
+
+  expect_s3_class(component$p1, "ggplot")
+  expect_s3_class(component$p2, "ggplot")
+  expect_s3_class(component$tabl, "datatables")
+
   # component_cell_recovery
   expect_no_error(component <- component_cell_recovery(sample_qc_metrics, sample_levels = NULL))
 

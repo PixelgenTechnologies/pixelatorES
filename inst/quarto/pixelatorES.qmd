@@ -1,6 +1,6 @@
 ---
 title: "Experiment Summary"
-subtitle: "v0.3.0" 
+subtitle: "v0.3.1" 
 format:
   html:
     theme: cerulean
@@ -222,26 +222,6 @@ close_tabset()
 
 
 ### Graph metrics
-
-#### A/B node degree 
-
-The mean degree of A and B nodes. 
-
-```{r}
-#| label: qc_metrics_ab_node_degree
-#| results: 'asis'
-component <-
-  component_node_degree(pg_data,
-    sample_levels = sample_aliases
-  )
-
-tabset_figure_table(
-  component$plot,
-  component$table,
-  level = 5
-)
-close_tabset()
-```
 
 #### Crossing edges 
 
