@@ -614,6 +614,7 @@ draw_quantiles <-
       violin_data %>%
       group_by(x, PANEL) %>%
       filter(sum(!is.na(density)) > 1) %>%
+      filter(!is.na(density)) %>% # Remove rows with NA density
       group_map(~ {
         .x <-
           bind_cols(.y, .x)
