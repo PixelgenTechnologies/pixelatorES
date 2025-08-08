@@ -10,6 +10,7 @@ format:
     toc-depth: 4
     embed-resources: true
     code-folding: show
+    fig-format: svg
     fig-width: 8
     fig-height: 5
     fig-dpi: 96
