@@ -613,7 +613,7 @@ draw_quantiles <-
     quantile_data <-
       violin_data %>%
       group_by(x, PANEL) %>%
-      filter(!all(is.na(density))) %>%
+      filter(sum(!is.na(density))> 1) %>%
       group_map(~ {
         .x <-
           bind_cols(.y, .x)
