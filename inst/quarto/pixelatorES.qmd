@@ -12,7 +12,7 @@ format:
     code-folding: show
     fig-width: 8
     fig-height: 5
-    fig-dpi: 96
+    fig-dpi: 52
     grid:
       body-width: 900px
     css: styles.css
