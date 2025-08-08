@@ -110,12 +110,12 @@ test_that("Embedding plots work as expected", {
 
 
 test_that("`draw_quantiles` works as expected", {
-
-
   df <-
-    tibble(x = rep(c("A", "B"), each = 100),
-           y = rnorm(200, mean = 5, sd = 2),
-           facet = rep(c("X", "Y"), each = 50, times = 2))
+    tibble(
+      x = rep(c("A", "B"), each = 100),
+      y = rnorm(200, mean = 5, sd = 2),
+      facet = rep(c("X", "Y"), each = 50, times = 2)
+    )
 
   # Facetting
   g <-
@@ -127,7 +127,7 @@ test_that("`draw_quantiles` works as expected", {
 
   # Too little data
   g <-
-    df[1,] %>%
+    df[1, ] %>%
     ggplot(aes(x, y)) +
     geom_violin()
 
@@ -155,5 +155,4 @@ test_that("`draw_quantiles` works as expected", {
     facet_wrap(~facet)
 
   expect_no_error(g + draw_quantiles(g, facet_var = "facet"))
-
 })
