@@ -605,6 +605,11 @@ draw_quantiles <-
     build <- ggplot_build(p)
     violin_data <- build$data[[1]]
 
+    if (nrow(violin_data) == 0) {
+      # If there is no data, return NULL
+      return(NULL)
+    }
+
     quantile_data <-
       violin_data %>%
       group_by(x, PANEL) %>%
@@ -665,11 +670,17 @@ draw_quantiles <-
 
     if (!is.null(facet_var)) {
       # If a facet variable is provided, add it to the quantile data
+      facet_levels <- levels(p$data[[facet_var]])
+      if (is.null(facet_levels)) {
+        # If the facet variable has no levels, use the unique values
+        facet_levels <- unique(p$data[[facet_var]])
+      }
+
       quantile_data <-
         quantile_data %>%
         mutate(facet = factor(
-          levels(p$data[[facet_var]])[PANEL],
-          levels(p$data[[facet_var]])
+          facet_levels[PANEL],
+          facet_levels
         )) %>%
         rename(!!facet_var := facet)
     }
