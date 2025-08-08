@@ -61,8 +61,8 @@ get_file_paths <-
   function(data_folder = NULL, file_paths = NULL, sample_aliases) {
     pixelatorR:::assert_single_value(data_folder, type = "string", allow_null = TRUE)
     pixelatorR:::assert_vector(file_paths, "character", allow_null = TRUE)
-    pixelatorR:::assert_vector(sample_aliases, "character", allow_null = TRUE)
-    pixelatorR:::assert_vector(names(sample_aliases), "character", allow_null = FALSE)
+    pixelatorR:::assert_vector(sample_aliases, "character", n = 1, allow_null = TRUE)
+    pixelatorR:::assert_vector(names(sample_aliases), "character", n = 1, allow_null = FALSE)
 
     if (is.null(file_paths)) {
       file_paths <- list.files(data_folder, recursive = TRUE, full.names = TRUE)
