@@ -37,7 +37,9 @@ vignettes/*.pdf
 # knitr and R markdown default cache directories
 *_cache/
 /cache/
+inst/quarto/pixelatorES.html
 inst/quarto/pixelatorES_files/
+inst/quarto/pixelatorES.rmarkdown
 
 # Temporary files created by R markdown
 *.utf8.md

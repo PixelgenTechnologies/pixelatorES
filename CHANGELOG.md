@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `cluster_palette` for coloring clusters
+
+### Updates
+- Lowered resolution to 96 dpi.
+
+### Fixed
+- `draw_quantiles` now works when there are missing values or few data points.
+
 ## [0.3.1] 2025-08-07
 
 ### Added

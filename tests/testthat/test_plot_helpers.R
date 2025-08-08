@@ -103,3 +103,56 @@ test_that("Embedding plots work as expected", {
     c("$A", "", "$B", "")
   )
 })
+
+
+
+
+
+
+test_that("`draw_quantiles` works as expected", {
+  df <-
+    tibble(
+      x = rep(c("A", "B"), each = 100),
+      y = rnorm(200, mean = 5, sd = 2),
+      facet = rep(c("X", "Y"), each = 50, times = 2)
+    )
+
+  # Facetting
+  g <-
+    ggplot(df, aes(x, y)) +
+    geom_violin() +
+    facet_wrap(~facet)
+
+  expect_no_error(g + draw_quantiles(g, facet_var = "facet"))
+
+  # Too little data
+  g <-
+    df[1, ] %>%
+    ggplot(aes(x, y)) +
+    geom_violin()
+
+  expect_error(g + draw_quantiles(g, facet_var = "facet"))
+
+  # Too little data in one group
+  g <-
+    df %>%
+    group_by(x, facet) %>%
+    filter(row_number() %in% 1:2 | !(x == "A" & facet == "X")) %>%
+    ggplot(aes(x, y)) +
+    geom_violin() +
+    facet_wrap(~facet)
+
+  expect_no_error(g + draw_quantiles(g, facet_var = "facet"))
+
+  # Missing value in one group
+  g <-
+    df %>%
+    group_by(x, facet) %>%
+    filter(row_number() %in% 1:2 | !(x == "A" & facet == "X")) %>%
+    mutate(y = ifelse(row_number() == 1, NA, y)) %>%
+    ggplot(aes(x, y)) +
+    geom_violin() +
+    facet_wrap(~facet)
+
+  expect_no_error(g + draw_quantiles(g, facet_var = "facet"))
+})
