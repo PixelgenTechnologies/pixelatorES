@@ -613,10 +613,13 @@ draw_quantiles <-
     quantile_data <-
       violin_data %>%
       group_by(x, PANEL) %>%
-      filter(!all(is.na(density))) %>%
+      filter(sum(!is.na(density)) > 1) %>%
+      filter(!is.na(density)) %>% # Remove rows with NA density
+      filter(!all(violinwidth == 1)) %>%
       group_map(~ {
         .x <-
           bind_cols(.y, .x)
+
         # Get density distribution
         dens <- cumsum(.x$density) / sum(.x$density)
         # Create approximate cumulative density to actual density function

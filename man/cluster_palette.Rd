@@ -5,7 +5,7 @@
 \alias{cluster_palette}
 \title{Cluster palette}
 \format{
-An object of class \code{character} of length 26.
+An object of class \code{character} of length 260.
 }
 \usage{
 cluster_palette
