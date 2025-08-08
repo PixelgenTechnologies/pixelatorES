@@ -40,7 +40,8 @@ Imports:
     tidyselect,
     DT,
     scales,
-    methods
+    methods,
+    dbplyr
 Remotes: 
     PixelgenTechnologies/pixelatorR
 Suggests: 
