@@ -38,6 +38,7 @@ vignettes/*.pdf
 *_cache/
 /cache/
 inst/quarto/pixelatorES_files/
+inst/quarto/pixelatorES.rmarkdown
 
 # Temporary files created by R markdown
 *.utf8.md

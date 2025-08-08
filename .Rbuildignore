@@ -7,3 +7,5 @@ Dockerfile
 .lintr
 experiment-summary
 LICENSE.md
+inst/quarto/pixelatorES.rmarkdown
+inst/quarto/pixelatorES_files/
