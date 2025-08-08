@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `cluster_palette` for coloring clusters
+
 ### Fixed
 - `draw_quantiles` now works when there are missing values or few data points.
 

@@ -110,6 +110,44 @@ cell_palette <-
 yes_no_palette <-
   c("#DAD6D7", "#C86584")
 
+#' Cluster palette
+#'
+#' A palette for clusters, combining various hues and levels from the PixelgenAccentColors.
+#'
+#' @export
+#'
+cluster_palette <-
+  c(PixelgenAccentColors(
+    level = 7,
+    hue = c("blues", "reds",
+            "cyans", "oranges",
+            "pinks", "greens",
+            "purples", "yellows",
+            "greys", "beiges")
+  ),
+  PixelgenAccentColors(
+    level = 9,
+    hue = c("blues", "pinks",
+            "reds", "yellows",
+            "greys", "beiges")
+  ),
+  PixelgenAccentColors(
+    level = 5,
+    hue = c("purples", "blues",
+            "cyans", "greens",
+            "reds", "oranges")
+  ),
+  PixelgenAccentColors(
+    level = 3,
+    hue = c("blues", "reds")
+  ),
+  PixelgenAccentColors(
+    level = 12,
+    hue = c("blues", "reds")
+  )) %>%
+  unname() %>%
+  rep(10)
+
 #' Theme for violin plots
 #'
 #' @param base_size Base font size for the theme.
