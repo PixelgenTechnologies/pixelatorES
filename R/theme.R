@@ -117,34 +117,42 @@ yes_no_palette <-
 #' @export
 #'
 cluster_palette <-
-  c(PixelgenAccentColors(
-    level = 7,
-    hue = c("blues", "reds",
-            "cyans", "oranges",
-            "pinks", "greens",
-            "purples", "yellows",
-            "greys", "beiges")
-  ),
-  PixelgenAccentColors(
-    level = 9,
-    hue = c("blues", "pinks",
-            "reds", "yellows",
-            "greys", "beiges")
-  ),
-  PixelgenAccentColors(
-    level = 5,
-    hue = c("purples", "blues",
-            "cyans", "greens",
-            "reds", "oranges")
-  ),
-  PixelgenAccentColors(
-    level = 3,
-    hue = c("blues", "reds")
-  ),
-  PixelgenAccentColors(
-    level = 12,
-    hue = c("blues", "reds")
-  )) %>%
+  c(
+    PixelgenAccentColors(
+      level = 7,
+      hue = c(
+        "blues", "reds",
+        "cyans", "oranges",
+        "pinks", "greens",
+        "purples", "yellows",
+        "greys", "beiges"
+      )
+    ),
+    PixelgenAccentColors(
+      level = 9,
+      hue = c(
+        "blues", "pinks",
+        "reds", "yellows",
+        "greys", "beiges"
+      )
+    ),
+    PixelgenAccentColors(
+      level = 5,
+      hue = c(
+        "purples", "blues",
+        "cyans", "greens",
+        "reds", "oranges"
+      )
+    ),
+    PixelgenAccentColors(
+      level = 3,
+      hue = c("blues", "reds")
+    ),
+    PixelgenAccentColors(
+      level = 12,
+      hue = c("blues", "reds")
+    )
+  ) %>%
   unname() %>%
   rep(10)
 
