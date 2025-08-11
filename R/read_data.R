@@ -478,11 +478,23 @@ get_test_data <-
       ReadPNA_Seurat(load_proximity_scores = FALSE)
 
     if (concatenate) {
+      seur_merged <- seur
+
+      colnames(seur_merged) <-
+        paste0(colnames(seur), "_1")
+
+      for (i in 1:5) {
+        seur2 <-
+          seur
+
+        colnames(seur2) <-
+          paste0(colnames(seur2), "_", i + 1)
+
+        seur_merged <- merge(seur_merged, y = seur2)
+      }
+
       seur <-
-        merge(
-          seur,
-          y = list(seur, seur, seur, seur, seur)
-        ) %>%
+        seur_merged %>%
         JoinLayers(verbose = FALSE)
     }
 
@@ -499,6 +511,14 @@ get_test_data <-
         verbose = FALSE,
         approx = TRUE
       )
+
+    set.seed(37)
+    seur[["seurat_clusters"]] <-
+      sample(1:3, ncol(seur), replace = TRUE) %>%
+      factor()
+    seur[["condition"]] <-
+      sample(paste("Cond", 1:3), ncol(seur), replace = TRUE) %>%
+      factor()
 
     return(seur)
   }

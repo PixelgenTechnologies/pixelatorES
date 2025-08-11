@@ -1140,7 +1140,7 @@ component_proximity_selected <- function(
     processed_data %>%
     filter(l1_annotation_summary %in% displayed_cell_types) %>%
     group_split() %>%
-    set_names(group_keys(processed_data)$marker_1) %>%
+    set_names(group_keys(processed_data)$contrast) %>%
     {
       if (test_mode) {
         head(., n = 3)
@@ -1183,7 +1183,7 @@ component_proximity_selected <- function(
           panel.grid = element_blank()
         ) +
         labs(
-          title = g_data$marker_1[1],
+          title = g_data$contrast[1],
           x = "Sample ID",
           y = ifelse(proximity_score == "join_count_z",
             "Z-score",
@@ -1512,6 +1512,7 @@ component_proximity_heatmap_celltype <- function(
 #' @param sample_palette Optional color palette for samples.
 #' @param cluster_palette Optional color palette for clusters.
 #' @param sample_plots Logical indicating whether to include sample-wise plots.
+#' @param plot_height Numeric value specifying the height of the full plot. Used to space the legend.
 #'
 #' @return A list containing three plots for reductions.
 #'
@@ -1522,7 +1523,8 @@ component_dimred_plots <-
     plot_reductions = "pca",
     sample_palette = NULL,
     cluster_palette = NULL,
-    sample_plots = FALSE
+    sample_plots = FALSE,
+    plot_height = 5
   ) {
     plot_reductions %>%
       set_names(toupper(plot_reductions)) %>%
@@ -1541,7 +1543,9 @@ component_dimred_plots <-
             plot_title = "Samples",
             label = FALSE,
             legend_position = "bottom",
-            yaxis_title = FALSE
+            yaxis_title = FALSE,
+            extract_legend = TRUE,
+            plot_height = plot_height
           )
         p3 <-
           plot_embedding(object, red,
@@ -1551,11 +1555,10 @@ component_dimred_plots <-
             label = FALSE,
             legend_position = "bottom",
             xaxis_title = FALSE,
-            yaxis_title = FALSE
+            yaxis_title = FALSE,
+            extract_legend = TRUE,
+            plot_height = plot_height
           )
-
-        plot_list <-
-          list(Combined = p1 | p2 | p3)
 
         if (sample_plots) {
           samplewise_plots <-
@@ -1568,12 +1571,15 @@ component_dimred_plots <-
 
           plot_list <-
             list(
-              Combined = p1 | p2 | p3,
+              Combined =
+                (p1 | p2$plot | p3$plot) /
+                  (plot_void() | p2$legend | p3$legend),
               Samplewise = samplewise_plots
             )
         } else {
           plot_list <-
-            p1 | p2 | p3
+            (p1 | p2$plot | p3$plot) /
+              (plot_void() | p2$legend | p3$legend)
         }
 
         return(plot_list)

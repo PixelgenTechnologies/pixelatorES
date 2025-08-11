@@ -131,7 +131,9 @@ test_that("`draw_quantiles` works as expected", {
     ggplot(aes(x, y)) +
     geom_violin()
 
-  expect_error(g + draw_quantiles(g, facet_var = "facet"))
+  expect_warning(
+    expect_no_error(g + draw_quantiles(g, facet_var = "facet"))
+  )
 
   # Too little data in one group
   g <-
@@ -154,5 +156,7 @@ test_that("`draw_quantiles` works as expected", {
     geom_violin() +
     facet_wrap(~facet)
 
-  expect_no_error(g + draw_quantiles(g, facet_var = "facet"))
+  expect_warning(
+    expect_no_error(g + draw_quantiles(g, facet_var = "facet"))
+  )
 })

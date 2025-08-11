@@ -9,7 +9,8 @@ component_dimred_plots(
   plot_reductions = "pca",
   sample_palette = NULL,
   cluster_palette = NULL,
-  sample_plots = FALSE
+  sample_plots = FALSE,
+  plot_height = 5
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ component_dimred_plots(
 \item{cluster_palette}{Optional color palette for clusters.}
 
 \item{sample_plots}{Logical indicating whether to include sample-wise plots.}
+
+\item{plot_height}{Numeric value specifying the height of the full plot. Used to space the legend.}
 }
 \value{
 A list containing three plots for reductions.

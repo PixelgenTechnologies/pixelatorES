@@ -16,7 +16,9 @@ plot_embedding(
   yaxis_title = TRUE,
   fix_aspect_ratio = TRUE,
   legend_position = "none",
-  legend_cols = 2
+  legend_cols = 2,
+  extract_legend = FALSE,
+  plot_height = 5
 )
 }
 \arguments{
@@ -43,6 +45,11 @@ plot_embedding(
 \item{legend_position}{The position of the legend (default is "none").}
 
 \item{legend_cols}{The number of columns in the legend (default is 2).}
+
+\item{extract_legend}{Logical indicating whether to extract the legend from the plot (default is FALSE). If TRUE,
+the function will return a list containing the plot and the legend separately.}
+
+\item{plot_height}{The height of the plot in inches (default is 5).}
 }
 \value{
 A ggplot object representing the embedding.
