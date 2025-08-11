@@ -113,4 +113,11 @@ test_that("Components work as expected", {
   )
 
   expect_s3_class(component[[1]], "ggplot")
+
+  # component_dimred_plots
+  expect_no_error(
+    component <- component_dimred_plots(pg_data, sample_palette = c("red", "black", "blue"))
+  )
+
+  expect_s3_class(component$PCA, "ggplot")
 })

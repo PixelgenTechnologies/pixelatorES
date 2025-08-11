@@ -500,5 +500,13 @@ get_test_data <-
         approx = TRUE
       )
 
+    set.seed(37)
+    seur[["seurat_clusters"]] <-
+      sample(1:3, ncol(seur), replace = TRUE) %>%
+      factor()
+    seur[["condition"]] <-
+      sample(paste("Cond", 1:3), ncol(seur), replace = TRUE) %>%
+      factor()
+
     return(seur)
   }
