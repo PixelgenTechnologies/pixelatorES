@@ -112,6 +112,7 @@ test_that("Components work as expected", {
     )
   )
 
+  expect_named(component, expected = c("CD11b", "B2M", "HLA-ABC"))
   expect_s3_class(component[[1]], "ggplot")
 
   # component_dimred_plots
