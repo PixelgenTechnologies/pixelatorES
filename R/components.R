@@ -1140,7 +1140,7 @@ component_proximity_selected <- function(
     processed_data %>%
     filter(l1_annotation_summary %in% displayed_cell_types) %>%
     group_split() %>%
-    set_names(group_keys(processed_data)$marker_1) %>%
+    set_names(group_keys(processed_data)$contrast) %>%
     {
       if (test_mode) {
         head(., n = 3)
@@ -1183,7 +1183,7 @@ component_proximity_selected <- function(
           panel.grid = element_blank()
         ) +
         labs(
-          title = g_data$marker_1[1],
+          title = g_data$contrast[1],
           x = "Sample ID",
           y = ifelse(proximity_score == "join_count_z",
             "Z-score",
