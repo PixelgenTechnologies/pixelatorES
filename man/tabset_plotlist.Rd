@@ -4,12 +4,14 @@
 \alias{tabset_plotlist}
 \title{Tabset plots}
 \usage{
-tabset_plotlist(plots, level = 2)
+tabset_plotlist(plots, level = 2, close = TRUE)
 }
 \arguments{
 \item{plots}{List of plots to be tabsetted.}
 
 \item{level}{Integer indicating the header level for the tabset title (default is 2).}
+
+\item{close}{Logical indicating whether to close the tabset after plotting (default is TRUE).}
 }
 \value{
 A formatted tabset of plots.

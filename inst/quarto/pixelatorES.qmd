@@ -1,6 +1,6 @@
 ---
 title: "Experiment Summary"
-subtitle: "v0.3.1" 
+subtitle: "v0.3.2" 
 format:
   html:
     theme: cerulean
@@ -350,16 +350,20 @@ component <-
     heatmap_gradient = cherry_gradient
   )
 
-tabset_plotlist(component$dimred_plots, level = 4)
+tabset_plotlist(component$dimred_plots, level = 4, close = FALSE)
 ```
 
+#### Cluster heatmap
 
 ```{r}
 #| label: annotation_dimred_heatmap
-#| fig-height: 16
+#| fig-height: 17
 #| results: 'asis'
 component$heatmap
+
 ```
+
+:::
 
 ### Summary
 

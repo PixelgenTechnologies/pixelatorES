@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] 2025-08-11
+
 ### Added
 - `cluster_palette` for coloring clusters.
 - `plot_void` function to plot empty `ggplot2` plots.
@@ -14,11 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Updates
 - Lowered resolution to 96 dpi.
+- `tabset_nested_plotlist` and `tabset_plotlist` now have an argument `close` to control whether the tabset should be closed or not.
 
 ### Fixed
 - `draw_quantiles` now works when there are missing values or few data points.
 - Overflowing legends should happen less often in Dimensionality Reduction plots.
 - Bug causing tabs in the "Selected contrasts" section to lack names.
+- `annotation_dimred_heatmap` is now given more space and is tabset together with "Automated annotation".
 
 ## [0.3.1] 2025-08-07
 
