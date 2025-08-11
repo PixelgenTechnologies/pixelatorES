@@ -159,6 +159,80 @@ close_tabset <-
     cat(":::\n")
   }
 
+#' Create a Void Plot
+#'
+#' Creates a ggplot object with no data and a void theme.
+#'
+#' @return A ggplot object with a void theme.
+#'
+#' @export
+#'
+plot_void <-
+  function() {
+    ggplot() +
+      theme_void() +
+      theme(plot.margin = margin(0, 0, 0, 0))
+  }
+
+#' Extract Legend from a ggplot
+#'
+#' Extracts the legend from a ggplot object and returns it as a separate ggplot object.
+#'
+#' @param plot A ggplot object from which to extract the legend.
+#' @param legend_position The position of the legend to extract (default is "bottom").
+#' @param plot_height The height of the plot in inches (default is 5).
+#' @param justify_top Logical indicating whether to justify the legend to the top (default is TRUE).
+#'
+#' @return A ggplot object containing only the legend.
+#'
+#' @export
+#'
+extract_legend <-
+  function(
+    plot,
+    legend_position = "bottom",
+    plot_height = 5,
+    justify_top = TRUE
+    ) {
+  pixelatorR:::assert_class(plot, "ggplot")
+  pixelatorR:::assert_single_value(legend_position, type = "string")
+  pixelatorR:::assert_single_value(plot_height, type = "numeric")
+  pixelatorR:::assert_single_value(justify_top, type = "bool")
+  legend_position <- match.arg(legend_position, c("bottom", "top", "left", "right", "none"))
+
+  if (legend_position == "none") {
+    return(plot_void())
+  }
+  # Extract the legend from the plot
+  g <- ggplotGrob(plot)
+
+  guide_grob <- g$grobs[[which(g$layout$name == paste0("guide-box-", legend_position))]]
+
+  legend_plot <-
+    plot_void() +
+    annotation_custom(guide_grob)
+
+  if (justify_top) {
+    # get legend height in mm (sum of the gtable row heights)
+    legend_height_mm <-
+      sum(grid::convertUnit(guide_grob$heights, "mm", valueOnly = TRUE)) +
+      4 # add some padding
+    # convert to inches
+    legend_height_in <- legend_height_mm / 25.4
+
+    # create a column for the legend where the top row is the legend and the bottom row is spacer
+    # use heights proportional to the absolute heights (so the legend gets the space it needs)
+    legend_plot <-
+      legend_plot /
+      plot_spacer() +
+      plot_layout(heights = c(legend_height_in, plot_height))
+
+  }
+
+  return(legend_plot)
+
+}
+
 #' Plot Embedding
 #'
 #' Plot a 2D embedding of a Seurat object, allowing for customization of the plot aesthetics.
@@ -174,6 +248,9 @@ close_tabset <-
 #' @param plot_title The title of the plot (default is an empty string).
 #' @param legend_position The position of the legend (default is "none").
 #' @param legend_cols The number of columns in the legend (default is 2).
+#' @param extract_legend Logical indicating whether to extract the legend from the plot (default is FALSE). If TRUE,
+#' the function will return a list containing the plot and the legend separately.
+#' @param plot_height The height of the plot in inches (default is 5).
 #'
 #' @return A ggplot object representing the embedding.
 #'
@@ -190,7 +267,10 @@ plot_embedding <-
              yaxis_title = TRUE,
              fix_aspect_ratio = TRUE,
              legend_position = "none",
-             legend_cols = 2) {
+             legend_cols = 2,
+           extract_legend = FALSE,
+           plot_height = 5
+           ) {
     pixelatorR:::assert_class(object, "Seurat")
     pixelatorR:::assert_single_value(plot_reduction, type = "string")
     pixelatorR:::assert_vector(dims, "numeric", n = 2)
@@ -198,8 +278,12 @@ plot_embedding <-
     pixelatorR:::assert_vector(pal, "character", n = 1, allow_null = TRUE)
     pixelatorR:::assert_single_value(label, type = "bool")
     pixelatorR:::assert_single_value(plot_title, type = "string")
+    pixelatorR:::assert_single_value(xaxis_title, type = "bool")
+    pixelatorR:::assert_single_value(yaxis_title, type = "bool")
+    pixelatorR:::assert_single_value(fix_aspect_ratio, type = "bool")
     pixelatorR:::assert_single_value(legend_position, type = "string")
     pixelatorR:::assert_single_value(legend_cols, type = "numeric")
+    pixelatorR:::assert_single_value(extract_legend, type = "bool")
 
     embeddings <-
       Embeddings(object, reduction = plot_reduction) %>%
@@ -245,9 +329,10 @@ plot_embedding <-
         axis.text = element_blank(),
         axis.ticks = element_blank(),
         legend.position = legend_position,
-        legend.key.size = unit(0.5, "cm"),
+        legend.key.size = unit(0.2, "cm"),
         legend.spacing.x = unit(0.2, "cm"),
-        legend.direction = "vertical"
+        legend.direction = "vertical",
+        legend.text = element_text(size = 8)
       ) +
       coord_fixed() +
       labs(
@@ -296,7 +381,17 @@ plot_embedding <-
         scale_y_continuous(limits = V2_range)
     }
 
-    return(p)
+    if (extract_legend) {
+      legend <- extract_legend(p,
+                               legend_position = legend_position,
+                               plot_height = plot_height)
+      p <- p + theme(legend.position = "none")
+
+      return(list(plot = p, legend = legend))
+    } else {
+      return(p)
+    }
+
   }
 
 #' Plot Embeddings Samplewise

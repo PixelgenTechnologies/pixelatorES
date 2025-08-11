@@ -41,7 +41,8 @@ Imports:
     DT,
     scales,
     methods,
-    dbplyr
+    dbplyr,
+    patchwork
 Remotes: 
     PixelgenTechnologies/pixelatorR
 Suggests: 

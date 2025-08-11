@@ -318,7 +318,7 @@ rm(pg_data)
 
 ```{r}
 #| label: dimred_plots
-#| fig-height: 4
+#| fig-height: 6
 #| results: 'asis'
 component <-
   component_dimred_plots(
@@ -326,7 +326,8 @@ component <-
     plot_reductions = preferred_dimred_order(Reductions(pg_data_processed)),
     sample_palette = sample_palette,
     cluster_palette = cluster_palette,
-    sample_plots = FALSE
+    sample_plots = FALSE, 
+    plot_height = 6
   )
 
 tabset_nested_plotlist(component, level = 3)
