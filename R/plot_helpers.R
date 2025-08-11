@@ -39,11 +39,17 @@ title_plotlist <- function(plots, level = 2) {
 #'
 #' @param plots List of plots to be tabsetted.
 #' @param level Integer indicating the header level for the tabset title (default is 2).
+#' @param close Logical indicating whether to close the tabset after plotting (default is TRUE).
 #'
 #' @return A formatted tabset of plots.
 #'
 #' @export
-tabset_plotlist <- function(plots, level = 2) {
+tabset_plotlist <-
+  function(
+    plots,
+    level = 2,
+    close = TRUE
+    ) {
   pixelatorR:::assert_class(plots, "list")
   for (plot in plots) pixelatorR:::assert_class(plot, c("ggplot", "datatables"))
 
@@ -53,7 +59,7 @@ tabset_plotlist <- function(plots, level = 2) {
   title_plotlist(plots, level)
 
   # Close the tabset
-  cat(":::\n")
+  if (close) cat(":::\n")
 }
 
 
@@ -63,11 +69,17 @@ tabset_plotlist <- function(plots, level = 2) {
 #'
 #' @param plots List of plots or list of lists of plots to be tabsetted.
 #' @param level Integer indicating the header level for the tabset title (default is 2).
+#' @param close Logical indicating whether to close the tabset after plotting (default is TRUE).
 #'
 #' @return A formatted tabset of plots.
 #'
 #' @export
-tabset_nested_plotlist <- function(plots, level = 2) {
+tabset_nested_plotlist <-
+  function(
+    plots,
+    level = 2,
+    close = TRUE
+    ) {
   pixelatorR:::assert_class(plots, "list")
   for (plot in plots) {
     pixelatorR:::assert_class(
@@ -99,7 +111,7 @@ tabset_nested_plotlist <- function(plots, level = 2) {
     }
   }
   # Close the tabset
-  cat(":::\n")
+  if (close) cat(":::\n")
 }
 
 

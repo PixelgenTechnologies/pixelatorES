@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Updates
 - Lowered resolution to 96 dpi.
+- `tabset_nested_plotlist` and `tabset_plotlist` now have an argument `close` to control whether the tabset should be closed or not.
 
 ### Fixed
 - `draw_quantiles` now works when there are missing values or few data points.
