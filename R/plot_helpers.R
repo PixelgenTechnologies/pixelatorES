@@ -49,18 +49,18 @@ tabset_plotlist <-
     plots,
     level = 2,
     close = TRUE
-    ) {
-  pixelatorR:::assert_class(plots, "list")
-  for (plot in plots) pixelatorR:::assert_class(plot, c("ggplot", "datatables"))
+  ) {
+    pixelatorR:::assert_class(plots, "list")
+    for (plot in plots) pixelatorR:::assert_class(plot, c("ggplot", "datatables"))
 
-  # Start the tabset
-  cat("::: {.panel-tabset .nav-pills}\n")
+    # Start the tabset
+    cat("::: {.panel-tabset .nav-pills}\n")
 
-  title_plotlist(plots, level)
+    title_plotlist(plots, level)
 
-  # Close the tabset
-  if (close) cat(":::\n")
-}
+    # Close the tabset
+    if (close) cat(":::\n")
+  }
 
 
 #' Tabset nested plots
@@ -79,40 +79,40 @@ tabset_nested_plotlist <-
     plots,
     level = 2,
     close = TRUE
-    ) {
-  pixelatorR:::assert_class(plots, "list")
-  for (plot in plots) {
-    pixelatorR:::assert_class(
-      plot,
-      c(
-        "ggplot",
-        "datatables",
-        "list"
+  ) {
+    pixelatorR:::assert_class(plots, "list")
+    for (plot in plots) {
+      pixelatorR:::assert_class(
+        plot,
+        c(
+          "ggplot",
+          "datatables",
+          "list"
+        )
       )
-    )
-  }
-
-  # Start the tabset
-  cat("\n\n")
-  cat("::: {.panel-tabset .nav-pills}\n")
-
-  for (tab in seq_len(length(plots))) {
-    if (inherits(plots[[tab]], "list")) {
-      # If the plot is a list, call tabset_nested_plotlist recursively
-
-      cat(paste0(strrep("#", level), " ", names(plots)[tab], "\n"))
-
-      tabset_nested_plotlist(plots[[tab]], level + 1)
-    } else if (inherits(plots[[tab]], "ggplot")) {
-      # Otherwise, just print the plot
-      list(plots[[tab]]) %>%
-        set_names(names(plots)[tab]) %>%
-        title_plotlist(level)
     }
+
+    # Start the tabset
+    cat("\n\n")
+    cat("::: {.panel-tabset .nav-pills}\n")
+
+    for (tab in seq_len(length(plots))) {
+      if (inherits(plots[[tab]], "list")) {
+        # If the plot is a list, call tabset_nested_plotlist recursively
+
+        cat(paste0(strrep("#", level), " ", names(plots)[tab], "\n"))
+
+        tabset_nested_plotlist(plots[[tab]], level + 1)
+      } else if (inherits(plots[[tab]], "ggplot")) {
+        # Otherwise, just print the plot
+        list(plots[[tab]]) %>%
+          set_names(names(plots)[tab]) %>%
+          title_plotlist(level)
+      }
+    }
+    # Close the tabset
+    if (close) cat(":::\n")
   }
-  # Close the tabset
-  if (close) cat(":::\n")
-}
 
 
 #' Tabset a figure and a table

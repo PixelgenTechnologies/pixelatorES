@@ -1,6 +1,6 @@
 ---
 title: "Experiment Summary"
-subtitle: "v0.3.1" 
+subtitle: "v0.3.2" 
 format:
   html:
     theme: cerulean
