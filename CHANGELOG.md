@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `draw_quantiles` now works when there are missing values or few data points.
 - Overflowing legends should happen less often in Dimensionality Reduction plots.
 - Bug causing tabs in the "Selected contrasts" section to lack names.
+- `annotation_dimred_heatmap` is now given more space and is tabset together with "Automated annotation".
 
 ## [0.3.1] 2025-08-07
 
