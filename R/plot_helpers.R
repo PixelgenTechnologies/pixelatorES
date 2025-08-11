@@ -193,45 +193,43 @@ extract_legend <-
     legend_position = "bottom",
     plot_height = 5,
     justify_top = TRUE
-    ) {
-  pixelatorR:::assert_class(plot, "ggplot")
-  pixelatorR:::assert_single_value(legend_position, type = "string")
-  pixelatorR:::assert_single_value(plot_height, type = "numeric")
-  pixelatorR:::assert_single_value(justify_top, type = "bool")
-  legend_position <- match.arg(legend_position, c("bottom", "top", "left", "right", "none"))
+  ) {
+    pixelatorR:::assert_class(plot, "ggplot")
+    pixelatorR:::assert_single_value(legend_position, type = "string")
+    pixelatorR:::assert_single_value(plot_height, type = "numeric")
+    pixelatorR:::assert_single_value(justify_top, type = "bool")
+    legend_position <- match.arg(legend_position, c("bottom", "top", "left", "right", "none"))
 
-  if (legend_position == "none") {
-    return(plot_void())
-  }
-  # Extract the legend from the plot
-  g <- ggplotGrob(plot)
+    if (legend_position == "none") {
+      return(plot_void())
+    }
+    # Extract the legend from the plot
+    g <- ggplotGrob(plot)
 
-  guide_grob <- g$grobs[[which(g$layout$name == paste0("guide-box-", legend_position))]]
+    guide_grob <- g$grobs[[which(g$layout$name == paste0("guide-box-", legend_position))]]
 
-  legend_plot <-
-    plot_void() +
-    annotation_custom(guide_grob)
-
-  if (justify_top) {
-    # get legend height in mm (sum of the gtable row heights)
-    legend_height_mm <-
-      sum(grid::convertUnit(guide_grob$heights, "mm", valueOnly = TRUE)) +
-      4 # add some padding
-    # convert to inches
-    legend_height_in <- legend_height_mm / 25.4
-
-    # create a column for the legend where the top row is the legend and the bottom row is spacer
-    # use heights proportional to the absolute heights (so the legend gets the space it needs)
     legend_plot <-
-      legend_plot /
-      plot_spacer() +
-      plot_layout(heights = c(legend_height_in, plot_height))
+      plot_void() +
+      annotation_custom(guide_grob)
 
+    if (justify_top) {
+      # get legend height in mm (sum of the gtable row heights)
+      legend_height_mm <-
+        sum(grid::convertUnit(guide_grob$heights, "mm", valueOnly = TRUE)) +
+        4 # add some padding
+      # convert to inches
+      legend_height_in <- legend_height_mm / 25.4
+
+      # create a column for the legend where the top row is the legend and the bottom row is spacer
+      # use heights proportional to the absolute heights (so the legend gets the space it needs)
+      legend_plot <-
+        legend_plot /
+        plot_spacer() +
+        plot_layout(heights = c(legend_height_in, plot_height))
+    }
+
+    return(legend_plot)
   }
-
-  return(legend_plot)
-
-}
 
 #' Plot Embedding
 #'
@@ -268,9 +266,9 @@ plot_embedding <-
              fix_aspect_ratio = TRUE,
              legend_position = "none",
              legend_cols = 2,
-           extract_legend = FALSE,
-           plot_height = 5
-           ) {
+             extract_legend = FALSE,
+             plot_height = 5
+  ) {
     pixelatorR:::assert_class(object, "Seurat")
     pixelatorR:::assert_single_value(plot_reduction, type = "string")
     pixelatorR:::assert_vector(dims, "numeric", n = 2)
@@ -383,15 +381,15 @@ plot_embedding <-
 
     if (extract_legend) {
       legend <- extract_legend(p,
-                               legend_position = legend_position,
-                               plot_height = plot_height)
+        legend_position = legend_position,
+        plot_height = plot_height
+      )
       p <- p + theme(legend.position = "none")
 
       return(list(plot = p, legend = legend))
     } else {
       return(p)
     }
-
   }
 
 #' Plot Embeddings Samplewise

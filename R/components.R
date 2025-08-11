@@ -1573,13 +1573,13 @@ component_dimred_plots <-
             list(
               Combined =
                 (p1 | p2$plot | p3$plot) /
-                (plot_void() | p2$legend | p3$legend),
+                  (plot_void() | p2$legend | p3$legend),
               Samplewise = samplewise_plots
             )
         } else {
           plot_list <-
             (p1 | p2$plot | p3$plot) /
-            (plot_void() | p2$legend | p3$legend)
+              (plot_void() | p2$legend | p3$legend)
         }
 
         return(plot_list)
