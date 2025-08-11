@@ -478,12 +478,26 @@ get_test_data <-
       ReadPNA_Seurat(load_proximity_scores = FALSE)
 
     if (concatenate) {
+
+      seur_merged <-  seur
+
+      colnames(seur_merged) <-
+        paste0(colnames(seur), "_1")
+
+      for (i in 1:5) {
+        seur2 <-
+          seur
+
+        colnames(seur2) <-
+          paste0(colnames(seur2), "_", i + 1)
+
+        seur_merged <- merge(seur_merged, y = seur2)
+      }
+
       seur <-
-        merge(
-          seur,
-          y = list(seur, seur, seur, seur, seur)
-        ) %>%
+        seur_merged %>%
         JoinLayers(verbose = FALSE)
+
     }
 
     seur[[]]$sample_alias <-
