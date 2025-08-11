@@ -106,13 +106,15 @@ test_that("Components work as expected", {
   # component_proximity_selected
   expect_no_error(
     component <- component_proximity_selected(
-      proximity_scores,
+      proximity_scores %>%
+        unite("contrast", marker_1, marker_2, sep = "/", remove = FALSE) %>%
+        group_by(contrast),
       sample_palette = c("red", "black"),
       proximity_score = "log2_ratio"
     )
   )
 
-  expect_named(component, expected = c("CD11b", "B2M", "HLA-ABC"))
+  expect_named(component, expected = c("B2M/B2M", "CD11b/CD11b", "HLA-ABC/HLA-ABC"))
   expect_s3_class(component[[1]], "ggplot")
 
   # component_dimred_plots
