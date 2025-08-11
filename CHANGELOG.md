@@ -8,13 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `cluster_palette` for coloring clusters
+- `cluster_palette` for coloring clusters.
+- `plot_void` function to plot empty `ggplot2` plots.
+- `extract_legend` function to extract legends from `ggplot2` plots.
 
 ### Updates
 - Lowered resolution to 96 dpi.
 
 ### Fixed
 - `draw_quantiles` now works when there are missing values or few data points.
+- Overflowing legends should happen less often in Dimensionality Reduction plots.
 
 ## [0.3.1] 2025-08-07
 
