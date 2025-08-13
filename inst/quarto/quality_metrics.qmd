@@ -80,7 +80,6 @@ close_tabset()
 #| results: 'asis'
 
 component_molecule_plot(pg_data, sample_palette)
-
 ```
 
 ### Graph metrics
