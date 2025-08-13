@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Updates
+- `pixelatorES.qmd` now calls upon modular qmd files for each tab.
+- Slimmed down content in "Quality metrics".
+
 ## [0.3.2] 2025-08-11
 
 ### Added
