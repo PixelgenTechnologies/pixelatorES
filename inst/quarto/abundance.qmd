@@ -1,0 +1,26 @@
+
+::: {.panel-tabset .nav-pills}
+
+### Global 
+
+```{r}
+#| label: global_abundance_per_marker
+#| fig-height: 4
+#| results: 'asis'
+plots <- component_abundance_per_sample(pg_data_processed, params, sample_palette, sample_aliases, params$test_mode)
+
+tabset_plotlist(plots, level = 5)
+```
+
+### Per celltype 
+
+```{r}
+#| label: per_celltype_abundance
+#| fig-height: 4
+#| results: 'asis'
+plots <- component_abundance_per_celltype(pg_data_processed, params, sample_palette, params$test_mode)
+
+tabset_plotlist(plots, level = 5)
+```
+
+:::
