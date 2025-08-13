@@ -1,0 +1,83 @@
+
+::: {.panel-tabset .nav-pills}
+
+### Self-proximity 
+
+::: {.panel-tabset .nav-pills}
+
+#### Per marker
+
+```{r}
+#| label: global_proximity_per_marker
+#| fig-height: 4
+#| results: 'asis'
+processed_data <-
+  proximity_scores %>%
+  filter(as.character(marker_1) == as.character(marker_2)) %>%
+  group_by(marker_1)
+```
+
+```{r}
+#| label: global_proximity_per_marker_logratio
+#| fig-height: 4
+#| results: 'asis'
+plots <- component_proximity_per_marker(processed_data, "log2_ratio", sample_palette, params$test_mode)
+tabset_plotlist(plots, level = 5)
+```
+
+#### Per celltype 
+
+```{r}
+#| label: polarity_summary
+#| fig-width: 16
+#| fig-height: 6
+plots <- component_clustering_summary(proximity_scores, heatmap_gradient, params$test_mode)
+print(plots$log2_ratio)
+```
+
+:::
+
+### Colocalization 
+::: {.panel-tabset .nav-pills}
+
+#### Global 
+
+```{r}
+#| label: coloc_global_summary
+#| results: 'asis'
+processed_data <- summarize_colocalization_scores_per_sample(proximity_scores, params$test_mode)
+```
+
+```{r}
+#| label: coloc_global_summary_heatmap_logratio
+#| fig-width: 14
+#| fig-height: 10
+#| results: 'asis'
+plots <- component_proximity_heatmap_sample(processed_data, heatmap_gradient, "log2_ratio")
+tabset_plotlist(plots, level = 5)
+```
+
+
+
+#### Per Celltype 
+
+```{r}
+#| label: coloc_celltype_summary
+#| fig-width: 14
+#| fig-height: 10
+#| results: 'asis'
+processed_data <- summarize_colocalization_scores_per_celltype(proximity_scores, params$test_mode)
+```
+
+```{r}
+#| label: coloc_celltype_summary_heatmap_logratio
+#| fig-width: 14
+#| fig-height: 10
+#| results: 'asis'
+plots <- component_proximity_heatmap_celltype(processed_data, heatmap_gradient, "log2_ratio")
+tabset_plotlist(plots, level = 5)
+```
+
+:::
+
+:::

@@ -1,0 +1,92 @@
+
+```{r}
+#| label: load_packages
+#| include: FALSE
+
+library(pixelatorES)
+library(pixelatorR)
+library(Seurat)
+library(dplyr)
+library(tibble)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(ggplotify)
+library(purrr)
+```
+
+```{r}
+#| label: read_sample_sheet
+
+sample_sheet <-
+  read_samplesheet(params$sample_sheet)
+
+sample_aliases <-
+  sample_sheet %>%
+  select(sample, sample_alias) %>%
+  deframe()
+```
+
+```{r}
+#| label: theme
+#| include: false
+heatmap_gradient <-
+  PixelgenGradient(100, "BluesCherry")
+
+cherry_gradient <-
+  PixelgenGradient(100, "Cherry")
+
+sample_palette <- create_sample_palette(sample_sheet$condition)
+```
+
+```{r}
+#| label: read_counts
+file_paths <- get_file_paths(
+  data_folder = params$data_folder,
+  sample_aliases = sample_aliases
+)
+
+data_files <- file_paths$data_files
+qc_files <- file_paths$qc_files
+
+pg_data <-
+  load_pxl_data_list(params$data_folder, data_files, sample_sheet) %>%
+  merge_data(sample_sheet)
+
+if (params$debug_mode) {
+  pg_data <-
+    downsample_data(pg_data,
+      control_markers = params$control_markers,
+      n_cells = 50,
+      n_markers = 21
+    )
+}
+```
+
+```{r}
+#| label: read_qc_metrics
+#| results: 'asis'
+sample_qc_metrics <-
+  read_qc_files(qc_files, sample_sheet)
+
+qc_metrics_tables <-
+  get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)
+```
+
+```{r}
+#| label: cell_processing
+#| include: false
+
+pg_data_processed <- process_data(pg_data, params)
+
+```
+
+```{r}
+#| label: global_proximity_load
+proximity_scores <- filter_proximity_scores(pg_data_processed, params, sample_levels = sample_aliases)
+```
+
+```{r}
+#| label: proximity_selected
+processed_data <- process_proximity_scores(pg_data_processed, proximity_scores)
+```
