@@ -78,7 +78,6 @@ qc_metrics_tables <-
 #| include: false
 
 pg_data_processed <- process_data(pg_data, params)
-
 ```
 
 ```{r}
