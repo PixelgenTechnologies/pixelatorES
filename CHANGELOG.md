@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Updates
 - More extensive document styling has been added.
 - Default color palettes for cell types and samples have been modified.
+- `pixelatorES.qmd` now calls upon modular qmd files for each tab.
+- Slimmed down content in "Quality metrics".
 
 ## [0.3.2] 2025-08-11
 
