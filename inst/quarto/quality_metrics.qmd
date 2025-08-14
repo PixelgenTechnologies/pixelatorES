@@ -4,11 +4,42 @@
 ```{r}
 #| label: key_metrics
 #| results: 'asis'
-key_metric_table(qc_metrics_tables)
+key_metric_table(qc_metrics_tables, detailed = FALSE)
 ```
 
 
 ### Sequencing
+
+#### Sequencing saturation 
+
+Sequencing saturation is the fraction of a library's complexity that has been 
+captured through sequencing.
+
+```{r}
+#| label: qc_metrics_sequencing_saturation
+#| results: 'asis'
+
+if (params$debug_mode) {
+  seqsat_comps <- 1L
+} else {
+  seqsat_comps <- 5L
+}
+
+plots <-
+  component_sequencing_saturation_curve(
+    pg_data,
+    data_files,
+    seqsat_comps = seqsat_comps,
+    sample_levels = sample_aliases,
+    mc_cores = params$mc_cores
+  )
+
+tabset_plotlist(plots,
+  level = 5
+)
+
+```
+
 #### Reads and molecules 
 
 Here we review the number of reads per stage of the `pixelator` pipeline, and the number of molecules that they are 
@@ -29,34 +60,26 @@ tabset_figure_table(
 close_tabset()
 ```
 
-#### Sequencing saturation 
-
-Sequencing saturation is the fraction of a library's complexity that has been 
-captured through sequencing.
 
 ```{r}
-#| label: qc_metrics_sequencing_saturation
+#| label: qc_metrics_reads_per_cell
 #| results: 'asis'
 
-component <-
-  component_sequencing_saturation(
-    qc_metrics_tables,
-    sample_levels = sample_aliases
-  )
+component <- 
+  component_sequencing_reads_per_cell(pg_data)
 
 tabset_figure_table(
-  component$plots,
-  component$tabl,
-  level = 5,
-  mode = "title"
+  component$plot,
+  component$table,
+  level = 5
 )
 close_tabset()
 ```
 
+
 ### Cell recovery
 
 #### Number of components 
-
 
 ```{r}
 #| label: qc_metrics_molrank_plot
@@ -80,6 +103,7 @@ close_tabset()
 #| results: 'asis'
 
 component_molecule_plot(pg_data, sample_palette)
+
 ```
 
 ### Graph metrics

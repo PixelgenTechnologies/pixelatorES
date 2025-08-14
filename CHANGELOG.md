@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default color palettes for cell types and samples have been modified.
 - `pixelatorES.qmd` now calls upon modular qmd files for each tab.
 - Slimmed down content in "Quality metrics".
+- `key_metric_table` now has an argument `detailed` to control whether all key metrics should be shown. 
+
+### Added
+- `component_sequencing_saturation_curve` and sequencing saturation curves.
+- Pop up tooltips for all key metrics.
 
 ## [0.3.2] 2025-08-11
 
