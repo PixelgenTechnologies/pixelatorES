@@ -396,7 +396,7 @@ key_metric_table <-
         by = c("Metric" = "display_name")
       ) %>%
       mutate(
-        Metric = format_with_info(Metric, description)
+        Metric = format_with_info_bootstrap(Metric, description)
       ) %>%
       select(-description) %>%
       # Show table
@@ -415,15 +415,25 @@ key_metric_table <-
 #'
 #' @export
 #'
-format_with_info <-
+format_with_info_bootstrap <-
   function(content, description) {
   # Use Bootstrap info icon with tooltip
   sprintf(
-    '%s <i class="bi bi-info-circle" title="%s" style="cursor:help;"></i>',
+    '%s <i class="bi bi-info-circle-fill text-primary" data-bs-toggle="tooltip" title="%s" style="cursor:help;"></i>',
     content,
     description
   )
 }
+
+# format_with_info_awesome <-
+#   function(content, description) {
+#     # Use Bootstrap info icon with tooltip
+#     sprintf(
+#       '%s <i class="fas fa-circle-info" data-bs-toggle="tooltip" title="%s" style="cursor:help;"></i>',
+#       content,
+#       description
+#     )
+#   }
 
 #' Key metric definitions
 #'
@@ -468,11 +478,11 @@ key_metric_definitions <-
 
     "graph_node_saturation", "Graph node saturation [%]", 1,
     "Percentage of graph nodes that are saturated, indicating the proportion of nodes that have been fully sampled.
-  Is calculated as: $\\mathit{Saturation} = 1 - \\frac{\\text{\\# Graph proteins}}{\\text{\\# Graph reads}}",
+  Is calculated as: $\\mathit{Saturation} = 1 - \\frac{\\text{\\# Graph proteins}}{\\text{\\# Graph reads}}$",
 
     "graph_edge_saturation", "Graph edge saturation [%]", 1,
     "Percentage of graph edges that are saturated, indicating the proportion of edges that have been fully sampled.
-  Is calculated as: $\\mathit{Saturation} = 1 - \\frac{\\text{\\# Graph edges}}{\\text{\\# Graph reads}}",
+  Is calculated as: $\\mathit{Saturation} = 1 - \\frac{\\text{\\# Graph edges}}{\\text{\\# Graph reads}}$",
 
     "valid_reads_saturation", "Valid reads saturation [%]", 1,
     "Percentage of valid reads that are saturated, indicating the proportion of reads that have been fully sampled.
