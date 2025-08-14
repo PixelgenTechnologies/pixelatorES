@@ -1,0 +1,128 @@
+
+### Key metrics
+
+```{r}
+#| label: key_metrics
+#| results: 'asis'
+key_metric_table(qc_metrics_tables)
+```
+
+
+### Sequencing
+#### Reads and molecules 
+
+Here we review the number of reads per stage of the `pixelator` pipeline, and the number of molecules that they are 
+mapped to.
+
+```{r}
+#| label: qc_metrics_reads
+#| fig-height: 4
+#| results: 'asis'
+component <-
+  component_sequencing_reads_and_molecules(sample_qc_metrics)
+
+tabset_figure_table(
+  component$plots,
+  component$tabl,
+  level = 5
+)
+close_tabset()
+```
+
+#### Sequencing saturation 
+
+Sequencing saturation is the fraction of a library's complexity that has been 
+captured through sequencing.
+
+```{r}
+#| label: qc_metrics_sequencing_saturation
+#| results: 'asis'
+
+component <-
+  component_sequencing_saturation(
+    qc_metrics_tables,
+    sample_levels = sample_aliases
+  )
+
+tabset_figure_table(
+  component$plots,
+  component$tabl,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```
+
+### Cell recovery
+
+#### Number of components 
+
+
+```{r}
+#| label: qc_metrics_molrank_plot
+#| results: 'asis'
+
+component <-
+  component_cell_recovery(sample_qc_metrics,
+    sample_levels = sample_aliases
+  )
+
+tabset_figure_table(
+  component$plot[[2]],
+  component$table[[2]],
+  level = 5
+)
+close_tabset()
+```
+
+```{r}
+#| label: qc_metrics_molecule_count
+#| results: 'asis'
+
+component_molecule_plot(pg_data, sample_palette)
+```
+
+### Graph metrics
+
+#### k-coreness 
+
+k-coreness is a measure of the connectivity of a node in a graph. A node with a 
+high k-coreness is well connected to 
+other nodes in the graph.
+
+```{r}
+#| label: qc_metrics_nodes_kcore
+#| results: 'asis'
+component <-
+  component_coreness(qc_metrics_tables)
+
+tabset_figure_table(
+  component$plots[[1]],
+  component$tabl,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```
+
+### Control markers 
+
+```{r}
+#| label: qc_metrics_frac_control
+#| results: 'asis'
+component <- component_control_markers(pg_data)
+
+tabset_figure_table(
+  component$p1,
+  component$tabl,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```
+
+```{r}
+#| label: qc_metrics_cleanup
+rm(sample_qc_metrics)
+rm(pg_data)
+```
