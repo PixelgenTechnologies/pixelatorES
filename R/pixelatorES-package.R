@@ -151,6 +151,7 @@
 #' @importFrom tibble deframe
 #' @importFrom tibble enframe
 #' @importFrom tibble tibble
+#' @importFrom tibble tribble
 #' @importFrom tidyr complete
 #' @importFrom tidyr expand_grid
 #' @importFrom tidyr nesting
