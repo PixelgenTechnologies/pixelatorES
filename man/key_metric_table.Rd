@@ -4,11 +4,15 @@
 \alias{key_metric_table}
 \title{Create a key metric table for samples}
 \usage{
-key_metric_table(qc_metrics_tables)
+key_metric_table(qc_metrics_tables, detailed = TRUE, return_data = FALSE)
 }
 \arguments{
 \item{qc_metrics_tables}{A list containing quality control metrics tables
 for each sample.}
+
+\item{detailed}{A logical value indicating whether to include all metrics.}
+
+\item{return_data}{A logical value indicating whether to return the data instead of the formatted table.}
 }
 \value{
 A formatted table of key metrics for each sample.

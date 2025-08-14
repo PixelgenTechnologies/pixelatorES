@@ -12,6 +12,7 @@ style_table(
   search = TRUE,
   lengthChange = FALSE,
   buttons = TRUE,
+  escape = FALSE,
   ...
 )
 }
@@ -33,6 +34,9 @@ of rows displayed (default is FALSE).}
 
 \item{buttons}{A boolean indicating whether to include download buttons for CSV and Excel
 files (default is TRUE).}
+
+\item{escape}{A boolean indicating whether to escape HTML characters in the table cells
+(default is FALSE).}
 
 \item{...}{Additional arguments passed to the \code{DT::datatable} function.}
 }
