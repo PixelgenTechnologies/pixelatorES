@@ -1,6 +1,6 @@
 #' Create sample palette
 #'
-#' Create a sample paette based on the number of unique conditions in the experiment.
+#' Create a sample palette based on the number of unique conditions in the experiment.
 #'
 #' @param conditions Character vector of conditions.
 #'
@@ -14,26 +14,27 @@ create_sample_palette <-
 
     if (n_distinct(conditions) <= 2) {
       sample_palette <-
-        c(Pixelgen_accent_colors$blues[5], Pixelgen_accent_colors$greys[4]) %>%
+        c(Pixelgen_accent_colors$blues[4], Pixelgen_accent_colors$beiges[6]) %>%
         rep(10)
     } else if (n_distinct(conditions) <= 6) {
       sample_palette <-
         c(
-          PixelgenAccentColors(hue = c("greys"), level = c(4)),
           PixelgenAccentColors(hue = c("blues"), level = c(4, 6)),
-          PixelgenAccentColors(hue = c("oranges"), level = c(4, 6)),
-          PixelgenAccentColors(hue = c("reds"), level = c(6))
+          PixelgenAccentColors(hue = c("beiges"), level = c(6, 9)),
+          PixelgenAccentColors(hue = c("pinks"), level = c(5, 6))
         ) %>%
         unname() %>%
         rep(10)
     } else if (n_distinct(conditions) > 6) {
       sample_palette <-
         c(
-          PixelgenAccentColors(hue = c("greys", "blues", "cyans"), level = c(4, 6)),
-          PixelgenAccentColors(hue = c("pinks"), level = c(5)),
-          PixelgenAccentColors(hue = c("reds"), level = c(6)),
-          PixelgenAccentColors(hue = c("oranges"), level = c(4, 6)),
-          PixelgenAccentColors(hue = c("purples"), level = c(4, 6))
+          PixelgenAccentColors(hue = c("blues"), level = c(4, 6)),
+          PixelgenAccentColors(hue = c("beiges"), level = c(6, 9)),
+          PixelgenAccentColors(hue = c("pinks"), level = c(5, 6)),
+          PixelgenAccentColors(hue = c("cyans"), level = c(4, 6)),
+          PixelgenAccentColors(hue = c("yellows"), level = c(5, 7)),
+          PixelgenAccentColors(hue = c("purples"), level = c(4, 6)),
+          PixelgenAccentColors(hue = c("greys"), level = c(4, 6))
         ) %>%
         unname() %>%
         rep(10)
@@ -68,7 +69,7 @@ cell_palette <-
     "CD8 TEMRA" = "#1B7E6F",
     "other T" = "#1B7E9F",
     "Other T" = "#1B7E9F",
-    "MAIT" = "#156559",
+    "MAIT" = "#0D6D5E",
     "DPT" = "#1B7E9F",
     "DNT" = "#7B787F",
     "dnT" = "#7B787F",
@@ -77,29 +78,29 @@ cell_palette <-
     "CD56bright NK" = "#866CCD",
     "NK_CD56bright" = "#866CCD",
     "NKT" = "#6C4ABD",
-    "B" = "#917557",
+    "B" = "#C7A989", # "#917557",
     "B naive" = "#F0DAC4",
     "Naive B" = "#F0DAC4",
     "B intermediate" = "#F0DAC4",
-    "Memory B" = "#917557",
-    "B memory" = "#917557",
+    "Memory B" = "#C7A989",
+    "B memory" = "#C7A989",
     "Plasma cells" = "#DE9982",
     "Plasmablast" = "#DE9982",
     "DC" = "#DA94C1",
     "cDC1" = "#DA94C1",
     "cDC2" = "#BB5391",
     "pDC" = "#9C4579",
-    "Mono" = "#F0C966",
-    "Classical Mono" = "#F0C966",
-    "CD14 Mono" = "#F0C966",
-    "Intermediate Mono" = "#DAAC22",
-    "CD16 Mono" = "#836714",
-    "Non-classical Mono" = "#836714",
+    "Mono" = "#F7DFA0",
+    "Classical Mono" = "#F7DFA0",
+    "CD14 Mono" = "#F7DFA0",
+    "Intermediate Mono" = "#E6BE4A",
+    "CD16 Mono" = "#BD9315",
+    "Non-classical Mono" = "#BD9315",
     "other" = "#797979",
     "Neutrophils" = "#CDCDCD",
     "Basophils" = "#797979",
-    "Platelet" = "#7C2628",
-    "Platelets" = "#7C2628",
+    "Platelet" = "#DB6365",
+    "Platelets" = "#DB6365",
     "gdT" = "#5A3E9E"
   )
 

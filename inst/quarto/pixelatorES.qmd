@@ -1,9 +1,9 @@
 ---
-title: "Experiment Summary"
+title: "EXPERIMENT SUMMARY REPORT"
 subtitle: "v0.3.2" 
 format:
   html:
-    theme: cerulean
+    theme: default
     page-layout: full
     toc: true
     toc-location: left

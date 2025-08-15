@@ -15,10 +15,62 @@
   border-top: 1px solid #dee2e6 !important; /* Uses Bootstrap's default border color */
 }
 
-
 .custom-title {
   color: white;
   font-size: 2px;
+}
+
+.nav-pills .nav-link.active {
+  background-color: black;
+}
+
+.nav {
+  --bs-nav-link-color: #000;
+  --bs-nav-link-hover-color: #E3C2A0;
+}
+
+a {
+  color: #E3C2A0;
+}
+
+/* Appears to render a bit slower when doing the font import - if it's too bad, let's just stick with default sans-serif*/
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+h1, .h1, h1.title, .title.h1 {
+  margin-top: 0.5em;
+  font-weight: 500;
+  font-size: 2.5rem;
+  line-height: 1.5;
+  color: black;
+  font-family: "Inter", sans-serif;
+  text-transform: uppercase;
+}
+
+h2  {
+  margin-top: 1em;
+  font-family: 'Inter', sans-serif;
+}
+
+h3  {
+  margin-top: 1em;
+  font-family: 'Inter', sans-serif;
+}
+
+p.subtitle {
+  letter-spacing: 1.5px;
+  font-family: 'Inter', sans-serif;
+}
+
+.text-primary {
+    --bs-text-opacity: 1;
+    color: #D1D1D1 !important;
+}
+
+#title-block-header.quarto-title-block.default .quarto-title-meta-heading {
+  color: #7B98C1;
+  opacity: 1;
+  letter-spacing: 1px;
+  font-family: "Inter", sans-serif;
 }
 
 #quarto-sidebar-toc-left::before {
