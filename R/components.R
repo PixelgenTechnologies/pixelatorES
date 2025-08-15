@@ -1562,19 +1562,25 @@ component_clustering_summary <- function(
 #'
 #' This function creates plots visualizing the proximity scores as heatmaps per sample and condition.
 #'
-#' @param processed_data A processed data object containing marker abundance data.
+#' @param proximity_scores A data frame containing proximity scores for different markers.
 #' @param heatmap_gradient A color palette for the heatmaps.
 #' @param proximity_score One of "join_count_z" or "log2_ratio".
+#' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots.
 #'
 #' @export
 #'
 component_proximity_heatmap_sample <- function(
-  processed_data,
+  proximity_scores,
   heatmap_gradient,
-  proximity_score
+  proximity_score = "log2_ratio",
+  test_mode = FALSE
+
 ) {
+  processed_data <-
+    summarize_colocalization_scores_per_sample(proximity_scores, test_mode = test_mode)
+
   plots <-
     processed_data %>%
     group_split() %>%
@@ -1636,19 +1642,24 @@ component_proximity_heatmap_sample <- function(
 #'
 #' This function creates plots visualizing the proximity scores as heatmaps per celltype and condition.
 #'
-#' @param processed_data A processed data object containing marker abundance data.
+#' @param proximity_scores A data frame containing proximity scores for different markers.
 #' @param heatmap_gradient A color palette for the heatmaps.
 #' @param proximity_score One of "join_count_z" or "log2_ratio".
+#' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots.
 #'
 #' @export
 #'
 component_proximity_heatmap_celltype <- function(
-  processed_data,
+  proximity_scores,
   heatmap_gradient,
-  proximity_score
+  proximity_score = "log2_ratio",
+  test_mode = FALSE
 ) {
+  processed_data <-
+    summarize_colocalization_scores_per_celltype(proximity_scores, test_mode = test_mode)
+
   plots <-
     processed_data %>%
     group_split() %>%

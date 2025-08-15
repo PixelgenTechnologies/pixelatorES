@@ -227,4 +227,9 @@ test_that("Components work as expected", {
   )
 
   expect_s3_class(component$PCA, "ggplot")
+
+  # component_proximity_heatmap_sample
+  expect_no_error(
+    component <- component_proximity_heatmap_sample(processed_data, heatmap_gradient, "log2_ratio")
+  )
 })
