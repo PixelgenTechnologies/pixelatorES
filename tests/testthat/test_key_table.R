@@ -197,7 +197,7 @@ test_that("get_top_markers works as expected", {
 
   expect_no_error(
     sample_qc_tables <-
-      get_qc_metrics(seur, sample_qc_metrics[1], sample_sheet[1,])
+      get_qc_metrics(seur, sample_qc_metrics[1], sample_sheet[1, ])
   )
   expect_no_error(
     tabl <- key_metric_table(sample_qc_tables)
@@ -237,9 +237,10 @@ test_that("get_top_markers works as expected", {
         `Top 5 % counts` = "45.23",
         `Top 5 markers` = "CD44, B2M, CD59, CD45, CD43",
         `% Crossing edges (Initial)` = "5.06",
-        `% Crossing edges (Refinement)` = "0.01"),
+        `% Crossing edges (Refinement)` = "0.01"
+      ),
       row.names = c(NA, -1L),
-      class = c("tbl_df", "tbl", "data.frame"))
+      class = c("tbl_df", "tbl", "data.frame")
+    )
   )
-
 })
