@@ -1,7 +1,7 @@
 
 ::: {.panel-tabset .nav-pills}
 
-### Self-proximity 
+### Clustering 
 
 ::: {.panel-tabset .nav-pills}
 

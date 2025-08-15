@@ -1235,24 +1235,86 @@ component_abundance_per_celltype <- function(
 #' This function creates plots visualizing the proximity Z scores for selected
 #' contrasts.
 #'
+#' @param object A Seurat object containing the sample data.
 #' @param processed_data A processed data object containing marker abundance data.
 #' @param sample_palette A color palette for the samples.
 #' @param proximity_score One of "join_count_z" or "log2_ratio".
+#' @param selected_contrasts A boolean indicating whether to filter for selected contrasts (default is TRUE).
+#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots.
 #'
 #' @export
 #'
-component_proximity_selected <- function(
-  processed_data,
-  sample_palette,
-  proximity_score,
-  test_mode = FALSE
-) {
+component_proximity_selected <-
+  function(
+    object,
+    proximity_scores,
+    sample_palette,
+    proximity_score = "log2_ratio",
+    selected_contrasts = TRUE,
+    sample_levels = NULL,
+    test_mode = FALSE
+  ) {
+
+  plot_contrasts <-
+    c(
+      "B2M" = "HLA-ABC",
+
+      # Sgnalling microclusters
+      "CD45" = "CD45RA",
+      "CD45" = "CD45RB",
+      "CD45" = "CD45RO",
+      "CD11a" = "CD18",
+      "CD29" = "CD49D",
+      "CD11b" = "CD18",
+      "CD11c" = "CD18",
+
+      # Isoforms
+      "HLA-DR" = "HLA-DR-DP-DQ",
+
+      # T cell
+      "CD3e" = "TCRab",
+      "CD2" = "CD58",
+
+      # B cell
+      "CD19" = "CD21",
+      "CD19" = "CD81",
+      "CD79a" = "IgM",
+      "CD79a" = "IgD",
+
+      # NK cell
+      "CD159a" = "CD94",
+
+      # Tetraspanins
+      "CD81" = "CD82",
+      "CD53" = "CD82",
+
+      # Complement cascade
+      "CD55" = "CD59",
+      "CD21" = "CD35"
+    ) %>%
+    enframe("marker_1", "marker_2")
+
+  processed_data <-
+    proximity_scores %>%
+    filter(l1_annotation_summary %in% displayed_cell_types)
+
+  if (selected_contrasts) {
+    processed_data <-
+      processed_data %>%
+      inner_join(plot_contrasts)
+  }
+
+  processed_data <-
+    processed_data %>%
+    set_sample_levels(sample_levels = sample_levels) %>%
+    unite("contrast", marker_1, marker_2, sep = "/", remove = FALSE) %>%
+    group_by(contrast)
+
   plots <-
     processed_data %>%
-    filter(l1_annotation_summary %in% displayed_cell_types) %>%
     group_split() %>%
     set_names(group_keys(processed_data)$contrast) %>%
     {

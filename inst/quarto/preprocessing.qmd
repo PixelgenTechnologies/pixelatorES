@@ -85,7 +85,3 @@ pg_data_processed <- process_data(pg_data, params)
 proximity_scores <- filter_proximity_scores(pg_data_processed, params, sample_levels = sample_aliases)
 ```
 
-```{r}
-#| label: proximity_selected
-processed_data <- process_proximity_scores(pg_data_processed, proximity_scores)
-```
