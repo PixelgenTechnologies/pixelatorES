@@ -17,8 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `component_sequencing_saturation_curve` and sequencing saturation curves.
 - Pop up tooltips for all key metrics.
-- More extensive document styling has been added.
-- Default color palettes for cell types and samples have been modified.
 
 ## [0.3.2] 2025-08-11
 
