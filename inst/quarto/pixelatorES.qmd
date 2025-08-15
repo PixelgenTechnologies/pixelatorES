@@ -23,7 +23,6 @@ date: "`r Sys.Date()`"
 editor_options: 
   chunk_output_type: console
 execute:
-  cache: false
   dev: ragg_png
   execute-dir: dir
   echo: false
