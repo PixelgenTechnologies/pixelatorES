@@ -20,8 +20,8 @@ create_sample_palette <-
       sample_palette <-
         c(
           PixelgenAccentColors(hue = c("blues"), level = c(4, 6)),
-          PixelgenAccentColors(hue = c("beiges"), level = c(6,9)),
-          PixelgenAccentColors(hue = c("pinks"), level = c(5,6))
+          PixelgenAccentColors(hue = c("beiges"), level = c(6, 9)),
+          PixelgenAccentColors(hue = c("pinks"), level = c(5, 6))
         ) %>%
         unname() %>%
         rep(10)
@@ -29,12 +29,12 @@ create_sample_palette <-
       sample_palette <-
         c(
           PixelgenAccentColors(hue = c("blues"), level = c(4, 6)),
-          PixelgenAccentColors(hue = c("beiges"), level = c(6,9)),
-          PixelgenAccentColors(hue = c("pinks"), level = c(5,6)),
-          PixelgenAccentColors(hue = c("cyans"), level = c(4,6)),
-          PixelgenAccentColors(hue = c("yellows"), level = c(5,7)),
-          PixelgenAccentColors(hue = c("purples"), level = c(4,6)),
-          PixelgenAccentColors(hue = c("greys"), level = c(4,6))
+          PixelgenAccentColors(hue = c("beiges"), level = c(6, 9)),
+          PixelgenAccentColors(hue = c("pinks"), level = c(5, 6)),
+          PixelgenAccentColors(hue = c("cyans"), level = c(4, 6)),
+          PixelgenAccentColors(hue = c("yellows"), level = c(5, 7)),
+          PixelgenAccentColors(hue = c("purples"), level = c(4, 6)),
+          PixelgenAccentColors(hue = c("greys"), level = c(4, 6))
         ) %>%
         unname() %>%
         rep(10)

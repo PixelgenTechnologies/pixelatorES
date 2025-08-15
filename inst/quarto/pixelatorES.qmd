@@ -361,7 +361,6 @@ tabset_plotlist(component$dimred_plots, level = 4, close = FALSE)
 #| fig-height: 17
 #| results: 'asis'
 component$heatmap
-
 ```
 
 :::
