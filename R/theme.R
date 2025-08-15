@@ -1,6 +1,6 @@
 #' Create sample palette
 #'
-#' Create a sample paette based on the number of unique conditions in the experiment.
+#' Create a sample palette based on the number of unique conditions in the experiment.
 #'
 #' @param conditions Character vector of conditions.
 #'
@@ -14,26 +14,27 @@ create_sample_palette <-
 
     if (n_distinct(conditions) <= 2) {
       sample_palette <-
-        c(Pixelgen_accent_colors$blues[5], Pixelgen_accent_colors$greys[4]) %>%
+        c(Pixelgen_accent_colors$blues[4], Pixelgen_accent_colors$beiges[6]) %>%
         rep(10)
     } else if (n_distinct(conditions) <= 6) {
       sample_palette <-
         c(
-          PixelgenAccentColors(hue = c("greys"), level = c(4)),
           PixelgenAccentColors(hue = c("blues"), level = c(4, 6)),
-          PixelgenAccentColors(hue = c("oranges"), level = c(4, 6)),
-          PixelgenAccentColors(hue = c("reds"), level = c(6))
+          PixelgenAccentColors(hue = c("beiges"), level = c(6,9)),
+          PixelgenAccentColors(hue = c("pinks"), level = c(5,6))
         ) %>%
         unname() %>%
         rep(10)
     } else if (n_distinct(conditions) > 6) {
       sample_palette <-
         c(
-          PixelgenAccentColors(hue = c("greys", "blues", "cyans"), level = c(4, 6)),
-          PixelgenAccentColors(hue = c("pinks"), level = c(5)),
-          PixelgenAccentColors(hue = c("reds"), level = c(6)),
-          PixelgenAccentColors(hue = c("oranges"), level = c(4, 6)),
-          PixelgenAccentColors(hue = c("purples"), level = c(4, 6))
+          PixelgenAccentColors(hue = c("blues"), level = c(4, 6)),
+          PixelgenAccentColors(hue = c("beiges"), level = c(6,9)),
+          PixelgenAccentColors(hue = c("pinks"), level = c(5,6)),
+          PixelgenAccentColors(hue = c("cyans"), level = c(4,6)),
+          PixelgenAccentColors(hue = c("yellows"), level = c(5,7)),
+          PixelgenAccentColors(hue = c("purples"), level = c(4,6)),
+          PixelgenAccentColors(hue = c("greys"), level = c(4,6))
         ) %>%
         unname() %>%
         rep(10)
