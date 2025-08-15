@@ -5,14 +5,14 @@
 \title{Create the component for proximity per marker}
 \usage{
 component_proximity_per_marker(
-  processed_data,
-  proximity_score,
+  proximity_scores,
+  proximity_score = "log2_ratio",
   sample_palette,
   test_mode = FALSE
 )
 }
 \arguments{
-\item{processed_data}{A processed data object containing proximity scores.}
+\item{proximity_scores}{A data frame containing proximity scores for different markers.}
 
 \item{proximity_score}{One of "join_count_z" or "log2_ratio".}
 

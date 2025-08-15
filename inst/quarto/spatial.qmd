@@ -12,13 +12,9 @@
 #| fig-height: 4
 #| results: 'asis'
 
-processed_data <-
-  proximity_scores %>%
-  filter(as.character(marker_1) == as.character(marker_2)) %>%
-  group_by(marker_1)
-
-plots <- component_proximity_per_marker(processed_data, "log2_ratio", sample_palette, params$test_mode)
+plots <- component_proximity_per_marker(proximity_scores, "log2_ratio", sample_palette, params$test_mode)
 tabset_plotlist(plots, level = 5)
+
 ```
 
 #### Per celltype 

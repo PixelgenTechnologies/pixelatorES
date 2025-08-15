@@ -1377,7 +1377,7 @@ component_proximity_selected <-
 #' This function creates plots visualizing the proximity scores for each marker
 #' across different samples and conditions.
 #'
-#' @param processed_data A processed data object containing proximity scores.
+#' @param proximity_scores A data frame containing proximity scores for different markers.
 #' @param proximity_score One of "join_count_z" or "log2_ratio".
 #' @param sample_palette A color palette for the samples.
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
@@ -1387,10 +1387,16 @@ component_proximity_selected <-
 #' @export
 #'
 component_proximity_per_marker <- function(
-  processed_data,
-  proximity_score,
+  proximity_scores,
+  proximity_score = "log2_ratio",
   sample_palette,
   test_mode = FALSE) {
+
+  processed_data <-
+    proximity_scores %>%
+    filter(as.character(marker_1) == as.character(marker_2)) %>%
+    group_by(marker_1)
+
   plots <-
     processed_data %>%
     group_split() %>%

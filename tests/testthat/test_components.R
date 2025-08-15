@@ -91,9 +91,8 @@ test_that("Components work as expected", {
       list(
         control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
       )
-    ) %>%
-    filter(as.character(marker_1) == as.character(marker_2)) %>%
-    group_by(marker_1)
+    )
+
   expect_no_error(
     component <- component_proximity_per_marker(
       proximity_scores,
@@ -102,13 +101,53 @@ test_that("Components work as expected", {
     )
   )
   expect_s3_class(component[[1]], "ggplot")
+  expect_equal(
+    component[[1]]$data,
+    structure(
+      list(
+        sample_alias = c("S1", "S1", "S1"),
+        marker_1 = structure(c(1L,
+                               1L, 1L),
+                             levels = c("CD11b", "B2M", "HLA-ABC"), class = "factor"),
+        marker_2 = structure(c(1L, 1L, 1L),
+                             levels = c("CD11b", "B2M",
+                                        "HLA-ABC"),
+                             class = "factor"),
+        join_count = c(0, 57, 0),
+        join_count_expected_mean = c(0.03, 45.18, 0),
+        join_count_expected_sd = c(0.171446607997765,
+                                   6.58338895258438, 0),
+        join_count_z = c(-0.03, 1.79542786931341,
+                         0),
+        join_count_p = c(0.488033526585887, 0.0362927777357692,
+                         0.5),
+        log2_ratio = c(0, 0.335277648546382, 0),
+        sample_component = c("c3c393e9a17c1981",
+                             "0a45497c6bfbfb22", "2708240b908e2eba"),
+        count_1 = c(17L,
+                    929L, 12L),
+        count_2 = c(17L, 929L, 12L),
+        p1 = c(0.0021783700666325,
+               0.312163978494624, 0.00216723857684667),
+        p2 = c(0.0021783700666325,
+               0.312163978494624, 0.00216723857684667),
+        condition = c("good",
+                      "good", "good"),
+        seurat_clusters = c("1", "1", "1"),
+        l1_annotation_summary = c("CD4 T",
+                                  "CD4 T", "B")),
+      class = c("tbl_df", "tbl", "data.frame"),
+      row.names = c(NA,
+                    -3L))
+  )
 
   # component_proximity_selected
   set.seed(37)
   expect_no_error(
     component <- component_proximity_selected(
       temp,
-      proximity_scores,
+      proximity_scores %>%
+        filter(as.character(marker_1) == as.character(marker_2)),
       sample_palette = c("red", "black"),
       selected_contrasts = FALSE,
       proximity_score = "log2_ratio"
