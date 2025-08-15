@@ -1236,7 +1236,7 @@ component_abundance_per_celltype <- function(
 #' contrasts.
 #'
 #' @param object A Seurat object containing the sample data.
-#' @param processed_data A processed data object containing marker abundance data.
+#' @param proximity_scores A data frame containing proximity scores for different markers.
 #' @param sample_palette A color palette for the samples.
 #' @param proximity_score One of "join_count_z" or "log2_ratio".
 #' @param selected_contrasts A boolean indicating whether to filter for selected contrasts (default is TRUE).
