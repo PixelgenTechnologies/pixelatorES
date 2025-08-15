@@ -1,9 +1,9 @@
 ---
-title: "Experiment Summary"
+title: "EXPERIMENT SUMMARY REPORT"
 subtitle: "v0.3.2" 
 format:
   html:
-    theme: cerulean
+    theme: default
     page-layout: full
     toc: true
     toc-location: left
@@ -23,6 +23,7 @@ date: "`r Sys.Date()`"
 editor_options: 
   chunk_output_type: console
 execute:
+  cache: false
   dev: ragg_png
   execute-dir: dir
   echo: false
