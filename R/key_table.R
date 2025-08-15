@@ -401,7 +401,8 @@ key_metric_table <-
 
 #' Format content with an info icon and tooltip
 #'
-#' This function formats content with an info icon that displays a tooltip with additional information when hovered over.
+#' This function formats content with an info icon that displays a tooltip
+#' with additional information when hovered over.
 #'
 #' @param content A string containing the content to be formatted.
 #' @param description A string containing the description to be displayed in the tooltip.
@@ -419,16 +420,6 @@ format_with_info_bootstrap <-
       description
     )
   }
-
-# format_with_info_awesome <-
-#   function(content, description) {
-#     # Use Bootstrap info icon with tooltip
-#     sprintf(
-#       '%s <i class="fas fa-circle-info" data-bs-toggle="tooltip" title="%s" style="cursor:help;"></i>',
-#       content,
-#       description
-#     )
-#   }
 
 #' Key metric definitions
 #'
