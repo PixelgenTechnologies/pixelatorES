@@ -1401,10 +1401,6 @@ component_proximity_per_marker <- function(
       }
     } %>%
     mutate(
-      marker_1 = factor(marker_1, order_cd_markers(
-        unique(marker_1),
-        params$control_markers
-      )),
       l1_annotation_summary = factor(l1_annotation_summary, displayed_cell_types)
     ) %>%
     group_by(marker_1)
