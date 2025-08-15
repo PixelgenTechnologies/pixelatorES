@@ -1,0 +1,22 @@
+name: Check testing modes
+
+on:
+  pull_request:
+
+jobs:
+  check-debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check for debug_mode TRUE
+        run: |
+          FILE_PATH="inst/quarto/pixelatorES.qmd"
+          if grep -Pq '^\s*(debug_mode|test_mode):\s*(TRUE|true)\b' "$FILE_PATH"; then
+            echo "❌ debug_mode or test_mode set to TRUE/true found in $FILE_PATH"
+            grep -Pn '^\s*(debug_mode|test_mode):\s*(TRUE|true)\b' "$FILE_PATH"
+            exit 1
+          else
+            echo "✅ No debug_mode/test_mode TRUE/true found."
+          fi
