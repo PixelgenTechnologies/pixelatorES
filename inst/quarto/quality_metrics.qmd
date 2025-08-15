@@ -37,7 +37,6 @@ plots <-
 tabset_plotlist(plots,
   level = 5
 )
-
 ```
 
 #### Reads and molecules 
@@ -65,7 +64,7 @@ close_tabset()
 #| label: qc_metrics_reads_per_cell
 #| results: 'asis'
 
-component <- 
+component <-
   component_sequencing_reads_per_cell(pg_data)
 
 tabset_figure_table(
@@ -103,7 +102,6 @@ close_tabset()
 #| results: 'asis'
 
 component_molecule_plot(pg_data, sample_palette)
-
 ```
 
 ### Graph metrics

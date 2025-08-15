@@ -530,8 +530,8 @@ component_sequencing_saturation_curve <-
         names_to = "type", values_to = "saturation"
       ) %>%
       mutate(type = str_remove(type, "graph_") %>%
-               str_remove("_saturation") %>%
-               str_to_sentence())
+        str_remove("_saturation") %>%
+        str_to_sentence())
 
     seqsat_curve_data <-
       set_sample_levels(
