@@ -11,6 +11,8 @@
 #' of rows displayed (default is FALSE).
 #' @param buttons A boolean indicating whether to include download buttons for CSV and Excel
 #' files (default is TRUE).
+#' @param escape A boolean indicating whether to escape HTML characters in the table cells
+#' (default is FALSE).
 #' @param ... Additional arguments passed to the `DT::datatable` function.
 #'
 #' @return A HTML table using the DT package.
@@ -25,6 +27,7 @@ style_table <- function(
   search = TRUE,
   lengthChange = FALSE,
   buttons = TRUE,
+  escape = FALSE,
   ...) {
   pixelatorR:::assert_class(df, "data.frame")
   pixelatorR:::assert_single_value(pageLength, "integer", allow_null = TRUE)
@@ -77,6 +80,7 @@ style_table <- function(
     df,
     caption = caption,
     rownames = FALSE,
+    escape = escape,
     options = opts,
     extensions = if (buttons) "Buttons" else list(),
     ...

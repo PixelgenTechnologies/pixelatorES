@@ -295,101 +295,86 @@ get_qc_metrics <-
 #'
 #' @param qc_metrics_tables A list containing quality control metrics tables
 #' for each sample.
+#' @param detailed A logical value indicating whether to include all metrics.
+#' @param return_data A logical value indicating whether to return the data instead of the formatted table.
 #'
 #' @return A formatted table of key metrics for each sample.
 #'
 #' @export
 #'
 key_metric_table <-
-  function(qc_metrics_tables) {
-    list(
-      # Basic cell stats
-      qc_metrics_tables$read_stats %>%
-        mutate(
-          median_reads_per_cell = median_reads_per_cell / 1e3,
-          median_abs_per_cell = median_abs_per_cell / 1e3
-        ) %>%
-        select(
-          `Sample ID` = sample_alias,
-          `Number of cells` = n_cells,
-          `Number of cells >10k nodes` = n_cells_over10k,
-          `Median isotype % counts` = median_isotype_count_pct,
-          `Median intracellular % counts` = median_intracellular_count_pct,
-          `Median Abs per cell [k]` = median_abs_per_cell,
-          `Median reads per cell [k]` = median_reads_per_cell
-        ),
+  function(qc_metrics_tables, detailed = TRUE, return_data = FALSE) {
+    table_content <-
+      list(
+        # Basic cell stats
+        qc_metrics_tables$read_stats,
 
-      # Sequencing saturation
-      qc_metrics_tables$seq_saturation %>%
-        mutate(
-          total_reads = total_reads / 1e6,
-          valid_reads = valid_reads / 1e6,
-          graph_proteins = graph_proteins / 1e6,
-          graph_edges = graph_edges / 1e6
-        ) %>%
-        select(
-          `Sample ID` = sample_alias,
-          `Total reads [M]` = total_reads,
-          `Valid reads [M]` = valid_reads,
-          `Graph Nodes [M]` = graph_proteins,
-          `Graph Edges [M]` = graph_edges,
-          `Graph node saturation` = graph_node_saturation,
-          `Graph edge saturation` = graph_edge_saturation,
-          `Valid reads saturation` = valid_reads_saturation,
-          `% valid reads` = fraction_valid_reads,
-          `% graph reads` = fraction_graph_reads
-        ),
+        # Sequencing saturation
+        qc_metrics_tables$seq_saturation,
 
-      # Denoise stats
+        # Denoise stats
+        qc_metrics_tables$denoising,
 
-      qc_metrics_tables$denoising %>%
-        mutate(
-          number_of_umis_removed = number_of_umis_removed / 1e6
-        ) %>%
-        select(
-          `Sample ID` = sample_alias,
-          `% Denoised UMIs` = ratio,
-          `Total denoised UMIs [M]` = number_of_umis_removed
-        ),
+        # Coreness stats
+        qc_metrics_tables$coreness$sample_summary,
 
-      # Coreness stats
-      qc_metrics_tables$coreness$sample_summary %>%
-        select(
-          `Sample ID` = sample_alias,
-          `Median mean coreness` = median_mean_coreness,
-          `Median % dangling nodes` = median_percent_dangling_nodes,
-          `Median % well connected nodes` = median_percent_well_connected_nodes
-        ),
+        # Top markers
+        qc_metrics_tables$top_markers,
 
-      # Top markers
-      qc_metrics_tables$top_markers %>%
-        mutate(across(where(is.numeric), . %>%
-          `*`(100))) %>%
-        rename(
-          `Sample ID` = sample_alias,
-          `Top 3 % counts` = top3_fraction,
-          `Top 5 % counts` = top5_fraction,
-          `Top 5 markers` = top_markers
-        ),
+        # Crossing edges
+        qc_metrics_tables$crossing_edges %>%
+          select(
+            sample_alias,
+            type,
+            percent
+          ) %>%
+          pivot_wider(names_from = "type", values_from = "percent")
+      ) %>%
+      reduce(left_join, by = "sample_alias") %>%
+      select(1, any_of(key_metric_definitions$var))
 
-      # Crossing edges
-      qc_metrics_tables$crossing_edges %>%
-        select(
-          `Sample ID` = sample_alias,
-          type,
-          percent
-        ) %>%
-        pivot_wider(names_from = "type", values_from = "percent") %>%
-        rename(
-          `% Crossing edges (Initial)` = "Initial stage",
-          `% Crossing edges (Refinement)` = "Refinement stage"
-        )
-    ) %>%
-      reduce(left_join, by = "Sample ID") %>%
+    if (!detailed) {
+      table_content <-
+        table_content %>%
+        select(1, all_of(c(
+          "n_cells",
+          "median_isotype_count_pct",
+          "median_abs_per_cell",
+          "median_reads_per_cell",
+          "total_reads",
+          "graph_node_saturation",
+          "graph_edge_saturation",
+          "median_mean_coreness"
+        )))
+    }
+
+
+    for (i in seq(from = 2, to = ncol(table_content))) {
+      definitions_i <- which(key_metric_definitions$var == colnames(table_content)[i])
+
+      if (is.numeric(table_content[[i]])) {
+        table_content[, i] <- table_content[, i] / key_metric_definitions$scale[definitions_i]
+      }
+      colnames(table_content)[i] <- key_metric_definitions$display_name[definitions_i]
+    }
+
+
+    table_content <-
+      table_content %>%
       # Format
       mutate(across(where(is.numeric), . %>%
         round(2))) %>%
       mutate_all(as.character) %>%
+      rename(
+        `Sample ID` = sample_alias
+      )
+
+
+    if (return_data) {
+      return(table_content)
+    }
+
+    table_content %>%
       # Pivot
       pivot_longer(
         cols = -`Sample ID`,
@@ -400,6 +385,110 @@ key_metric_table <-
         names_from = "Sample ID",
         values_from = "Value"
       ) %>%
+      left_join(
+        key_metric_definitions %>%
+          select(display_name, description),
+        by = c("Metric" = "display_name")
+      ) %>%
+      mutate(
+        Metric = format_with_info_bootstrap(Metric, description)
+      ) %>%
+      select(-description) %>%
       # Show table
-      style_table()
+      style_table(escape = FALSE)
   }
+
+
+#' Format content with an info icon and tooltip
+#'
+#' This function formats content with an info icon that displays a tooltip
+#' with additional information when hovered over.
+#'
+#' @param content A string containing the content to be formatted.
+#' @param description A string containing the description to be displayed in the tooltip.
+#'
+#' @return A formatted string with an info icon and tooltip.
+#'
+#' @export
+#'
+format_with_info_bootstrap <-
+  function(content, description) {
+    # Use Bootstrap info icon with tooltip
+    sprintf(
+      '%s <i class="bi bi-info-circle-fill text-primary" data-bs-toggle="tooltip" title="%s" style="cursor:help;"></i>',
+      content,
+      description
+    )
+  }
+
+#' Key metric definitions
+#'
+#' This tibble contains definitions for key metrics.
+#'
+#' @noRd
+#'
+key_metric_definitions <-
+  tribble(
+    ~var, ~display_name, ~scale,
+    ~description,
+    "n_cells", "Number of cells", 1,
+    "Total number of cells in the sample.",
+    "n_cells_over10k", "Number of cells >10k nodes", 1,
+    "Number of cells with more than 10,000 nodes (proteins).",
+    "median_isotype_count_pct", "Median isotype % counts", 1,
+    "Median percentage of counts attributed to isotype controls across all cells in the sample.",
+    "median_intracellular_count_pct", "Median intracellular % counts", 1,
+    "Median percentage of counts attributed to intracellular proteins across all cells in the sample.",
+    "median_abs_per_cell", "Median proteins per cell [k]", 1e3,
+    "Median number of proteins (nodes) per cell, scaled to thousands.",
+    "median_reads_per_cell", "Median reads per cell [k]", 1e3,
+    "Median number of reads per cell, scaled to thousands.",
+    "total_reads", "Total reads [M]", 1e6,
+    "Total number of reads in the sample, scaled to millions.",
+    "valid_reads", "Valid reads [M]", 1e6,
+    "Total number of valid reads in the sample, excluding reads that do not map to any panel protein,
+    scaled to millions.",
+    "graph_proteins", "Graph Nodes [M]", 1e6,
+    "Total number of graph nodes (proteins) in the sample, excluding nodes that don't belong to any cell,
+    scaled to millions.",
+    "graph_edges", "Graph Edges [M]", 1e6,
+    "Total number of graph edges in the sample, excluding edges that don't belong to any cell, scaled to millions.",
+    "graph_node_saturation", "Graph node saturation [%]", 1,
+    "Percentage of graph nodes that are saturated, indicating the proportion of nodes that have been fully sampled.
+  Is calculated as: $\\mathit{Saturation} = 1 - \\frac{\\text{\\# Graph proteins}}{\\text{\\# Graph reads}}$",
+    "graph_edge_saturation", "Graph edge saturation [%]", 1,
+    "Percentage of graph edges that are saturated, indicating the proportion of edges that have been fully sampled.
+  Is calculated as: $\\mathit{Saturation} = 1 - \\frac{\\text{\\# Graph edges}}{\\text{\\# Graph reads}}$",
+    "valid_reads_saturation", "Valid reads saturation [%]", 1,
+    "Percentage of valid reads that are saturated, indicating the proportion of reads that have been fully sampled.
+  Is calulated as: $\\mathit{Saturation} = 1 - \\frac{\\text{\\# Deduped valid reads}}{\\text{\\# Valid reads}}$",
+    "fraction_valid_reads", "Valid reads fraction [%]", 1,
+    "Percentage of total reads that are valid reads.",
+    "fraction_graph_reads", "Graph reads fraction [%]", 1,
+    "Percentage of total reads that are graph reads,
+    indicating the proportion of reads that contribute to cell graphs.",
+    "ratio", "% Denoised UMIs", 1,
+    "Percentage of unique molecular identifiers (UMIs) that have been removed in denoising.",
+    "number_of_umis_removed", "Total denoised UMIs [M]", 1e6,
+    "Total number of unique molecular identifiers (UMIs) that have been removed during the denoising process,
+    scaled to millions.",
+    "median_mean_coreness", "Median mean coreness", 1,
+    "Median mean coreness across all components in the sample,
+    indicating the average connectivity of nodes in cell graphs.",
+    "median_percent_dangling_nodes", "Median % dangling nodes", 1,
+    "Median percentage of dangling nodes in the sample,
+    indicating the proportion of nodes that have a coreness of 1.",
+    "median_percent_well_connected_nodes", "Median % well connected nodes", 1,
+    "Median percentage of well-connected nodes in the sample,
+    indicating the proportion of nodes that have a coreness of 3-5.",
+    "top3_fraction", "Top 3 % counts", 1e-2,
+    "Percentage of counts attributed to the top 3 abundant markers in the sample.",
+    "top5_fraction", "Top 5 % counts", 1e-2,
+    "Percentage of counts attributed to the top 5 abundant markers in the sample.",
+    "top_markers", "Top 5 markers", 1,
+    "The top 5 abundant markers in the sample.",
+    "Initial stage", "% Crossing edges (Initial)", 1,
+    "Percentage of edges that were crossing edges in the initial stage of graph refinement.",
+    "Refinement stage", "% Crossing edges (Refinement)", 1,
+    "Percentage of edges that were crossing edges in the refinement stage of graph refinement."
+  )

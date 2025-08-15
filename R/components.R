@@ -272,12 +272,12 @@ component_molecule_plot <- function(
     plot_violin(
       x = "sample_alias",
       y = "n_umi",
-      fill = "condition",
       y_label = "Number of molecules",
       round = 0,
       use_log10 = TRUE,
       palette = sample_palette,
-      alpha = 1
+      alpha = 1,
+      title = "Protein molecule counts",
     )
   return(p)
 }
@@ -465,6 +465,120 @@ component_sequencing_reads_per_cell <-
     ))
   }
 
+
+#' Create the component sequencing saturation curve
+#'
+#' This function creates a component that visualizes the sequencing saturation
+#' curve for each sample.
+#'
+#' @param object A Seurat object containing the sample data.
+#' @param data_files A data frame containing the sample aliases and corresponding file names.
+#' @param seqsat_comps The number of components to consider for sequencing saturation.
+#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
+#' @param mc_cores The number of cores to use for parallel processing. Default is 1, meaning
+#' sequential processing.
+#'
+#' @return A list containing plots showing the sequencing saturation curve for
+#' each sample.
+#'
+#' @export
+#'
+component_sequencing_saturation_curve <-
+  function(object, data_files, seqsat_comps = 5L, sample_levels = NULL, mc_cores = 1) {
+    object_meta <-
+      FetchData(object, c("sample_alias", "reads_in_component")) %>%
+      group_by(sample_alias) %>%
+      summarise(
+        n_comps = n(),
+        reads_per_component = mean(reads_in_component)
+      )
+
+    seqsat_curve_data <-
+      data_files$sample_alias %>%
+      set_names() %>%
+      parallel::mclapply(function(sampl) {
+        n_comps <-
+          object_meta$n_comps[which(object_meta$sample_alias == sampl)]
+        n_comps <- pmin(n_comps, seqsat_comps)
+        sampled_comps <- sample(
+          object[[]] %>%
+            filter(sample_alias == sampl) %>%
+            rownames() %>%
+            sample(n_comps)
+        )
+        el <- object %>%
+          subset(cells = sampled_comps) %>%
+          Edgelists(lazy = FALSE)
+
+        el %>%
+          SequenceSaturationCurve(n_comps = n_comps)
+      }, mc.cores = mc_cores) %>%
+      bind_rows(.id = "sample_alias") %>%
+      left_join(
+        object_meta,
+        by = join_by(sample_alias)
+      ) %>%
+      mutate(
+        reads_per_component = reads_per_component * sample_frac
+      ) %>%
+      select(
+        sample_alias, reads_per_component, graph_node_saturation,
+        graph_edge_saturation
+      ) %>%
+      pivot_longer(
+        cols = c("graph_node_saturation", "graph_edge_saturation"),
+        names_to = "type", values_to = "saturation"
+      ) %>%
+      mutate(type = str_remove(type, "graph_") %>%
+        str_remove("_saturation") %>%
+        str_to_sentence())
+
+    seqsat_curve_data <-
+      set_sample_levels(
+        seqsat_curve_data,
+        sample_levels
+      )
+
+    seqsat_curve_data_mean <-
+      seqsat_curve_data %>%
+      group_by(sample_alias, type, reads_per_component) %>%
+      summarise(saturation = mean(saturation)) %>%
+      ungroup()
+
+    plots <-
+      seqsat_curve_data %>%
+      pull(sample_alias) %>%
+      levels() %>%
+      set_names() %>%
+      lapply(function(x) {
+        seqsat_curve_data %>%
+          mutate(selected_sample = sample_alias == x) %>%
+          ggplot(aes(reads_per_component, saturation, color = selected_sample)) +
+          geom_line(
+            data = seqsat_curve_data_mean %>%
+              mutate(selected_sample = sample_alias == x),
+            aes(group = sample_alias)
+          ) +
+          geom_point(size = 0.1) +
+          facet_wrap(~type) +
+          scale_y_continuous(limits = c(0, 100)) +
+          scale_color_manual(values = c("TRUE" = "black", "FALSE" = "gray80")) +
+          theme_bw() +
+          theme(
+            axis.text.x = element_text(angle = 60, hjust = 1),
+            panel.grid = element_blank(),
+            legend.position = "none"
+          ) +
+          labs(
+            x = "Reads per component",
+            y = "Sequencing saturation [%]",
+            title = "Sequencing saturation curve"
+          )
+      })
+
+
+    return(plots)
+  }
 
 #' Create the component cell recovery
 #'

@@ -193,4 +193,54 @@ test_that("get_top_markers works as expected", {
       row.names = c(NA, -1L)
     )
   )
+
+
+  expect_no_error(
+    sample_qc_tables <-
+      get_qc_metrics(seur, sample_qc_metrics[1], sample_sheet[1, ])
+  )
+  expect_no_error(
+    tabl <- key_metric_table(sample_qc_tables)
+  )
+  expect_s3_class(tabl, "datatables")
+
+  expect_no_error(
+    tabl <- key_metric_table(sample_qc_tables, return_data = TRUE)
+  )
+  expect_s3_class(tabl, "data.frame")
+  expect_equal(
+    tabl,
+    structure(
+      list(
+        `Sample ID` = "S1",
+        `Number of cells` = "30",
+        `Number of cells >10k nodes` = "30",
+        `Median isotype % counts` = "0.04",
+        `Median intracellular % counts` = "0",
+        `Median proteins per cell [k]` = "48.64",
+        `Median reads per cell [k]` = "289.86",
+        `Total reads [M]` = "400.75",
+        `Valid reads [M]` = "359.95",
+        `Graph Nodes [M]` = "1.47",
+        `Graph Edges [M]` = "3.17",
+        `Graph node saturation [%]` = "83.2",
+        `Graph edge saturation [%]` = "63.74",
+        `Valid reads saturation [%]` = "35.4",
+        `Valid reads fraction [%]` = "89.82",
+        `Graph reads fraction [%]` = "2.18",
+        `% Denoised UMIs` = "2.67",
+        `Total denoised UMIs [M]` = "1.62",
+        `Median mean coreness` = "2.47",
+        `Median % dangling nodes` = "24.99",
+        `Median % well connected nodes` = "57.11",
+        `Top 3 % counts` = "35.2",
+        `Top 5 % counts` = "45.23",
+        `Top 5 markers` = "CD44, B2M, CD59, CD45, CD43",
+        `% Crossing edges (Initial)` = "5.06",
+        `% Crossing edges (Refinement)` = "0.01"
+      ),
+      row.names = c(NA, -1L),
+      class = c("tbl_df", "tbl", "data.frame")
+    )
+  )
 })
