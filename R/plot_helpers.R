@@ -493,6 +493,7 @@ plot_embeddings_samplewise <-
 #' @param use_jitter Logical indicating whether to add jittered data points.
 #' @param jitter_size Size of the jittered points.
 #' @param jitter_alpha Transparency level for the jittered points.
+#' @param hline Optional horizontal line to draw on the plot.
 #'
 #' @return A ggplot object representing the violin plot.
 #'
@@ -522,7 +523,8 @@ plot_violin <- function(
   use_grid = FALSE,
   use_jitter = FALSE,
   jitter_size = 0.1,
-  jitter_alpha = 0.5
+  jitter_alpha = 0.5,
+  hline = NULL
 ) {
   pixelatorR:::assert_class(plot_data, "data.frame")
   pixelatorR:::assert_single_value(x, type = "string", allow_null = TRUE)
@@ -548,6 +550,7 @@ plot_violin <- function(
   pixelatorR:::assert_single_value(jitter_size, type = "numeric")
   pixelatorR:::assert_single_value(jitter_alpha, type = "numeric")
   pixelatorR:::assert_within_limits(jitter_alpha, c(0, 1))
+  pixelatorR:::assert_single_value(hline, type = "numeric", allow_null = TRUE)
 
   if (is.null(expand)) {
     expand <- waiver()
@@ -559,6 +562,7 @@ plot_violin <- function(
     {
       if (!is.null(fill)) {
         ggplot(., aes(!!sym(x), !!sym(y), fill = !!sym(fill))) +
+          geom_hline(yintercept = hline) +
           geom_violin(
             position = position_dodge(width = 0.9),
             alpha = alpha,
@@ -568,6 +572,7 @@ plot_violin <- function(
           )
       } else {
         ggplot(., aes(!!sym(x), !!sym(y))) +
+          geom_hline(yintercept = hline) +
           geom_violin(
             position = position_dodge(width = 0.9),
             alpha = alpha,
@@ -708,19 +713,27 @@ draw_quantiles <-
     pixelatorR:::assert_single_value(use_real_quantile, "bool")
 
     build <- ggplot_build(p)
-    violin_data <- build$data[[1]]
+    violin_data <- build$data[[2]]
 
     if (nrow(violin_data) == 0) {
       # If there is no data, return NULL
       return(NULL)
     }
 
-    quantile_data <-
+    violin_data <-
       violin_data %>%
       group_by(x, PANEL) %>%
       filter(sum(!is.na(density)) > 1) %>%
       filter(!is.na(density)) %>% # Remove rows with NA density
-      filter(!all(violinwidth == 1)) %>%
+      filter(!all(violinwidth == 1))
+
+    if (nrow(violin_data) == 0) {
+      # If there is no data after filtering, return NULL
+      return(NULL)
+    }
+
+    quantile_data <-
+      violin_data %>%
       group_map(~ {
         .x <-
           bind_cols(.y, .x)

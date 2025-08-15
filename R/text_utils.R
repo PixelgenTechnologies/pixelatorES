@@ -11,6 +11,9 @@
 #' @export
 order_cd_markers <-
   function(markers, control_markers) {
+    if (inherits(markers, "factor")) {
+      markers <- as.character(markers)
+    }
     pixelatorR:::assert_vector(markers, "character", n = 1)
     pixelatorR:::assert_vector(control_markers, "character", n = 1)
 

@@ -5,26 +5,13 @@
 
 ::: {.panel-tabset .nav-pills}
 
-#### Per marker
-
 ```{r}
 #| label: global_proximity_per_marker_logratio
-#| fig-height: 4
+#| fig-height: 8
 #| results: 'asis'
 
-plots <- component_proximity_per_marker(proximity_scores, "log2_ratio", sample_palette, params$test_mode)
+plots <- component_proximity_per_marker(proximity_scores, sample_palette = sample_palette, test_mode = params$test_mode)
 tabset_plotlist(plots, level = 5)
-
-```
-
-#### Per celltype 
-
-```{r}
-#| label: polarity_summary
-#| fig-width: 16
-#| fig-height: 6
-plots <- component_clustering_summary(proximity_scores, heatmap_gradient, params$test_mode)
-print(plots$log2_ratio)
 ```
 
 :::

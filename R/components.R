@@ -1200,7 +1200,7 @@ component_abundance_per_celltype <- function(
         unique(marker),
         params$control_markers
       )),
-      l1_annotation_summary = factor(l1_annotation_summary)
+      l1_annotation_summary = factor(l1_annotation_summary, displayed_cell_types)
     ) %>%
     group_by(marker)
 
@@ -1257,119 +1257,118 @@ component_proximity_selected <-
     sample_levels = NULL,
     test_mode = FALSE
   ) {
+    plot_contrasts <-
+      c(
+        "B2M" = "HLA-ABC",
 
-  plot_contrasts <-
-    c(
-      "B2M" = "HLA-ABC",
+        # Sgnalling microclusters
+        "CD45" = "CD45RA",
+        "CD45" = "CD45RB",
+        "CD45" = "CD45RO",
+        "CD11a" = "CD18",
+        "CD29" = "CD49D",
+        "CD11b" = "CD18",
+        "CD11c" = "CD18",
 
-      # Sgnalling microclusters
-      "CD45" = "CD45RA",
-      "CD45" = "CD45RB",
-      "CD45" = "CD45RO",
-      "CD11a" = "CD18",
-      "CD29" = "CD49D",
-      "CD11b" = "CD18",
-      "CD11c" = "CD18",
+        # Isoforms
+        "HLA-DR" = "HLA-DR-DP-DQ",
 
-      # Isoforms
-      "HLA-DR" = "HLA-DR-DP-DQ",
+        # T cell
+        "CD3e" = "TCRab",
+        "CD2" = "CD58",
 
-      # T cell
-      "CD3e" = "TCRab",
-      "CD2" = "CD58",
+        # B cell
+        "CD19" = "CD21",
+        "CD19" = "CD81",
+        "CD79a" = "IgM",
+        "CD79a" = "IgD",
 
-      # B cell
-      "CD19" = "CD21",
-      "CD19" = "CD81",
-      "CD79a" = "IgM",
-      "CD79a" = "IgD",
+        # NK cell
+        "CD159a" = "CD94",
 
-      # NK cell
-      "CD159a" = "CD94",
+        # Tetraspanins
+        "CD81" = "CD82",
+        "CD53" = "CD82",
 
-      # Tetraspanins
-      "CD81" = "CD82",
-      "CD53" = "CD82",
+        # Complement cascade
+        "CD55" = "CD59",
+        "CD21" = "CD35"
+      ) %>%
+      enframe("marker_1", "marker_2")
 
-      # Complement cascade
-      "CD55" = "CD59",
-      "CD21" = "CD35"
-    ) %>%
-    enframe("marker_1", "marker_2")
+    processed_data <-
+      proximity_scores %>%
+      filter(l1_annotation_summary %in% displayed_cell_types)
 
-  processed_data <-
-    proximity_scores %>%
-    filter(l1_annotation_summary %in% displayed_cell_types)
+    if (selected_contrasts) {
+      processed_data <-
+        processed_data %>%
+        inner_join(plot_contrasts)
+    }
 
-  if (selected_contrasts) {
     processed_data <-
       processed_data %>%
-      inner_join(plot_contrasts)
+      set_sample_levels(sample_levels = sample_levels) %>%
+      unite("contrast", marker_1, marker_2, sep = "/", remove = FALSE) %>%
+      group_by(contrast)
+
+    plots <-
+      processed_data %>%
+      group_split() %>%
+      set_names(group_keys(processed_data)$contrast) %>%
+      {
+        if (test_mode) {
+          head(., n = 3)
+        } else {
+          .
+        }
+      } %>%
+      lapply(function(g_data) {
+        g_data %>%
+          complete(
+            sample_alias = levels(g_data$sample_alias),
+            l1_annotation_summary = displayed_cell_types,
+            fill = setNames(list(NA), proximity_score)
+          ) %>%
+          ggplot(aes(x = sample_alias, y = !!sym(proximity_score))) +
+          geom_hline(yintercept = 0) +
+          geom_violin(aes(fill = condition),
+            draw_quantiles = 0.5,
+            drop = FALSE,
+            scale = "width"
+          ) +
+          geom_jitter(
+            size = 0.1,
+            position = position_jitter(height = 0),
+            alpha = 0.3
+          ) +
+          geom_text(
+            data = . %>%
+              group_by(sample_alias, l1_annotation_summary) %>%
+              summarise(!!sym(proximity_score) := median(!!sym(proximity_score)), .groups = "drop"),
+            aes(label = round(!!sym(proximity_score), 2)),
+            size = 3,
+            vjust = 0
+          ) +
+          facet_grid(l1_annotation_summary ~ .) +
+          scale_fill_manual(values = sample_palette) +
+          theme_violin() +
+          theme(
+            axis.text.x = element_text(angle = 45, hjust = 1),
+            panel.grid = element_blank()
+          ) +
+          labs(
+            title = g_data$contrast[1],
+            x = "Sample ID",
+            y = ifelse(proximity_score == "join_count_z",
+              "Z-score",
+              "logratio"
+            ),
+          )
+      })
+
+    return(plots)
   }
-
-  processed_data <-
-    processed_data %>%
-    set_sample_levels(sample_levels = sample_levels) %>%
-    unite("contrast", marker_1, marker_2, sep = "/", remove = FALSE) %>%
-    group_by(contrast)
-
-  plots <-
-    processed_data %>%
-    group_split() %>%
-    set_names(group_keys(processed_data)$contrast) %>%
-    {
-      if (test_mode) {
-        head(., n = 3)
-      } else {
-        .
-      }
-    } %>%
-    lapply(function(g_data) {
-      g_data %>%
-        complete(
-          sample_alias = levels(g_data$sample_alias),
-          l1_annotation_summary = displayed_cell_types,
-          fill = setNames(list(NA), proximity_score)
-        ) %>%
-        ggplot(aes(x = sample_alias, y = !!sym(proximity_score))) +
-        geom_hline(yintercept = 0) +
-        geom_violin(aes(fill = condition),
-          draw_quantiles = 0.5,
-          drop = FALSE,
-          scale = "width"
-        ) +
-        geom_jitter(
-          size = 0.1,
-          position = position_jitter(height = 0),
-          alpha = 0.3
-        ) +
-        geom_text(
-          data = . %>%
-            group_by(sample_alias, l1_annotation_summary) %>%
-            summarise(!!sym(proximity_score) := median(!!sym(proximity_score)), .groups = "drop"),
-          aes(label = round(!!sym(proximity_score), 2)),
-          size = 3,
-          vjust = 0
-        ) +
-        facet_grid(l1_annotation_summary ~ .) +
-        scale_fill_manual(values = sample_palette) +
-        theme_violin() +
-        theme(
-          axis.text.x = element_text(angle = 45, hjust = 1),
-          panel.grid = element_blank()
-        ) +
-        labs(
-          title = g_data$contrast[1],
-          x = "Sample ID",
-          y = ifelse(proximity_score == "join_count_z",
-            "Z-score",
-            "logratio"
-          ),
-        )
-    })
-
-  return(plots)
-}
 
 
 #' Create the component for proximity per marker
@@ -1378,8 +1377,8 @@ component_proximity_selected <-
 #' across different samples and conditions.
 #'
 #' @param proximity_scores A data frame containing proximity scores for different markers.
-#' @param proximity_score One of "join_count_z" or "log2_ratio".
 #' @param sample_palette A color palette for the samples.
+#' @param per_celltype A boolean indicating whether to add a plot per cell type (default is TRUE).
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots for each marker.
@@ -1388,54 +1387,80 @@ component_proximity_selected <-
 #'
 component_proximity_per_marker <- function(
   proximity_scores,
-  proximity_score = "log2_ratio",
   sample_palette,
+  per_celltype = TRUE,
   test_mode = FALSE) {
-
-  processed_data <-
+  plot_data <-
     proximity_scores %>%
-    filter(as.character(marker_1) == as.character(marker_2)) %>%
-    group_by(marker_1)
-
-  plots <-
-    processed_data %>%
-    group_split() %>%
-    set_names(group_keys(processed_data)$marker_1) %>%
+    filter(marker_1 == marker_2) %>%
     {
       if (test_mode) {
-        head(., 10)
+        filter(., marker_1 %in% head(levels(marker_1), 10))
       } else {
         .
       }
     } %>%
+    mutate(
+      marker_1 = factor(marker_1, order_cd_markers(
+        unique(marker_1),
+        params$control_markers
+      )),
+      l1_annotation_summary = factor(l1_annotation_summary, displayed_cell_types)
+    ) %>%
+    group_by(marker_1)
+
+
+
+
+  plots <-
+    plot_data %>%
+    group_split() %>%
+    set_names(group_keys(plot_data)$marker_1) %>%
     lapply(function(g_data) {
-      g_data %>%
+      p1 <-
+        g_data %>%
+        plot_violin(
+          x = "sample_alias",
+          y = "log2_ratio",
+          fill = "sample_alias",
+          title = unique(g_data$marker_1) %>% as.character(),
+          y_label = "Log2 ratio Proximity Score",
+          summarize = FALSE,
+          palette = sample_palette,
+          use_jitter = TRUE,
+          use_grid = TRUE,
+          jitter_alpha = 1,
+          hline = 0
+        ) +
+        guides(fill = "none")
+
+      if (!per_celltype) {
+        return(p1)
+      }
+
+      p2 <-
+        g_data %>%
+        filter(l1_annotation_summary %in% displayed_cell_types) %>%
         complete(
           sample_alias = levels(g_data$sample_alias),
-          condition = levels(g_data$condition),
-          fill = setNames(list(NA), proximity_score)
+          l1_annotation_summary = displayed_cell_types
         ) %>%
-        ggplot(aes(sample_alias, !!sym(proximity_score), fill = condition)) +
-        geom_hline(yintercept = 0) +
-        geom_violin(
-          draw_quantiles = 0.5,
-          scale = "width"
+        plot_violin(
+          x = "sample_alias",
+          y = "log2_ratio",
+          fill = "sample_alias",
+          y_label = "Log2 ratio Proximity Score",
+          summarize = FALSE,
+          palette = sample_palette,
+          facet_var = "l1_annotation_summary",
+          use_jitter = TRUE,
+          use_grid = TRUE,
+          jitter_alpha = 1,
+          hline = 0
         ) +
-        geom_jitter(
-          size = 0.1,
-          position = position_jitter(height = 0)
-        ) +
-        scale_fill_manual(values = sample_palette) +
-        theme_violin() +
-        labs(
-          x = "Sample ID",
-          y = ifelse(
-            proximity_score == "join_count_z",
-            "Self-Proximity Z-score",
-            "Self-Proximity logratio"
-          ),
-          title = unique(g_data$marker_1)
-        )
+        guides(fill = "none")
+
+      p1 / p2
     })
 }
 

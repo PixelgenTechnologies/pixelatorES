@@ -28,7 +28,8 @@ plot_violin(
   use_grid = FALSE,
   use_jitter = FALSE,
   jitter_size = 0.1,
-  jitter_alpha = 0.5
+  jitter_alpha = 0.5,
+  hline = NULL
 )
 }
 \arguments{
@@ -80,6 +81,8 @@ above the 0.5 quantile.}
 \item{jitter_size}{Size of the jittered points.}
 
 \item{jitter_alpha}{Transparency level for the jittered points.}
+
+\item{hline}{Optional horizontal line to draw on the plot.}
 }
 \value{
 A ggplot object representing the violin plot.
