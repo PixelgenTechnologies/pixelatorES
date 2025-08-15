@@ -15,5 +15,6 @@ format_with_info_bootstrap(content, description)
 A formatted string with an info icon and tooltip.
 }
 \description{
-This function formats content with an info icon that displays a tooltip with additional information when hovered over.
+This function formats content with an info icon that displays a tooltip
+with additional information when hovered over.
 }
