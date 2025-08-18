@@ -1,3 +1,4 @@
+
 #' Convert PNG images to WebP format
 #'
 #' This function is used as a hook in knitr to convert PNG images generated during the rendering of a Quarto document
