@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] 2025-08-18
+
 ### Updates
 - More extensive document styling has been added.
 - Default color palettes for cell types and samples have been modified.
@@ -16,12 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Total and sample-wise proximity score violin plots are now plotted together in a tabset to avoid "nested" structures in the ES. 
 - The Proximity tab is now called "Spatial metrics" and "Self-proximity" is now called "Clustering".
 - The proximity score content has had a major overhaul to make calculations within the functions that generate the plots, rather than in previous steps. This allows for more flexibility in the plots and avoids unexpected dependencies of different functions.
+- Colocalization heatmaps are now showing the 40 markers with the highest F statistic in proximity ANOVA. 
 
 ### Added
 - `component_sequencing_saturation_curve` and sequencing saturation curves.
 - Pop up tooltips for all key metrics.
 - Horizontal line (`hline`) at 0 for poximity score violins.
-
+- Functions for performing ANOVA on abundance and proximity metrics. 
+- `complete_proximity_scores` function to add 0's to proximity scores for markers that are missing for each cell.
 
 ## [0.3.2] 2025-08-11
 

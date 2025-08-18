@@ -13,5 +13,5 @@ create_sample_palette(conditions)
 Character vectors of color hex codes.
 }
 \description{
-Create a sample paette based on the number of unique conditions in the experiment.
+Create a sample palette based on the number of unique conditions in the experiment.
 }

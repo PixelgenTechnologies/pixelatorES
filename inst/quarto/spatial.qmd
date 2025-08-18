@@ -1,4 +1,14 @@
 
+In PNA, each cell is represented as a graph where proteins are nodes and edges reflect spatial proximity. 
+For each protein pair, the observed number of edges (join count) is compared to the expected number under random 
+permutations, which account for protein abundance.  
+
+The **log2 ratio** Proximity Score summarizes this comparison as the log2-transformed ratio of observed to expected 
+counts. A value of **+1** means twice as many edges as expected by chance, while **−1** means half as many. 
+This provides an intuitive measure of spatial correlation, highlighting patterns such as clustering or colocalization.
+
+Learn more at [PNA Proximity Scores](https://software.pixelgen.com/pixelator/algorithms/#pna-proximity-scores).
+
 ::: {.panel-tabset .nav-pills}
 
 ### Clustering 
@@ -20,25 +30,30 @@ tabset_plotlist(plots, level = 5)
 
 ```{r}
 #| label: coloc_global_summary_heatmap_logratio
-#| fig-width: 14
-#| fig-height: 10
 #| results: 'asis'
-
-plots <- component_proximity_heatmap_sample(proximity_scores, heatmap_gradient, "log2_ratio")
+#| fig-height: 8
+plots <- component_proximity_heatmap_sample(
+  proximity_scores,
+  heatmap_gradient,
+  plot_markers = proximity_top_markers,
+  test_mode = params$test_mode
+)
 tabset_plotlist(plots, level = 5)
 ```
-
-
 
 #### Per Celltype 
 
 ```{r}
 #| label: coloc_celltype_summary_heatmap_logratio
-#| fig-width: 14
-#| fig-height: 10
 #| results: 'asis'
-plots <- component_proximity_heatmap_celltype(proximity_scores, heatmap_gradient, "log2_ratio")
-tabset_plotlist(plots, level = 5)
+#| fig-height: 8
+plots <- component_proximity_heatmap_celltype(
+  proximity_scores,
+  heatmap_gradient,
+  plot_markers = proximity_top_markers,
+  test_mode = params$test_mode
+)
+tabset_nested_plotlist(plots, level = 5)
 ```
 
 :::
