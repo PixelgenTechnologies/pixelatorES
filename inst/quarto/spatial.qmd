@@ -31,7 +31,7 @@ tabset_plotlist(plots, level = 5)
 ```{r}
 #| label: coloc_global_summary_heatmap_logratio
 #| results: 'asis'
-
+#| fig-height: 8
 plots <- component_proximity_heatmap_sample(
   proximity_scores,
   heatmap_gradient,
@@ -46,6 +46,7 @@ tabset_plotlist(plots, level = 5)
 ```{r}
 #| label: coloc_celltype_summary_heatmap_logratio
 #| results: 'asis'
+#| fig-height: 8
 plots <- component_proximity_heatmap_celltype(
   proximity_scores,
   heatmap_gradient,
