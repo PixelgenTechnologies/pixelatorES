@@ -24,6 +24,7 @@ library(knitr)
 
 # Hook to convert PNG -> WebP after each plot is saved
 knit_hooks$set(plot = convert_png_to_webp)
+
 ```
 
 ```{r}
