@@ -14,7 +14,7 @@
 convert_png_to_webp <-
   function(filepath, options) {
 
-        if (str_detect(filepath, "\\.png$")) {
+    if (str_detect(filepath, "\\.png$")) {
       # Make a WebP file:
       webp_path <- str_replace(filepath, "\\.png$", ".webp")
       img <- image_read(filepath)
