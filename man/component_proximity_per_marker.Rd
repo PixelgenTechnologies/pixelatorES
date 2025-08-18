@@ -5,18 +5,18 @@
 \title{Create the component for proximity per marker}
 \usage{
 component_proximity_per_marker(
-  processed_data,
-  proximity_score,
+  proximity_scores,
   sample_palette,
+  per_celltype = TRUE,
   test_mode = FALSE
 )
 }
 \arguments{
-\item{processed_data}{A processed data object containing proximity scores.}
-
-\item{proximity_score}{One of "join_count_z" or "log2_ratio".}
+\item{proximity_scores}{A data frame containing proximity scores for different markers.}
 
 \item{sample_palette}{A color palette for the samples.}
+
+\item{per_celltype}{A boolean indicating whether to add a plot per cell type (default is TRUE).}
 
 \item{test_mode}{A boolean indicating whether to run in test mode (default is FALSE).}
 }

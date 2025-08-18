@@ -91,25 +91,77 @@ test_that("Components work as expected", {
       list(
         control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
       )
-    ) %>%
-    filter(as.character(marker_1) == as.character(marker_2)) %>%
-    group_by(marker_1)
+    )
+
   expect_no_error(
     component <- component_proximity_per_marker(
       proximity_scores,
-      proximity_score = "log2_ratio",
       sample_palette = c("red", "black")
     )
   )
   expect_s3_class(component[[1]], "ggplot")
+  expect_equal(
+    component[[1]]$data,
+    structure(list(
+      sample_alias = c(
+        "S1", "S1", "S1", "S1", "S1",
+        "S1"
+      ), l1_annotation_summary = c(
+        "B", "CD4 T", "CD4 T", "CD8 T",
+        "Mono", "NK"
+      ), marker_1 = structure(c(1L, 1L, 1L, NA, NA, NA), levels = c(
+        "CD11b",
+        "B2M", "HLA-ABC"
+      ), class = "factor"), marker_2 = structure(c(
+        1L,
+        1L, 1L, NA, NA, NA
+      ), levels = c("CD11b", "B2M", "HLA-ABC"), class = "factor"),
+      join_count = c(0, 0, 57, NA, NA, NA), join_count_expected_mean = c(
+        0,
+        0.03, 45.18, NA, NA, NA
+      ), join_count_expected_sd = c(
+        0, 0.171446607997765,
+        6.58338895258438, NA, NA, NA
+      ), join_count_z = c(
+        0, -0.03,
+        1.79542786931341, NA, NA, NA
+      ), join_count_p = c(
+        0.5, 0.488033526585887,
+        0.0362927777357692, NA, NA, NA
+      ), log2_ratio = c(
+        0, 0, 0.335277648546382,
+        NA, NA, NA
+      ), sample_component = c(
+        "2708240b908e2eba", "c3c393e9a17c1981",
+        "0a45497c6bfbfb22", NA, NA, NA
+      ), count_1 = c(
+        12L, 17L, 929L,
+        NA, NA, NA
+      ), count_2 = c(12L, 17L, 929L, NA, NA, NA), p1 = c(
+        0.00216723857684667,
+        0.0021783700666325, 0.312163978494624, NA, NA, NA
+      ), p2 = c(
+        0.00216723857684667,
+        0.0021783700666325, 0.312163978494624, NA, NA, NA
+      ), condition = c(
+        "good",
+        "good", "good", NA, NA, NA
+      ), seurat_clusters = c(
+        "1", "1",
+        "1", NA, NA, NA
+      )
+    ), class = c("tbl_df", "tbl", "data.frame"), row.names = c(NA, -6L))
+  )
 
   # component_proximity_selected
+  set.seed(37)
   expect_no_error(
     component <- component_proximity_selected(
+      temp,
       proximity_scores %>%
-        unite("contrast", marker_1, marker_2, sep = "/", remove = FALSE) %>%
-        group_by(contrast),
+        filter(as.character(marker_1) == as.character(marker_2)),
       sample_palette = c("red", "black"),
+      selected_contrasts = FALSE,
       proximity_score = "log2_ratio"
     )
   )
@@ -117,10 +169,19 @@ test_that("Components work as expected", {
   expect_named(component, expected = c("B2M/B2M", "CD11b/CD11b", "HLA-ABC/HLA-ABC"))
   expect_s3_class(component[[1]], "ggplot")
 
+
   # component_dimred_plots
   expect_no_error(
     component <- component_dimred_plots(pg_data, sample_palette = c("red", "black", "blue"))
   )
 
   expect_s3_class(component$PCA, "ggplot")
+
+  # component_proximity_heatmap_sample
+  expect_no_error(
+    component <- component_proximity_heatmap_sample(proximity_scores,
+                                                    heatmap_gradient = c("red", "cyan"),
+                                                    proximity_score = "log2_ratio",
+                                                    test_mode = TRUE)
+  )
 })

@@ -103,6 +103,7 @@
 #' @importFrom pixelatorR ProximityScores
 #' @importFrom pixelatorR ReadPNA_edgelist
 #' @importFrom pixelatorR ReadPNA_Seurat
+#' @importFrom pixelatorR SequenceSaturationCurve
 #' @importFrom pixelatorR sequencing_saturation
 #' @importFrom pixelatorR SummarizeProximityScores
 #' @importFrom purrr map

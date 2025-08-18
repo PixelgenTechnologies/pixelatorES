@@ -5,18 +5,27 @@
 \title{Create the component for proximity Z scores}
 \usage{
 component_proximity_selected(
-  processed_data,
+  object,
+  proximity_scores,
   sample_palette,
-  proximity_score,
+  proximity_score = "log2_ratio",
+  selected_contrasts = TRUE,
+  sample_levels = NULL,
   test_mode = FALSE
 )
 }
 \arguments{
-\item{processed_data}{A processed data object containing marker abundance data.}
+\item{object}{A Seurat object containing the sample data.}
+
+\item{proximity_scores}{A data frame containing proximity scores for different markers.}
 
 \item{sample_palette}{A color palette for the samples.}
 
 \item{proximity_score}{One of "join_count_z" or "log2_ratio".}
+
+\item{selected_contrasts}{A boolean indicating whether to filter for selected contrasts (default is TRUE).}
+
+\item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
 
 \item{test_mode}{A boolean indicating whether to run in test mode (default is FALSE).}
 }

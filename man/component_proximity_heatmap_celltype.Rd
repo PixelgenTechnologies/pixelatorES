@@ -5,17 +5,20 @@
 \title{Create the component for proximity heatmaps per celltype and condition}
 \usage{
 component_proximity_heatmap_celltype(
-  processed_data,
+  proximity_scores,
   heatmap_gradient,
-  proximity_score
+  proximity_score = "log2_ratio",
+  test_mode = FALSE
 )
 }
 \arguments{
-\item{processed_data}{A processed data object containing marker abundance data.}
+\item{proximity_scores}{A data frame containing proximity scores for different markers.}
 
 \item{heatmap_gradient}{A color palette for the heatmaps.}
 
 \item{proximity_score}{One of "join_count_z" or "log2_ratio".}
+
+\item{test_mode}{A boolean indicating whether to run in test mode (default is FALSE).}
 }
 \value{
 A list containing plots.

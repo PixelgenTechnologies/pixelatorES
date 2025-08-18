@@ -13,10 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pixelatorES.qmd` now calls upon modular qmd files for each tab.
 - Slimmed down content in "Quality metrics".
 - `key_metric_table` now has an argument `detailed` to control whether all key metrics should be shown. 
+- Total and sample-wise proximity score violin plots are now plotted together in a tabset to avoid "nested" structures in the ES. 
+- The Proximity tab is now called "Spatial metrics" and "Self-proximity" is now called "Clustering".
+- The proximity score content has had a major overhaul to make calculations within the functions that generate the plots, rather than in previous steps. This allows for more flexibility in the plots and avoids unexpected dependencies of different functions.
 
 ### Added
 - `component_sequencing_saturation_curve` and sequencing saturation curves.
 - Pop up tooltips for all key metrics.
+- Horizontal line (`hline`) at 0 for poximity score violins.
+
 
 ## [0.3.2] 2025-08-11
 
