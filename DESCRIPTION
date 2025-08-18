@@ -45,7 +45,8 @@ Imports:
     patchwork,
     broom,
     stats,
-    htmlwidgets
+    htmlwidgets,
+    magick
 Remotes: 
     PixelgenTechnologies/pixelatorR
 Suggests: 
