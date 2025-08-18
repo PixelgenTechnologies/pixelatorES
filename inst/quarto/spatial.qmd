@@ -3,8 +3,6 @@
 
 ### Clustering 
 
-::: {.panel-tabset .nav-pills}
-
 ```{r}
 #| label: global_proximity_per_marker_logratio
 #| fig-height: 8
@@ -14,7 +12,6 @@ plots <- component_proximity_per_marker(proximity_scores, sample_palette = sampl
 tabset_plotlist(plots, level = 5)
 ```
 
-:::
 
 ### Colocalization 
 ::: {.panel-tabset .nav-pills}
@@ -27,7 +24,7 @@ tabset_plotlist(plots, level = 5)
 #| fig-height: 10
 #| results: 'asis'
 
-plots <- component_proximity_heatmap_sample(processed_data, heatmap_gradient, "log2_ratio")
+plots <- component_proximity_heatmap_sample(proximity_scores, heatmap_gradient, "log2_ratio")
 tabset_plotlist(plots, level = 5)
 ```
 
@@ -40,7 +37,7 @@ tabset_plotlist(plots, level = 5)
 #| fig-width: 14
 #| fig-height: 10
 #| results: 'asis'
-plots <- component_proximity_heatmap_celltype(processed_data, heatmap_gradient, "log2_ratio")
+plots <- component_proximity_heatmap_celltype(proximity_scores, heatmap_gradient, "log2_ratio")
 tabset_plotlist(plots, level = 5)
 ```
 
