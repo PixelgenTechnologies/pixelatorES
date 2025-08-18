@@ -1,6 +1,6 @@
 ---
 title: "EXPERIMENT SUMMARY REPORT"
-subtitle: "v0.3.2" 
+subtitle: "v0.4.0" 
 format:
   html:
     theme: default
