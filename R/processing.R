@@ -157,7 +157,6 @@ complete_proximity_scores <-
         nesting(marker_1, marker_2),
         fill = list(log2_ratio = 0)
       )
-
   }
 
 #' Summarize proximity scores per sample and condition
@@ -239,7 +238,6 @@ summarize_colocalization_scores_per_celltype <- function(
   plot_markers = NULL,
   test_mode = FALSE
 ) {
-
   pixelatorR:::assert_class(proximity_scores, "tbl_df")
   pixelatorR:::assert_single_value(test_mode, "bool")
   pixelatorR:::assert_vector(plot_markers, "character", allow_null = TRUE)
@@ -303,11 +301,11 @@ summarize_colocalization_scores_per_celltype <- function(
 #' @noRd
 #'
 .run_anova <- function(
-    data,
-    vars = NULL,
-    response = "x",
-    formula_str = NULL,
-    tidy = TRUE
+  data,
+  vars = NULL,
+  response = "x",
+  formula_str = NULL,
+  tidy = TRUE
 ) {
   pixelatorR:::assert_class(data, "data.frame")
   pixelatorR:::assert_vector(vars, "character", n = 1, allow_null = TRUE)
@@ -348,7 +346,7 @@ summarize_colocalization_scores_per_celltype <- function(
         omega_squared = ifelse(term == "Residuals", NA, omega_squared)
       ) %>%
       select(term, df, sumsq, meansq, statistic,
-             p = p.value, eta_squared, omega_squared
+        p = p.value, eta_squared, omega_squared
       )
   }
 

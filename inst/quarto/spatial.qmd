@@ -30,16 +30,14 @@ tabset_plotlist(plots, level = 5)
 
 ```{r}
 #| label: coloc_global_summary_heatmap_logratio
-#| fig-width: 14
-#| fig-height: 10
 #| results: 'asis'
 
 plots <- component_proximity_heatmap_sample(
-    proximity_scores, 
-    heatmap_gradient, 
-    plot_markers = proximity_top_markers, 
-    test_mode = params$test_mode
-    )
+  proximity_scores,
+  heatmap_gradient,
+  plot_markers = proximity_top_markers,
+  test_mode = params$test_mode
+)
 tabset_plotlist(plots, level = 5)
 ```
 
@@ -47,15 +45,13 @@ tabset_plotlist(plots, level = 5)
 
 ```{r}
 #| label: coloc_celltype_summary_heatmap_logratio
-#| fig-width: 14
-#| fig-height: 10
 #| results: 'asis'
 plots <- component_proximity_heatmap_celltype(
-    proximity_scores, 
-    heatmap_gradient, 
-    plot_markers = proximity_top_markers, 
-    test_mode = params$test_mode
-    )
+  proximity_scores,
+  heatmap_gradient,
+  plot_markers = proximity_top_markers,
+  test_mode = params$test_mode
+)
 tabset_nested_plotlist(plots, level = 5)
 ```
 

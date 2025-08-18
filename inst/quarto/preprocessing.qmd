@@ -97,12 +97,10 @@ proximity_aov_res <-
   )
 
 proximity_top_markers <-
-  proximity_aov_res %>% 
-  arrange(desc(statistic)) %>% 
-  select(marker_1) %>% 
-  distinct() %>% 
-  head(40) %>% 
+  proximity_aov_res %>%
+  arrange(desc(statistic)) %>%
+  select(marker_1) %>%
+  distinct() %>%
+  head(40) %>%
   pull(1)
-
-
 ```

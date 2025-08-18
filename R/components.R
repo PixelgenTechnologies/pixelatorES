@@ -1575,7 +1575,6 @@ component_proximity_heatmap_sample <- function(
   plot_markers = NULL,
   test_mode = FALSE
 ) {
-
   pixelatorR:::assert_class(proximity_scores, "tbl_df")
   pixelatorR:::assert_class(heatmap_gradient, "character")
   pixelatorR:::assert_class(n_markers, "numeric")
@@ -1588,10 +1587,9 @@ component_proximity_heatmap_sample <- function(
       proximity_scores,
       plot_markers = plot_markers,
       test_mode = test_mode
-      )
+    )
 
   if (is.null(plot_markers)) {
-
     plot_markers <-
       processed_data %>%
       bind_rows(select(processed_data,
@@ -1604,7 +1602,6 @@ component_proximity_heatmap_sample <- function(
       arrange(desc(sd)) %>%
       head(n_markers) %>%
       pull(marker_1)
-
   }
 
   # Filter and symmetrise data
@@ -1693,7 +1690,6 @@ component_proximity_heatmap_celltype <- function(
   plot_markers = NULL,
   test_mode = FALSE
 ) {
-
   pixelatorR:::assert_class(proximity_scores, "tbl_df")
   pixelatorR:::assert_class(heatmap_gradient, "character")
   pixelatorR:::assert_class(n_markers, "numeric")
@@ -1706,24 +1702,22 @@ component_proximity_heatmap_celltype <- function(
       proximity_scores,
       plot_markers = plot_markers,
       test_mode = test_mode
-      )
+    )
 
 
   if (is.null(plot_markers)) {
-
     plot_markers <-
       processed_data %>%
       bind_rows(select(processed_data,
-                       marker_2 = marker_1,
-                       marker_1 = marker_2,
-                       everything()
+        marker_2 = marker_1,
+        marker_1 = marker_2,
+        everything()
       )) %>%
       group_by(marker_1) %>%
       summarise(sd = sd(mean_log2_ratio)) %>%
       arrange(desc(sd)) %>%
       head(n_markers) %>%
       pull(marker_1)
-
   }
   # Filter and symmetrise data
   processed_data <-
@@ -1732,9 +1726,9 @@ component_proximity_heatmap_celltype <- function(
     filter(marker_1 %in% plot_markers & marker_2 %in% plot_markers) %>%
     mutate(l1_annotation_summary = factor(l1_annotation_summary, displayed_cell_types)) %>%
     bind_rows(select(.,
-                     marker_2 = marker_1,
-                     marker_1 = marker_2,
-                     everything()
+      marker_2 = marker_1,
+      marker_1 = marker_2,
+      everything()
     )) %>%
     distinct() %>%
     group_by(celltype = l1_annotation_summary) %>%
@@ -1780,7 +1774,6 @@ component_proximity_heatmap_celltype <- function(
               marker_2 = factor(marker_2, levels = plot_order)
             ) %>%
             arrange(marker_1, marker_2) %>%
-
             ColocalizationHeatmap(
               marker1_col = "marker_1",
               marker2_col = "marker_2",
