@@ -560,7 +560,10 @@ plot_violin <- function(
 
   p <- plot_data %>%
     {
-      if (!is.null(fill)) {
+      if (sum(!is.na(plot_data[[y]])) <= 1) {
+        ggplot(plot_data, aes(!!sym(x), !!sym(y), fill = !!sym(fill))) +
+          geom_hline(yintercept = hline)
+      } else if (!is.null(fill)) {
         ggplot(., aes(!!sym(x), !!sym(y), fill = !!sym(fill))) +
           geom_hline(yintercept = hline) +
           geom_violin(
@@ -717,10 +720,13 @@ draw_quantiles <-
     # Grab the data of the first violin layer:
     violin_data <- build$data[[which(lapply(build$plot$layers, function(l) class(l$geom)[1]) == "GeomViolin")[1]]]
 
-    if (nrow(violin_data) == 0) {
-      # If there is no data, return NULL
+    if (is.null(violin_data)) {
       return(NULL)
     }
+    if (nrow(violin_data) == 0) {
+      return(NULL)
+    }
+
 
     violin_data <-
       violin_data %>%

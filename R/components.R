@@ -1415,6 +1415,9 @@ component_proximity_per_marker <- function(
     lapply(function(g_data) {
       p1 <-
         g_data %>%
+        complete(
+          sample_alias = levels(g_data$sample_alias)
+        ) %>%
         plot_violin(
           x = "sample_alias",
           y = "log2_ratio",
