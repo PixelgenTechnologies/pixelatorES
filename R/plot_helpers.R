@@ -713,7 +713,9 @@ draw_quantiles <-
     pixelatorR:::assert_single_value(use_real_quantile, "bool")
 
     build <- ggplot_build(p)
-    violin_data <- build$data[[2]]
+
+    # Grab the data of the first violin layer:
+    violin_data <- build$data[[which(lapply(build$plot$layers, function(l) class(l$geom)[1]) == "GeomViolin")[1]]]
 
     if (nrow(violin_data) == 0) {
       # If there is no data, return NULL
