@@ -44,7 +44,8 @@ Imports:
     dbplyr,
     patchwork,
     broom,
-    stats
+    stats,
+    magick
 Remotes: 
     PixelgenTechnologies/pixelatorR
 Suggests: 
