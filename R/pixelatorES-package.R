@@ -2,6 +2,7 @@
 "_PACKAGE"
 
 ## usethis namespace: start
+#' @importFrom broom tidy
 #' @importFrom cli cli_abort
 #' @importFrom ComplexHeatmap pheatmap
 #' @importFrom dplyr %>%

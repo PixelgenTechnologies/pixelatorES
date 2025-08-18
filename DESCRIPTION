@@ -42,7 +42,8 @@ Imports:
     scales,
     methods,
     dbplyr,
-    patchwork
+    patchwork,
+    broom
 Remotes: 
     PixelgenTechnologies/pixelatorR
 Suggests: 

@@ -1560,7 +1560,8 @@ component_clustering_summary <- function(
 #'
 #' @param proximity_scores A data frame containing proximity scores for different markers.
 #' @param heatmap_gradient A color palette for the heatmaps.
-#' @param proximity_score One of "join_count_z" or "log2_ratio".
+#' @param n_markers The number of markers to plot (default is 40).
+#' @param plot_markers A vector of markers to plot (default is NULL).
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots.
@@ -1570,12 +1571,70 @@ component_clustering_summary <- function(
 component_proximity_heatmap_sample <- function(
   proximity_scores,
   heatmap_gradient,
-  proximity_score = "log2_ratio",
+  n_markers = 40,
+  plot_markers = NULL,
   test_mode = FALSE
-
 ) {
+
+  pixelatorR:::assert_class(proximity_scores, "tbl_df")
+  pixelatorR:::assert_class(heatmap_gradient, "character")
+  pixelatorR:::assert_class(n_markers, "numeric")
+  pixelatorR:::assert_within_limits(n_markers, c(1, 100))
+  pixelatorR:::assert_class(plot_markers, "character", allow_null = TRUE)
+  pixelatorR:::assert_class(test_mode, "logical")
+
   processed_data <-
-    summarize_colocalization_scores_per_sample(proximity_scores, test_mode = test_mode)
+    summarize_colocalization_scores_per_sample(
+      proximity_scores,
+      plot_markers = plot_markers,
+      test_mode = test_mode
+      )
+
+  if (is.null(plot_markers)) {
+
+    plot_markers <-
+      processed_data %>%
+      bind_rows(select(processed_data,
+        marker_2 = marker_1,
+        marker_1 = marker_2,
+        everything()
+      )) %>%
+      group_by(marker_1) %>%
+      summarise(sd = sd(mean_log2_ratio)) %>%
+      arrange(desc(sd)) %>%
+      head(n_markers) %>%
+      pull(marker_1)
+
+  }
+
+  # Filter and symmetrise data
+  processed_data <-
+    processed_data %>%
+    filter(marker_1 %in% plot_markers & marker_2 %in% plot_markers) %>%
+    bind_rows(select(.,
+      marker_2 = marker_1,
+      marker_1 = marker_2,
+      everything()
+    )) %>%
+    distinct() %>%
+    group_by(sample_alias)
+
+  plot_order <-
+    processed_data %>%
+    group_by(marker_1, marker_2) %>%
+    summarise(
+      mean_log2_ratio = mean(mean_log2_ratio, na.rm = TRUE)
+    ) %>%
+    ungroup() %>%
+    pivot_wider(
+      names_from = marker_2,
+      values_from = mean_log2_ratio
+    ) %>%
+    column_to_rownames("marker_1") %>%
+    as.matrix() %>%
+    dist() %>%
+    hclust(method = "ward.D2") %>%
+    with(labels[order])
 
   plots <-
     processed_data %>%
@@ -1585,46 +1644,25 @@ component_proximity_heatmap_sample <- function(
       sampl <- unique(g_data$sample_alias)
       cond <- unique(g_data$condition)
 
-      plot_markers <-
-        g_data %>%
-        bind_rows(select(g_data,
-          marker_2 = marker_1,
-          marker_1 = marker_2,
-          everything()
-        )) %>%
-        distinct() %>%
-        group_by(marker = marker_1) %>%
-        summarise(sd = sd(mean_join_count_z)) %>%
-        arrange(-sd) %>%
-        head(60) %>%
-        pull(marker)
-
       g_data %>%
-        filter(marker_1 %in% plot_markers & marker_2 %in% plot_markers) %>%
+        mutate(
+          marker_1 = factor(marker_1, levels = plot_order),
+          marker_2 = factor(marker_2, levels = plot_order)
+        ) %>%
+        arrange(marker_1, marker_2) %>%
         ColocalizationHeatmap(
           marker1_col = "marker_1",
           marker2_col = "marker_2",
-          value_col = ifelse(
-            proximity_score == "join_count_z",
-            "mean_join_count_z",
-            "mean_log2_ratio"
-          ),
-          clustering_method = "ward.D2",
+          value_col = "mean_log2_ratio",
+          cluster_rows = FALSE,
+          cluster_cols = FALSE,
           cellwidth = 8,
           cellheight = 8,
           fontsize = 8,
           colors = heatmap_gradient,
           border_color = "white",
-          legend_range = if (proximity_score == "join_count_z") {
-            c(-1, 1) * 4
-          } else {
-            c(-1, 1)
-          },
-          legend_title = ifelse(
-            proximity_score == "join_count_z",
-            "Mean\nProximity\nZ-score",
-            "Mean\nProximity\nlogratio"
-          ),
+          legend_range = c(-1, 1),
+          legend_title = "Mean\nProximity\nlogratio",
           main = paste("Mean colocalization:", sampl, "-", cond)
         ) %>%
         as.ggplot()
@@ -1640,7 +1678,8 @@ component_proximity_heatmap_sample <- function(
 #'
 #' @param proximity_scores A data frame containing proximity scores for different markers.
 #' @param heatmap_gradient A color palette for the heatmaps.
-#' @param proximity_score One of "join_count_z" or "log2_ratio".
+#' @param n_markers The number of markers to plot (default is 40).
+#' @param plot_markers A vector of markers to plot (default is NULL).
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots.
@@ -1650,67 +1689,115 @@ component_proximity_heatmap_sample <- function(
 component_proximity_heatmap_celltype <- function(
   proximity_scores,
   heatmap_gradient,
-  proximity_score = "log2_ratio",
+  n_markers = 40,
+  plot_markers = NULL,
   test_mode = FALSE
 ) {
+
+  pixelatorR:::assert_class(proximity_scores, "tbl_df")
+  pixelatorR:::assert_class(heatmap_gradient, "character")
+  pixelatorR:::assert_class(n_markers, "numeric")
+  pixelatorR:::assert_within_limits(n_markers, c(1, 100))
+  pixelatorR:::assert_class(plot_markers, "character", allow_null = TRUE)
+  pixelatorR:::assert_class(test_mode, "logical")
+
   processed_data <-
-    summarize_colocalization_scores_per_celltype(proximity_scores, test_mode = test_mode)
+    summarize_colocalization_scores_per_celltype(
+      proximity_scores,
+      plot_markers = plot_markers,
+      test_mode = test_mode
+      )
+
+
+  if (is.null(plot_markers)) {
+
+    plot_markers <-
+      processed_data %>%
+      bind_rows(select(processed_data,
+                       marker_2 = marker_1,
+                       marker_1 = marker_2,
+                       everything()
+      )) %>%
+      group_by(marker_1) %>%
+      summarise(sd = sd(mean_log2_ratio)) %>%
+      arrange(desc(sd)) %>%
+      head(n_markers) %>%
+      pull(marker_1)
+
+  }
+  # Filter and symmetrise data
+  processed_data <-
+    processed_data %>%
+    filter(l1_annotation_summary %in% displayed_cell_types) %>%
+    filter(marker_1 %in% plot_markers & marker_2 %in% plot_markers) %>%
+    mutate(l1_annotation_summary = factor(l1_annotation_summary, displayed_cell_types)) %>%
+    bind_rows(select(.,
+                     marker_2 = marker_1,
+                     marker_1 = marker_2,
+                     everything()
+    )) %>%
+    distinct() %>%
+    group_by(celltype = l1_annotation_summary) %>%
+    arrange(celltype)
+
+  plot_order <-
+    processed_data %>%
+    group_by(marker_1, marker_2) %>%
+    summarise(
+      mean_log2_ratio = mean(mean_log2_ratio, na.rm = TRUE)
+    ) %>%
+    ungroup() %>%
+    pivot_wider(
+      names_from = marker_2,
+      values_from = mean_log2_ratio
+    ) %>%
+    column_to_rownames("marker_1") %>%
+    as.matrix() %>%
+    dist() %>%
+    hclust(method = "ward.D2") %>%
+    with(labels[order])
 
   plots <-
     processed_data %>%
     group_split() %>%
-    set_names(paste(
-      group_keys(processed_data)$celltype,
-      group_keys(processed_data)$condition
-    )) %>%
-    lapply(function(g_data) {
-      cellpop <- unique(g_data$celltype)
-      cond_ <- unique(g_data$condition)
+    set_names(group_keys(processed_data)$celltype) %>%
+    lapply(function(cell_type_data) {
+      cell_type_data <-
+        cell_type_data %>%
+        group_by(sample_alias)
 
-      plot_markers <-
-        g_data %>%
-        bind_rows(select(g_data,
-          marker_2 = marker_1,
-          marker_1 = marker_2,
-          everything()
-        )) %>%
-        distinct() %>%
-        group_by(marker = marker_1) %>%
-        summarise(sd = sd(mean_join_count_z)) %>%
-        arrange(-sd) %>%
-        head(60) %>%
-        pull(marker)
+      cell_type_data %>%
+        group_split() %>%
+        set_names(group_keys(cell_type_data)$sample_alias) %>%
+        lapply(function(g_data) {
+          cellpop <- unique(g_data$celltype)
+          samp_id <- unique(g_data$sample_alias)
+          cond_ <- unique(g_data$condition)
 
+          g_data %>%
+            mutate(
+              marker_1 = factor(marker_1, levels = plot_order),
+              marker_2 = factor(marker_2, levels = plot_order)
+            ) %>%
+            arrange(marker_1, marker_2) %>%
 
-      g_data %>%
-        filter(marker_1 %in% plot_markers & marker_2 %in% plot_markers) %>%
-        ColocalizationHeatmap(
-          marker1_col = "marker_1",
-          marker2_col = "marker_2",
-          value_col = ifelse(
-            proximity_score == "join_count_z",
-            "mean_join_count_z",
-            "mean_log2_ratio"
-          ),
-          clustering_method = "ward.D2",
-          cellwidth = 8,
-          cellheight = 8,
-          fontsize = 8,
-          colors = heatmap_gradient,
-          border_color = "white",
-          legend_range = if (proximity_score == "join_count_z") {
-            c(-1, 1) * 4
-          } else {
-            c(-1, 1)
-          },
-          legend_title = ifelse(
-            proximity_score == "join_count_z",
-            "Mean\nProximity\nZ-score",
-            "Mean\nProximity\nlogratio"
-          ),
-          main = paste("Mean colocalization:", cond_, cellpop)
-        ) %>%
-        as.ggplot()
+            ColocalizationHeatmap(
+              marker1_col = "marker_1",
+              marker2_col = "marker_2",
+              value_col = "mean_log2_ratio",
+              cluster_rows = FALSE,
+              cluster_cols = FALSE,
+              cellwidth = 8,
+              cellheight = 8,
+              fontsize = 8,
+              colors = heatmap_gradient,
+              border_color = "white",
+              legend_range = c(-1, 1),
+              legend_title = "Mean\nProximity\nlogratio",
+              main = paste("Mean colocalization:", samp_id, cond_, cellpop)
+            ) %>%
+            as.ggplot()
+        })
     })
 
   return(plots)

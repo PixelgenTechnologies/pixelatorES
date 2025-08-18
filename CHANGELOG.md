@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `component_sequencing_saturation_curve` and sequencing saturation curves.
 - Pop up tooltips for all key metrics.
 - Horizontal line (`hline`) at 0 for poximity score violins.
-
+- Functions for performing ANOVA on abundance and proximity metrics. 
 
 ## [0.3.2] 2025-08-11
 

@@ -6,11 +6,14 @@
 \usage{
 summarize_colocalization_scores_per_celltype(
   proximity_scores,
+  plot_markers = NULL,
   test_mode = FALSE
 )
 }
 \arguments{
 \item{proximity_scores}{A data frame of proximity scores.}
+
+\item{plot_markers}{A character vector of markers to plot (default is NULL, which means all markers will be used).}
 
 \item{test_mode}{A logical indicating whether to run in test mode (default is FALSE).}
 }

@@ -7,7 +7,8 @@
 component_proximity_heatmap_celltype(
   proximity_scores,
   heatmap_gradient,
-  proximity_score = "log2_ratio",
+  n_markers = 40,
+  plot_markers = NULL,
   test_mode = FALSE
 )
 }
@@ -16,7 +17,9 @@ component_proximity_heatmap_celltype(
 
 \item{heatmap_gradient}{A color palette for the heatmaps.}
 
-\item{proximity_score}{One of "join_count_z" or "log2_ratio".}
+\item{n_markers}{The number of markers to plot (default is 40).}
+
+\item{plot_markers}{A vector of markers to plot (default is NULL).}
 
 \item{test_mode}{A boolean indicating whether to run in test mode (default is FALSE).}
 }
