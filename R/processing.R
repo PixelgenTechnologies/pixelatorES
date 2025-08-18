@@ -128,7 +128,8 @@ filter_proximity_scores <- function(
 
 #' Complete Proximity Scores
 #'
-#' This function completes the proximity scores by ensuring that each marker pair has a score for each sample component, filling missing values with 0.
+#' This function completes the proximity scores by ensuring that each marker pair has a score for each sample component,
+#' filling missing values with 0.
 #'
 #' @param proximity_scores A data frame of proximity scores.
 #' @param only_self A boolean indicating whether to filter for self-comparisons only (default is TRUE).

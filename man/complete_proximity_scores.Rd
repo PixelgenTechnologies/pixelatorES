@@ -15,5 +15,6 @@ complete_proximity_scores(proximity_scores, only_self = TRUE)
 A data frame of completed proximity scores with missing values filled.
 }
 \description{
-This function completes the proximity scores by ensuring that each marker pair has a score for each sample component, filling missing values with 0.
+This function completes the proximity scores by ensuring that each marker pair has a score for each sample component,
+filling missing values with 0.
 }
