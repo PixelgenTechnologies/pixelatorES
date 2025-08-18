@@ -1,4 +1,3 @@
-
 #' Convert PNG images to WebP format
 #'
 #' This function is used as a hook in knitr to convert PNG images generated during the rendering of a Quarto document
@@ -14,7 +13,6 @@
 #'
 convert_png_to_webp <-
   function(filepath, options) {
-
     if (str_detect(filepath, "\\.png$")) {
       # Make a WebP file:
       webp_path <- str_replace(filepath, "\\.png$", ".webp")
