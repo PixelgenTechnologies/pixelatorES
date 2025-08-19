@@ -89,6 +89,7 @@
 #' @importFrom ggplotify as.ggplot
 #' @importFrom grid unit
 #' @importFrom harmony RunHarmony
+#' @importFrom htmlwidgets JS
 #' @importFrom knitr kable
 #' @importFrom methods as
 #' @importFrom parallel mclapply
