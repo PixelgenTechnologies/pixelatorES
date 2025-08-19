@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed a bug in `plot_violin` that would throw an error if there is only a single point to be plotted. 
+
 ## [0.4.0] 2025-08-18
 
 ### Updates
