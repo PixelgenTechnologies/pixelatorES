@@ -78,28 +78,30 @@ style_table <- function(
     }
   }
 
-  if(tooltips) {
-    opts$initComplete <-
-      htmlwidgets::JS("
-      $(function () {
-        $('[data-bs-toggle=\"tooltip\"]').tooltip();
-        document.addEventListener('shown.bs.tooltip', function (e) {
-          if (window.MathJax) {
-            MathJax.typesetPromise([e.target.nextSibling]);
+  if (tooltips) {
+    opts$initComplete <- htmlwidgets::JS("
+    $(function () {
+      $('[data-bs-toggle=\"tooltip\"]').tooltip();
+      document.addEventListener('shown.bs.tooltip', function (e) {
+        if (window.MathJax) {
+          var tooltip = e.target.getAttribute('aria-describedby');
+          if (tooltip) {
+            var el = document.getElementById(tooltip);
+            MathJax.typesetPromise([el]);
           }
-        });
+        }
       });
-    ")
+    });
+  ")
 
-    opts$drawCallback <-
-      htmlwidgets::JS("
+    opts$drawCallback <- htmlwidgets::JS("
     function(settings) {
       // Reapply tooltips on each redraw
       $('[data-bs-toggle=\"tooltip\"]').tooltip();
     }
   ")
-
   }
+
 
   opts$dom <- dom
 

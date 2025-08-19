@@ -395,8 +395,10 @@ key_metric_table <-
       ) %>%
       select(-description) %>%
       # Show table
-      style_table(escape = FALSE,
-                  tooltips = TRUE)
+      style_table(
+        escape = FALSE,
+        tooltips = TRUE
+      )
   }
 
 
@@ -459,14 +461,11 @@ key_metric_definitions <-
     "graph_edges", "Graph Edges [M]", 1e6,
     "Total number of graph edges in the sample, excluding edges that don't belong to any cell, scaled to millions.",
     "graph_node_saturation", "Graph node saturation [%]", 1,
-    "Percentage of graph nodes that are saturated, indicating the proportion of nodes that have been fully sampled.
-  Is calculated as: $\\mathit{Saturation} = 1 - \\frac{\\text{\\# Graph proteins}}{\\text{\\# Graph reads}}$",
+    "Percentage of graph nodes that are saturated, indicating the proportion of nodes that have been fully sampled.",
     "graph_edge_saturation", "Graph edge saturation [%]", 1,
-    "Percentage of graph edges that are saturated, indicating the proportion of edges that have been fully sampled.
-  Is calculated as: $\\mathit{Saturation} = 1 - \\frac{\\text{\\# Graph edges}}{\\text{\\# Graph reads}}$",
+    "Percentage of graph edges that are saturated, indicating the proportion of edges that have been fully sampled.",
     "valid_reads_saturation", "Valid reads saturation [%]", 1,
-    "Percentage of valid reads that are saturated, indicating the proportion of reads that have been fully sampled.
-  Is calulated as: $\\mathit{Saturation} = 1 - \\frac{\\text{\\# Deduped valid reads}}{\\text{\\# Valid reads}}$",
+    "Percentage of valid reads that are saturated, indicating the proportion of reads that have been fully sampled.",
     "fraction_valid_reads", "Valid reads fraction [%]", 1,
     "Percentage of total reads that are valid reads.",
     "fraction_graph_reads", "Graph reads fraction [%]", 1,
