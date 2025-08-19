@@ -30,8 +30,8 @@ execute:
   message: false
 params: 
   
-  sample_sheet: "C:/Users/Max/data/pixelgen/esbug/test_samplesheet.samplesheet.csv"
-  data_folder: "C:/Users/Max/data/pixelgen/esbug"
+  sample_sheet: "../../../ES_test_data/test_samplesheet.csv"
+  data_folder: "../../../ES_test_data/"
   control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
   do_harmonize: FALSE
   harmonization_vars: ["condition"]

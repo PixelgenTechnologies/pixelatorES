@@ -561,7 +561,7 @@ plot_violin <- function(
   p <- plot_data %>%
     {
       if (sum(!is.na(plot_data[[y]])) <= 1) {
-        ggplot(plot_data, aes(!!sym(x), !!sym(y), fill = !!sym(fill))) +
+        ggplot(plot_data, aes(!!sym(x), !!sym(y))) +
           geom_hline(yintercept = hline)
       } else if (!is.null(fill)) {
         ggplot(., aes(!!sym(x), !!sym(y), fill = !!sym(fill))) +
