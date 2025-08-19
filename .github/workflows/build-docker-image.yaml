@@ -31,8 +31,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/pixelgentechnologies/experiment-summary-internal
-            890888997283.dkr.ecr.eu-north-1.amazonaws.com/experiment-summary-internal
+            ghcr.io/pixelgentechnologies/pixelatores
+            890888997283.dkr.ecr.eu-north-1.amazonaws.com/experiment-summary
           tags: |
             type=ref,event=branch
             type=ref,event=pr
