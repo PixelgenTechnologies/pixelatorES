@@ -395,7 +395,8 @@ key_metric_table <-
       ) %>%
       select(-description) %>%
       # Show table
-      style_table(escape = FALSE)
+      style_table(escape = FALSE,
+                  tooltips = TRUE)
   }
 
 
@@ -415,7 +416,11 @@ format_with_info_bootstrap <-
   function(content, description) {
     # Use Bootstrap info icon with tooltip
     sprintf(
-      '%s <i class="bi bi-info-circle-fill text-primary" data-bs-toggle="tooltip" title="%s" style="cursor:help;"></i>',
+      '%s <i class="bi bi-info-circle-fill text-primary"
+        data-bs-toggle="tooltip"
+        data-bs-html="true"
+        data-bs-title="%s"
+        style="cursor:help;"></i>',
       content,
       description
     )

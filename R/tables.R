@@ -11,6 +11,9 @@
 #' of rows displayed (default is FALSE).
 #' @param buttons A boolean indicating whether to include download buttons for CSV and Excel
 #' files (default is TRUE).
+#' @param tooltips A boolean indicating whether to enable tooltips for the table cells
+#' (default is FALSE). If enabled, it will also ensure that MathJax typesets the content
+#' of the cells after the tooltip is shown.
 #' @param escape A boolean indicating whether to escape HTML characters in the table cells
 #' (default is FALSE).
 #' @param ... Additional arguments passed to the `DT::datatable` function.
@@ -27,6 +30,7 @@ style_table <- function(
   search = TRUE,
   lengthChange = FALSE,
   buttons = TRUE,
+  tooltips = FALSE,
   escape = FALSE,
   ...) {
   pixelatorR:::assert_class(df, "data.frame")
@@ -72,6 +76,29 @@ style_table <- function(
     } else {
       dom <- "t" # Only show the table, nothing else
     }
+  }
+
+  if(tooltips) {
+    opts$initComplete <-
+      htmlwidgets::JS("
+      $(function () {
+        $('[data-bs-toggle=\"tooltip\"]').tooltip();
+        document.addEventListener('shown.bs.tooltip', function (e) {
+          if (window.MathJax) {
+            MathJax.typesetPromise([e.target.nextSibling]);
+          }
+        });
+      });
+    ")
+
+    opts$drawCallback <-
+      htmlwidgets::JS("
+    function(settings) {
+      // Reapply tooltips on each redraw
+      $('[data-bs-toggle=\"tooltip\"]').tooltip();
+    }
+  ")
+
   }
 
   opts$dom <- dom
