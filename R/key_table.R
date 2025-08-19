@@ -420,7 +420,6 @@ format_with_info_bootstrap <-
     sprintf(
       '%s <i class="bi bi-info-circle-fill text-primary"
         data-bs-toggle="tooltip"
-        data-bs-html="true"
         data-bs-title="%s"
         style="cursor:help;"></i>',
       content,
