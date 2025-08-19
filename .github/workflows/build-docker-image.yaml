@@ -3,8 +3,12 @@ name: Docker Image CI
 on:
   push:
     branches: ["main", "dev"]
+    tags:
+      - 'v*.*.*'
   pull_request:
     branches: ["main", "dev"]
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -27,7 +31,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/pixelgentechnologies/pixelatorES
+            ghcr.io/pixelgentechnologies/pixelatores
             890888997283.dkr.ecr.eu-north-1.amazonaws.com/experiment-summary
           tags: |
             type=ref,event=branch

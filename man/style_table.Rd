@@ -12,6 +12,7 @@ style_table(
   search = TRUE,
   lengthChange = FALSE,
   buttons = TRUE,
+  tooltips = FALSE,
   escape = FALSE,
   ...
 )
@@ -34,6 +35,10 @@ of rows displayed (default is FALSE).}
 
 \item{buttons}{A boolean indicating whether to include download buttons for CSV and Excel
 files (default is TRUE).}
+
+\item{tooltips}{A boolean indicating whether to enable tooltips for the table cells
+(default is FALSE). If enabled, it will also ensure that MathJax typesets the content
+of the cells after the tooltip is shown.}
 
 \item{escape}{A boolean indicating whether to escape HTML characters in the table cells
 (default is FALSE).}
