@@ -160,3 +160,32 @@ test_that("`draw_quantiles` works as expected", {
     expect_no_error(g + draw_quantiles(g, facet_var = "facet"))
   )
 })
+
+
+
+test_that("`plot_violin` works as expected", {
+  plot_data <-
+    structure(
+      list(sample_alias = c(
+        "S1_SOP_d0", "S1_SOP_d0", "S2_2Ab_d0", "S3_no2Ab_d0",
+        "S4_SOP_d3"
+      ), log2_ratio = c(NA, 1, 0, 0, NA)),
+      row.names = c(NA, -5L), class = c("tbl_df", "tbl", "data.frame")
+    )
+
+  expect_no_error(
+    plot_data %>%
+      plot_violin(
+        x = "sample_alias",
+        y = "log2_ratio",
+        fill = "sample_alias",
+        y_label = "Log2 ratio Proximity Score",
+        summarize = FALSE,
+        palette = c("red", "blue", "green", "orange"),
+        use_jitter = TRUE,
+        use_grid = TRUE,
+        jitter_alpha = 1,
+        hline = 0
+      )
+  )
+})

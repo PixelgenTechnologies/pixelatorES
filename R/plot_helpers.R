@@ -558,9 +558,18 @@ plot_violin <- function(
     expand <- expansion(mult = expand)
   }
 
+  # Check that there are enough datapoints to plot violins
+  max_complete_datapoints <-
+    plot_data %>%
+    filter(!is.na(!!sym(y))) %>%
+    group_by(across(all_of(c(x, facet_var)))) %>%
+    count() %>%
+    pull(n) %>%
+    max()
+
   p <- plot_data %>%
     {
-      if (sum(!is.na(plot_data[[y]])) <= 1) {
+      if (max_complete_datapoints <= 1) {
         ggplot(plot_data, aes(!!sym(x), !!sym(y))) +
           geom_hline(yintercept = hline)
       } else if (!is.null(fill)) {
