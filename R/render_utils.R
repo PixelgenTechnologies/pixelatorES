@@ -17,7 +17,7 @@ convert_png_to_webp <-
       # Make a WebP file:
       webp_path <- str_replace(filepath, "\\.png$", ".webp")
       img <- image_read(filepath)
-      image_write(img, webp_path, format = "webp", quality = 100)
+      image_write(img, webp_path, format = "webp", quality = 90)
 
       # Remove the original PNG file and replace the filepath with the WebP path
       file.remove(filepath)
