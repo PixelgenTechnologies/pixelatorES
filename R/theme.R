@@ -119,7 +119,7 @@ yes_no_palette <-
 #'
 cluster_palette <-
   c(
-    PixelgenAccentColors(
+    pixelatorR::PixelgenAccentColors(
       level = 7,
       hue = c(
         "blues", "reds",
@@ -129,7 +129,7 @@ cluster_palette <-
         "greys", "beiges"
       )
     ),
-    PixelgenAccentColors(
+    pixelatorR::PixelgenAccentColors(
       level = 9,
       hue = c(
         "blues", "pinks",
@@ -137,7 +137,7 @@ cluster_palette <-
         "greys", "beiges"
       )
     ),
-    PixelgenAccentColors(
+    pixelatorR::PixelgenAccentColors(
       level = 5,
       hue = c(
         "purples", "blues",
@@ -145,11 +145,11 @@ cluster_palette <-
         "reds", "oranges"
       )
     ),
-    PixelgenAccentColors(
+    pixelatorR::PixelgenAccentColors(
       level = 3,
       hue = c("blues", "reds")
     ),
-    PixelgenAccentColors(
+    pixelatorR::PixelgenAccentColors(
       level = 12,
       hue = c("blues", "reds")
     )

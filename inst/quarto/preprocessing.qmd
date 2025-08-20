@@ -13,6 +13,17 @@ library(stringr)
 library(ggplot2)
 library(ggplotify)
 library(purrr)
+library(magick)
+library(knitr)
+```
+
+
+```{r}
+#| label: setup_image_processing
+#| include: false
+
+# Hook to convert PNG -> WebP after each plot is saved
+knit_hooks$set(plot = convert_png_to_webp)
 ```
 
 ```{r}

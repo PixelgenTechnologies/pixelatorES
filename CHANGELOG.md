@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a bug in `plot_violin` that would throw an error if there is only a single point to be plotted. 
 - Removed equations from key metrics table tooltips, as these could not be rendered properly.
 
+### Updated
+- Images are now converted to WebP to limit file size somewhat. 
+
 ### Added
 - Workflow to label images with the version upon release. 
 

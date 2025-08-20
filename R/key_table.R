@@ -434,7 +434,7 @@ format_with_info_bootstrap <-
 #' @noRd
 #'
 key_metric_definitions <-
-  tribble(
+  tibble::tribble(
     ~var, ~display_name, ~scale,
     ~description,
     "n_cells", "Number of cells", 1,
