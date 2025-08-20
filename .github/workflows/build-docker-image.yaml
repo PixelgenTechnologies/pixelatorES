@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main", "dev"]
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   pull_request:
     branches: ["main", "dev"]
   release:
@@ -33,6 +33,7 @@ jobs:
           images: |
             ghcr.io/pixelgentechnologies/pixelatores
             890888997283.dkr.ecr.eu-north-1.amazonaws.com/experiment-summary
+            quay.io/pixelgen-technologies/pixelatores
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -40,7 +41,14 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-      - name: Build and push to ghcr and aws
+      - name: Set up build environment
+        id: setup_build_env
+        uses: ./.github/actions/setup-image-build-env
+        with:
+          quay-username: ${{ secrets.QUAY_IO_USERNAME }}
+          quay-password: ${{ secrets.QUAY_IO_PASSWORD }}
+
+      - name: Build and push to registries
         uses: docker/build-push-action@v4
         with:
           context: .
