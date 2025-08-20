@@ -24,7 +24,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-image-build-env
+      - name: Set up build environment
+        id: setup_build_env
+        uses: ./.github/actions/setup-image-build-env
+        with:
+          quay-username: ${{ secrets.QUAY_IO_USERNAME }}
+          quay-password: ${{ secrets.QUAY_IO_PASSWORD }}
 
       - name: Docker meta
         id: meta
@@ -40,13 +45,6 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha
-
-      - name: Set up build environment
-        id: setup_build_env
-        uses: ./.github/actions/setup-image-build-env
-        with:
-          quay-username: ${{ secrets.QUAY_IO_USERNAME }}
-          quay-password: ${{ secrets.QUAY_IO_PASSWORD }}
 
       - name: Build and push to registries
         uses: docker/build-push-action@v4
