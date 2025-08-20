@@ -89,7 +89,10 @@
 #' @importFrom ggplotify as.ggplot
 #' @importFrom grid unit
 #' @importFrom harmony RunHarmony
+<<<<<<< HEAD
 #' @importFrom htmlwidgets JS
+=======
+>>>>>>> 8642a3e6d49877ef0e3d657c0c0bc4515cd1027e
 #' @importFrom knitr hook_plot_md
 #' @importFrom knitr kable
 #' @importFrom magick image_read
