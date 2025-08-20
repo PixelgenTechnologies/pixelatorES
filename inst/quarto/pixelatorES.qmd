@@ -10,15 +10,14 @@ format:
     toc-depth: 4
     embed-resources: true
     code-folding: show
-    fig-width: 8
-    fig-height: 5
-    fig-dpi: 96
+    fig-retina: 1
     grid:
       body-width: 900px
     css: styles.css
 knitr:
   opts_chunk:
     out.width: "100%"
+    fig-asp: 0.625 # 16:10 aspect ratio
 date: "`r Sys.Date()`"
 editor_options: 
   chunk_output_type: console
