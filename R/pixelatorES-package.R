@@ -42,6 +42,7 @@
 #' @importFrom dplyr summarise
 #' @importFrom dplyr summarize
 #' @importFrom dplyr top_n
+#' @importFrom dplyr tribble
 #' @importFrom dplyr ungroup
 #' @importFrom ggplot2 aes
 #' @importFrom ggplot2 annotation_custom
@@ -89,10 +90,7 @@
 #' @importFrom ggplotify as.ggplot
 #' @importFrom grid unit
 #' @importFrom harmony RunHarmony
-<<<<<<< HEAD
 #' @importFrom htmlwidgets JS
-=======
->>>>>>> 8642a3e6d49877ef0e3d657c0c0bc4515cd1027e
 #' @importFrom knitr hook_plot_md
 #' @importFrom knitr kable
 #' @importFrom magick image_read
