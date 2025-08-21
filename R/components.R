@@ -1628,7 +1628,8 @@ component_proximity_heatmap_sample <- function(
     ungroup() %>%
     pivot_wider(
       names_from = marker_2,
-      values_from = mean_log2_ratio
+      values_from = mean_log2_ratio,
+      values_fill = 0
     ) %>%
     column_to_rownames("marker_1") %>%
     as.matrix() %>%
@@ -1746,7 +1747,8 @@ component_proximity_heatmap_celltype <- function(
     ungroup() %>%
     pivot_wider(
       names_from = marker_2,
-      values_from = mean_log2_ratio
+      values_from = mean_log2_ratio,
+      values_fill = 0
     ) %>%
     column_to_rownames("marker_1") %>%
     as.matrix() %>%
