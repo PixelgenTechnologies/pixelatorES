@@ -4,7 +4,7 @@
 \name{pixelatorES-package}
 \alias{pixelatorES}
 \alias{pixelatorES-package}
-\title{pixelatorES: Experiment Summary}
+\title{pixelatorES: Proxiome Experiment Summary}
 \description{
 The Experiment Summary (ES) generates a self-contained `.html` report summarizing a multi-sample experiment, including QC metrics, statistics, and visualizations.
 }

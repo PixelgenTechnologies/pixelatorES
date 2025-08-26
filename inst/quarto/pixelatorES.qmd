@@ -1,5 +1,5 @@
 ---
-title: "EXPERIMENT SUMMARY REPORT"
+title: "PROXIOME EXPERIMENT SUMMARY"
 subtitle: "v0.4.2" 
 format:
   html:
