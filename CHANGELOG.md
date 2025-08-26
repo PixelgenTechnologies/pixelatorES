@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] 2025-08-26
+
+### Updated
+
+- Renamed report to "Proxiome Experiment Summary". 
+
 ## [0.4.2] 2025-08-21
 
 ### Fixed

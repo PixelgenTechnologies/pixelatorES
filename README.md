@@ -1,10 +1,10 @@
-# Experiment Summary 
+# Proxiome Experiment Summary 
 
-The **Experiment Summary** (ES) generates a self-contained `.html` report summarizing a multi-sample experiment, including QC metrics, statistics, and visualizations.
+The **Proxiome Experiment Summary** (ES) generates a self-contained `.html` report summarizing a multi-sample experiment, including QC metrics, statistics, and visualizations.
 
 ## Usage
 
-The `pixelatorES.qmd` file can be moved, renamed, and run from different locations on your computer without modifications. Given a sample sheet specifying the samples in an experiment, it processes that data and generates an experiment summary report. The ES is always run from the directory that the `.qmd` file is in, and will by default generate the report in the same directory.
+The `pixelatorES.qmd` file can be moved, renamed, and run from different locations on your computer without modifications. Given a sample sheet specifying the samples in an experiment, it processes that data and generates a Proxiome Experiment Summary. The report is always generated from the directory that the `.qmd` file is in, and will by default generate the report in the same directory.
 
 ### Parameters
 
@@ -88,7 +88,7 @@ quarto render pixelatorES.qmd -P sample_sheet="a_samplesheet.csv" -P data_folder
 The report can also be rendered in RStudio by opening a copy of the `.qmd` file and pressing "Render" in the top toolbar. This will generate a report in the same directory as the `.qmd` file with the same name (e.g., `pixelatorES.html`). 
 
 
-#### Running the Experiment Summary in a Docker container
+#### Running the Proxiome Experiment Summary in a Docker container
 
 The ES can be run in a Docker container with `pixelatorR` pre-installed using the `run_ES_docker.sh` bash script in the `utility/` directory.
 The script downloads the Docker image from ghcr (or runs one that is available locally) and runs the ES in the container.
