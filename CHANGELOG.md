@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed an issue in ANOVA components that would throw an error when only a single sample was run, as ANOVA requires at least two groups to compare. These functions will now default to using only the `seurat_clusters` variable for ANOVA if only a single sample is detected in the data. 
+
 ## [0.4.3] 2025-08-26
 
 ### Updated
