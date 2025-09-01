@@ -337,7 +337,24 @@ summarize_colocalization_scores_per_celltype <- function(
   if (tidy) {
     mdl <-
       mdl %>%
-      tidy() %>%
+      tidy()
+
+    # Add residuals if not present (no variance in data)
+    if (!any(mdl$term == "Residuals")) {
+      mdl <-
+        mdl %>%
+        bind_rows(tibble(
+          term = "Residuals",
+          df = NA,
+          sumsq = 0,
+          meansq = 0,
+          statistic = NA,
+          p.value = NA
+        ))
+    }
+
+    mdl <-
+      mdl %>%
       mutate(
         ss_total = sum(sumsq),
         ms_error = meansq[term == "Residuals"],
@@ -354,6 +371,26 @@ summarize_colocalization_scores_per_celltype <- function(
   return(mdl)
 }
 
+#' Tidy variables by removing those with only one unique value
+#'
+#' This function selects variables from a data frame that have more than one unique value.
+#'
+#' @param df A data frame containing the variables to be checked.
+#' @param vars A character vector of variable names to be checked.
+#'
+#' @return A character vector of variable names that have more than one unique value.
+#'
+#' @noRd
+#'
+tidy_vars <-
+  function(df, vars) {
+    select(df, all_of(vars)) %>%
+      apply(2, n_distinct) %>%
+      {
+        which(. > 1)
+      } %>%
+      names()
+  }
 
 #' Run ANOVA for abundance data in a Seurat object
 #'
@@ -397,6 +434,11 @@ run_abundance_anova <-
     comp_meta_data <-
       FetchData(object, vars = vars) %>%
       as_tibble(rownames = "comp_id")
+
+    vars <- tidy_vars(comp_meta_data, vars)
+    if (length(vars) == 0) {
+      cli::cli_abort("No valid variables provided for ANOVA.")
+    }
 
     aov_res <-
       cnt_data %>%
@@ -464,6 +506,11 @@ run_proximity_anova <-
       ungroup() %>%
       select(comp_id = sample_component, all_of(vars)) %>%
       distinct()
+
+    vars <- tidy_vars(comp_meta_data, vars)
+    if (length(vars) == 0) {
+      cli::cli_abort("No valid variables provided for ANOVA.")
+    }
 
     proximity_scores_wide <-
       proximity_scores %>%
