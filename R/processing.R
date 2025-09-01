@@ -435,7 +435,10 @@ run_abundance_anova <-
       FetchData(object, vars = vars) %>%
       as_tibble(rownames = "comp_id")
 
-      cli::cli_abort("No valid variables provided for ANOVA. Variables with only one unique value were filtered out, leaving no variables for comparison.")
+    vars <- tidy_vars(comp_meta_data, vars)
+    if (length(vars) == 0) {
+      cli::cli_abort("No valid variables provided for ANOVA. Variables with only one unique value were filtered out,
+                     leaving no variables for comparison.")
     }
 
     aov_res <-
@@ -505,7 +508,10 @@ run_proximity_anova <-
       select(comp_id = sample_component, all_of(vars)) %>%
       distinct()
 
-      cli::cli_abort("No valid variables provided for ANOVA. All provided variables had only one unique value and were filtered out, leaving no variables for comparison.")
+    vars <- tidy_vars(comp_meta_data, vars)
+    if (length(vars) == 0) {
+      cli::cli_abort("No valid variables provided for ANOVA. Variables with only one unique value were filtered out,
+                     leaving no variables for comparison.")
     }
 
     proximity_scores_wide <-
