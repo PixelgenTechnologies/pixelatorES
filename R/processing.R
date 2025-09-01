@@ -505,9 +505,7 @@ run_proximity_anova <-
       select(comp_id = sample_component, all_of(vars)) %>%
       distinct()
 
-    vars <- tidy_vars(comp_meta_data, vars)
-    if (length(vars) == 0) {
-      cli::cli_abort("No valid variables provided for ANOVA.")
+      cli::cli_abort("No valid variables provided for ANOVA. All provided variables had only one unique value and were filtered out, leaving no variables for comparison.")
     }
 
     proximity_scores_wide <-
