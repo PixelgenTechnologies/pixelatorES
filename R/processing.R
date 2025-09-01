@@ -459,10 +459,6 @@ run_abundance_anova <-
       }, mc.cores = mc_cores) %>%
       bind_rows()
 
-    if (nrow(aov_res) == 0) {
-      cli::cli_warn("ANOVA failed for the provided data. Make sure that contrast factors have at least 2 levels.")
-      return(NULL)
-    }
     aov_res <- aov_res %>%
       mutate(p_adj = p.adjust(p, method = p_adj_method)) %>%
       relocate(p_adj, .after = p)
@@ -543,10 +539,6 @@ run_proximity_anova <-
       }, mc.cores = mc_cores) %>%
       bind_rows()
 
-    if (nrow(aov_res) == 0) {
-      cli::cli_warn("ANOVA failed for the provided data. Make sure that contrast factors have at least 2 levels.")
-      return(NULL)
-    }
     aov_res <- aov_res %>%
       separate(contrast, into = c("marker_1", "marker_2"), sep = "/") %>%
       mutate(p_adj = p.adjust(p, method = p_adj_method))
