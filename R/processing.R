@@ -435,9 +435,7 @@ run_abundance_anova <-
       FetchData(object, vars = vars) %>%
       as_tibble(rownames = "comp_id")
 
-    vars <- tidy_vars(comp_meta_data, vars)
-    if (length(vars) == 0) {
-      cli::cli_abort("No valid variables provided for ANOVA.")
+      cli::cli_abort("No valid variables provided for ANOVA. Variables with only one unique value were filtered out, leaving no variables for comparison.")
     }
 
     aov_res <-
