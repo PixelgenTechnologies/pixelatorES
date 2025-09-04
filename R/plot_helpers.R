@@ -459,7 +459,6 @@ plot_embeddings_samplewise <-
       } else if (range_diff > 0) {
         V1_range <- V1_range + c(-1, 1) * abs(range_diff) / 2
       }
-
     } else {
       V1_range <- NULL
       V2_range <- NULL

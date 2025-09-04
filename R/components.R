@@ -1859,8 +1859,8 @@ component_dimred_plots <-
             list(
               Combined =
                 p1 + p2$plot +
-                plot_void() + p2$legend +
-                plot_layout(nrow = 2, heights = c(1, 0.5)),
+                  plot_void() + p2$legend +
+                  plot_layout(nrow = 2, heights = c(1, 0.5)),
               Samplewise = samplewise_plots
             )
         } else {
@@ -1868,7 +1868,6 @@ component_dimred_plots <-
             p1 + p2$plot +
             plot_void() + p2$legend +
             plot_layout(nrow = 2, heights = c(1, 0.5))
-
         }
 
         return(plot_list)
