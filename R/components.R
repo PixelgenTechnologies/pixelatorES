@@ -1832,8 +1832,7 @@ component_dimred_plots <-
           plot_embedding(object, red,
             metavars = "seurat_clusters",
             pal = cluster_palette,
-            plot_title = "Clusters",
-            xaxis_title = FALSE
+            plot_title = "Clusters"
           )
         p2 <-
           plot_embedding(object, red,
@@ -1842,7 +1841,6 @@ component_dimred_plots <-
             plot_title = "Conditions",
             label = FALSE,
             legend_position = "bottom",
-            xaxis_title = FALSE,
             yaxis_title = FALSE,
             extract_legend = TRUE,
             plot_height = plot_height
@@ -1860,14 +1858,17 @@ component_dimred_plots <-
           plot_list <-
             list(
               Combined =
-                (p1 | p2$plot) /
-                  (plot_void() | p2$legend),
+                p1 + p2$plot +
+                plot_void() + p2$legend +
+                plot_layout(nrow = 2, heights = c(1, 0.5)),
               Samplewise = samplewise_plots
             )
         } else {
           plot_list <-
-            (p1 | p2$plot) /
-              (plot_void() | p2$legend)
+            p1 + p2$plot +
+            plot_void() + p2$legend +
+            plot_layout(nrow = 2, heights = c(1, 0.5))
+
         }
 
         return(plot_list)

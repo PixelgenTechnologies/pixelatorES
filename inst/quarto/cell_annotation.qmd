@@ -3,7 +3,6 @@
 
 ```{r}
 #| label: dimred_plots
-#| fig-height: 5
 #| results: 'asis'
 component <-
   component_dimred_plots(
@@ -12,7 +11,7 @@ component <-
     sample_palette = sample_palette,
     cluster_palette = cluster_palette,
     sample_plots = TRUE,
-    plot_height = 6
+    plot_height = 2.5
   )
 
 tabset_nested_plotlist(component, level = 3)

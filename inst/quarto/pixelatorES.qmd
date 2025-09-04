@@ -39,7 +39,7 @@ params:
   clustering_resolution: 1
   annotation_method: "Seurat"
   mc_cores: 1
-  debug_mode: FALSE
+  debug_mode: TRUE
   test_mode: FALSE
 ---
 
