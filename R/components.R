@@ -1837,17 +1837,6 @@ component_dimred_plots <-
           )
         p2 <-
           plot_embedding(object, red,
-            metavars = "sample_alias",
-            pal = sample_palette,
-            plot_title = "Samples",
-            label = FALSE,
-            legend_position = "bottom",
-            yaxis_title = FALSE,
-            extract_legend = TRUE,
-            plot_height = plot_height
-          )
-        p3 <-
-          plot_embedding(object, red,
             metavars = "condition",
             pal = sample_palette,
             plot_title = "Conditions",
@@ -1871,14 +1860,14 @@ component_dimred_plots <-
           plot_list <-
             list(
               Combined =
-                (p1 | p2$plot | p3$plot) /
-                  (plot_void() | p2$legend | p3$legend),
+                (p1 | p2$plot) /
+                  (plot_void() | p2$legend),
               Samplewise = samplewise_plots
             )
         } else {
           plot_list <-
-            (p1 | p2$plot | p3$plot) /
-              (plot_void() | p2$legend | p3$legend)
+            (p1 | p2$plot) /
+              (plot_void() | p2$legend)
         }
 
         return(plot_list)

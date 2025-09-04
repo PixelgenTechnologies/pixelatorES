@@ -1,7 +1,9 @@
 
+### Dimensionality Reduction 
+
 ```{r}
 #| label: dimred_plots
-#| fig-height: 6
+#| fig-height: 5
 #| results: 'asis'
 component <-
   component_dimred_plots(
@@ -9,12 +11,14 @@ component <-
     plot_reductions = preferred_dimred_order(Reductions(pg_data_processed)),
     sample_palette = sample_palette,
     cluster_palette = cluster_palette,
-    sample_plots = FALSE,
+    sample_plots = TRUE,
     plot_height = 6
   )
 
 tabset_nested_plotlist(component, level = 3)
 ```
+
+### Cell Annotation 
 
 We run an automatic annotation using an annotated reference dataset. This allows
 us to put a few simple labels on cell populations, which can be useful for 
@@ -23,7 +27,7 @@ downstream analysis. We visualize the annotation using UMAPs
 
 ::: {.panel-tabset .nav-pills}
 
-### Automated annotation
+#### Automated annotation
 
 ```{r}
 #| label: annotation_dimred
@@ -33,10 +37,10 @@ component <-
     heatmap_gradient = cherry_gradient
   )
 
-tabset_plotlist(component$dimred_plots, level = 4, close = FALSE)
+tabset_plotlist(component$dimred_plots, level = 5, close = FALSE)
 ```
 
-#### Cluster heatmap
+##### Cluster heatmap
 
 ```{r}
 #| label: annotation_dimred_heatmap
@@ -47,7 +51,7 @@ component$heatmap
 
 :::
 
-### Summary
+#### Summary
 
 ```{r}
 #| label: annotation_summary
@@ -61,7 +65,7 @@ component$celltype_composition
 #| label: annotation_summary2
 #| fig-height: 4
 #| results: 'asis'
-tabset_plotlist(component$celltype_composition_barplots1, level = 4)
+tabset_plotlist(component$celltype_composition_barplots1, level = 5)
 ```
 
 
@@ -69,7 +73,7 @@ tabset_plotlist(component$celltype_composition_barplots1, level = 4)
 #| label: annotation_summary3
 #| fig-height: 4
 #| results: 'asis'
-tabset_plotlist(component$celltype_composition_barplots2, level = 4)
+tabset_plotlist(component$celltype_composition_barplots2, level = 5)
 ```
 
 
