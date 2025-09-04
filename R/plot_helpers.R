@@ -237,7 +237,7 @@ extract_legend <-
       legend_plot <-
         legend_plot /
         plot_spacer() +
-        plot_layout(heights = c(legend_height_in, plot_height - legend_height_in))
+        plot_layout(heights = c(legend_height_in, max(0, plot_height - legend_height_in)))
     }
 
     return(legend_plot)
