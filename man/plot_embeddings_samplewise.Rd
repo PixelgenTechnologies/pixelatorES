@@ -13,6 +13,7 @@ plot_embeddings_samplewise(
   pal = NULL,
   label = TRUE,
   plot_title = "",
+  fix_aspect_ratio = TRUE,
   legend_position = "none",
   legend_cols = 2
 )
@@ -33,6 +34,8 @@ plot_embeddings_samplewise(
 \item{label}{Logical indicating whether to label the points with their metadata (default is TRUE).}
 
 \item{plot_title}{The title of the plot (default is an empty string).}
+
+\item{fix_aspect_ratio}{Logical indicating whether to fix the aspect ratio of the plot (default is TRUE).}
 
 \item{legend_position}{The position of the legend (default is "none").}
 

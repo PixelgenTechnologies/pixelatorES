@@ -1,6 +1,6 @@
 Package: pixelatorES
 Title: Proxiome Experiment Summary
-Version: 0.4.3
+Version: 0.4.4
 Authors@R: 
     c(
     person("Max", "Karlsson", , "max.karlsson@pixelgen.com", role = c("aut", "cre"),

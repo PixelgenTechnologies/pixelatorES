@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.4] 2025-09-05
+
+### Added
+
+- Added Samplewise Dimensionality Reduction plots and restyled the Cell annotation tab somewhat. 
+
 ### Fixed
 
 - Fixed an issue in ANOVA components that would throw an error when only a single sample was run, as ANOVA requires at least two groups to compare. These functions will now default to using only the `seurat_clusters` variable for ANOVA if only a single sample is detected in the data. 

@@ -237,7 +237,7 @@ extract_legend <-
       legend_plot <-
         legend_plot /
         plot_spacer() +
-        plot_layout(heights = c(legend_height_in, plot_height))
+        plot_layout(heights = c(legend_height_in, max(0, plot_height - legend_height_in)))
     }
 
     return(legend_plot)
@@ -416,22 +416,26 @@ plot_embedding <-
 #' @param pal A color palette to use for the points (default is NULL).
 #' @param label Logical indicating whether to label the points with their metadata (default is TRUE).
 #' @param plot_title The title of the plot (default is an empty string).
+#' @param fix_aspect_ratio Logical indicating whether to fix the aspect ratio of the plot (default is TRUE).
 #' @param legend_position The position of the legend (default is "none").
 #' @param legend_cols The number of columns in the legend (default is 2).
 #'
 #' @return A list of ggplot objects, each representing the embedding for a sample.
 #' @export
 plot_embeddings_samplewise <-
-  function(samples,
-             object,
-             plot_reduction = "pca",
-             dims = 1:2,
-             metavars = "seurat_clusters",
-             pal = NULL,
-             label = TRUE,
-             plot_title = "",
-             legend_position = "none",
-             legend_cols = 2) {
+  function(
+    samples,
+    object,
+    plot_reduction = "pca",
+    dims = 1:2,
+    metavars = "seurat_clusters",
+    pal = NULL,
+    label = TRUE,
+    plot_title = "",
+    fix_aspect_ratio = TRUE,
+    legend_position = "none",
+    legend_cols = 2
+  ) {
     pixelatorR:::assert_vector(samples, "character", n = 1)
     pixelatorR:::assert_class(object, "Seurat")
     pixelatorR:::assert_single_value(plot_reduction, type = "string")
@@ -442,6 +446,23 @@ plot_embeddings_samplewise <-
     pixelatorR:::assert_single_value(plot_title, type = "string")
     pixelatorR:::assert_single_value(legend_position, type = "string")
     pixelatorR:::assert_single_value(legend_cols, type = "numeric")
+
+
+    if (fix_aspect_ratio) {
+      V1_range <- range(Embeddings(object, plot_reduction)[, dims[1]])
+      V2_range <- range(Embeddings(object, plot_reduction)[, dims[2]])
+
+      range_diff <- diff(V2_range) - diff(V1_range)
+
+      if (range_diff < 0) {
+        V2_range <- V2_range + c(-1, 1) * abs(range_diff) / 2
+      } else if (range_diff > 0) {
+        V1_range <- V1_range + c(-1, 1) * abs(range_diff) / 2
+      }
+    } else {
+      V1_range <- NULL
+      V2_range <- NULL
+    }
 
 
     samples %>%
@@ -459,8 +480,8 @@ plot_embeddings_samplewise <-
             legend_position = legend_position,
             legend_cols = legend_cols
           ) +
-          scale_x_continuous(limits = range(Embeddings(object, plot_reduction)[, dims[1]])) +
-          scale_y_continuous(limits = range(Embeddings(object, plot_reduction)[, dims[2]]))
+          scale_x_continuous(limits = V1_range) +
+          scale_y_continuous(limits = V2_range)
       })
   }
 
