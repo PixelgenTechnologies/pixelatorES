@@ -1039,9 +1039,9 @@ component_coreness <-
         if (n_distinct(g_data$sample_component) > 2000) {
           plot_cells <-
             g_data %>%
-            select(sample_component, n_umi) %>%
+            select(sample_component, molecules) %>%
             distinct() %>%
-            arrange(-n_umi, sample_component) %>%
+            arrange(-molecules, sample_component) %>%
             pull(sample_component) %>%
             head(2000)
 
