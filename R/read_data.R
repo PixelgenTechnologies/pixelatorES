@@ -398,7 +398,8 @@ read_samplesheet <-
       )
     ) %>%
       select(sample, sample_alias, condition) %>%
-      mutate(sample_alias = ifelse(is.na(sample_alias), sample, sample_alias)) %>%
+      mutate(sample_alias = ifelse(is.na(sample_alias), sample, sample_alias),
+             condition = ifelse(is.na(condition), sample_alias, condition)) %>%
       distinct()
   }
 
