@@ -392,11 +392,11 @@ read_samplesheet <-
 
     sample_sheet <-
       read_csv(filepath,
-               col_types = cols(
-                 sample = col_character(),
-                 sample_alias = col_character(),
-                 condition = col_character()
-               )
+        col_types = cols(
+          sample = col_character(),
+          sample_alias = col_character(),
+          condition = col_character()
+        )
       )
 
     if (!"sample_alias" %in% names(sample_sheet)) {
@@ -408,8 +408,10 @@ read_samplesheet <-
 
     sample_sheet %>%
       select(sample, sample_alias, condition) %>%
-      mutate(sample_alias = ifelse(is.na(sample_alias), sample, sample_alias),
-             condition = ifelse(is.na(condition), sample_alias, condition)) %>%
+      mutate(
+        sample_alias = ifelse(is.na(sample_alias), sample, sample_alias),
+        condition = ifelse(is.na(condition), sample_alias, condition)
+      ) %>%
       distinct()
   }
 
