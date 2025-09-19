@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.5] 2025-09-19
+
+### Updated
+
+- The ES is now more lenient with the file input, allowing some QC data to be missing, and allowing `sample_alias` and `condition` columns to be missing or empty in the sample sheet. 
 
 ## [0.4.4] 2025-09-05
 

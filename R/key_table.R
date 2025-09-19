@@ -330,6 +330,8 @@ key_metric_table <-
           ) %>%
           pivot_wider(names_from = "type", values_from = "percent")
       ) %>%
+      # Remove NULL elements
+      keep(~ !is.null(.x)) %>%
       reduce(left_join, by = "sample_alias") %>%
       select(1, any_of(key_metric_definitions$var))
 
