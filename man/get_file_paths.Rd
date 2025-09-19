@@ -4,7 +4,12 @@
 \alias{get_file_paths}
 \title{Get file paths for data and QC files}
 \usage{
-get_file_paths(data_folder = NULL, file_paths = NULL, sample_aliases)
+get_file_paths(
+  data_folder = NULL,
+  file_paths = NULL,
+  sample_aliases,
+  allow_unknown = FALSE
+)
 }
 \arguments{
 \item{data_folder}{A character string specifying the path to the data folder.}
@@ -12,6 +17,8 @@ get_file_paths(data_folder = NULL, file_paths = NULL, sample_aliases)
 \item{file_paths}{A character vector with file paths including all data files.}
 
 \item{sample_aliases}{A named character vector mapping sample aliases to their actual names.}
+
+\item{allow_unknown}{A logical indicating whether to allow files from unknown stages (default: FALSE).}
 }
 \value{
 A list containing two data frames: \code{data_files} and \code{qc_files}.

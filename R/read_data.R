@@ -13,14 +13,16 @@ pipeline_stages <- c(
 #' Determine which pixelator stage a file comes from
 #'
 #' @param filepath A file path
+#' @param allow_unknown Whether to allow unknown stages (default: FALSE)
 #'
 #' @return The name of the stage it comes from
 #'
 #' @export
 #'
 find_stage <-
-  function(filepath) {
+  function(filepath, allow_unknown = FALSE) {
     pixelatorR:::assert_single_value(filepath, type = "string")
+    pixelatorR:::assert_single_value(allow_unknown, type = "bool")
 
     suffix <-
       basename(filepath) %>%
@@ -35,6 +37,8 @@ find_stage <-
     if (suffix %in% pipeline_stages) {
       return(suffix)
     } else if (filedir %in% pipeline_stages) {
+      return(filedir)
+    } else if (allow_unknown) {
       return(filedir)
     } else {
       cli_abort(
@@ -52,17 +56,19 @@ find_stage <-
 #' @param data_folder A character string specifying the path to the data folder.
 #' @param file_paths A character vector with file paths including all data files.
 #' @param sample_aliases A named character vector mapping sample aliases to their actual names.
+#' @param allow_unknown A logical indicating whether to allow files from unknown stages (default: FALSE).
 #'
 #' @return A list containing two data frames: `data_files` and `qc_files`.
 #'
 #' @export
 #'
 get_file_paths <-
-  function(data_folder = NULL, file_paths = NULL, sample_aliases) {
+  function(data_folder = NULL, file_paths = NULL, sample_aliases, allow_unknown = FALSE) {
     pixelatorR:::assert_single_value(data_folder, type = "string", allow_null = TRUE)
     pixelatorR:::assert_vector(file_paths, "character", allow_null = TRUE)
     pixelatorR:::assert_vector(sample_aliases, "character", n = 1, allow_null = TRUE)
     pixelatorR:::assert_vector(names(sample_aliases), "character", n = 1, allow_null = FALSE)
+    pixelatorR:::assert_single_value(allow_unknown, type = "bool")
 
     if (is.null(file_paths)) {
       file_paths <- list.files(data_folder, recursive = TRUE, full.names = TRUE)
@@ -77,7 +83,7 @@ get_file_paths <-
       filter(!str_detect(filename, "pipeline_info")) %>%
       mutate(
         file_basename = basename(filename),
-        stage = sapply(filename, find_stage),
+        stage = sapply(filename, find_stage, allow_unknown),
         sample_alias = str_remove(file_basename, "\\..*")
       )
 

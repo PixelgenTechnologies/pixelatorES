@@ -4,10 +4,12 @@
 \alias{find_stage}
 \title{Find pixelator stage of file}
 \usage{
-find_stage(filepath)
+find_stage(filepath, allow_unknown = FALSE)
 }
 \arguments{
 \item{filepath}{A file path}
+
+\item{allow_unknown}{Whether to allow unknown stages (default: FALSE)}
 }
 \value{
 The name of the stage it comes from
