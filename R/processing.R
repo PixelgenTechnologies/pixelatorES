@@ -89,11 +89,10 @@ filter_proximity_scores <- function(
 ) {
   # Set proximity score cutoff
   background_threshold_pct <-
-    median(pg_data_processed$isotype_fraction) +
-    2 * mad(pg_data_processed$isotype_fraction)
+    quantile(pg_data_processed$isotype_fraction, 0.9)
 
   # Fall back to a small cutoff if the background threshold is too low
-  background_threshold_pct <- max(background_threshold_pct, 0.001)
+  background_threshold_pct <- max(background_threshold_pct, 0.0025)
 
   proximity_scores <-
     ProximityScores(pg_data_processed,
@@ -210,12 +209,12 @@ summarize_colocalization_scores_per_sample <- function(
     ungroup() %>%
     select(
       sample_alias, condition, marker_1, marker_2,
-      mean_join_count_z, mean_log2_ratio
+      mean_join_count_z, mean_log2_ratio, pct_detected
     ) %>%
     complete(
       nesting(sample_alias, condition),
       nesting(marker_1, marker_2),
-      fill = list(mean_join_count_z = 0, mean_log2_ratio = 0)
+      fill = list(mean_join_count_z = 0, mean_log2_ratio = 0, pct_detected = 0)
     )
 
   return(summarized_data)
@@ -228,6 +227,7 @@ summarize_colocalization_scores_per_sample <- function(
 #'
 #' @param proximity_scores A data frame of proximity scores.
 #' @param plot_markers A character vector of markers to plot (default is NULL, which means all markers will be used).
+#' @param n_markers An integer specifying the number of top markers to select (default is 40).
 #' @param test_mode A logical indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A data frame summarizing the proximity scores per celltype and condition.
@@ -237,10 +237,12 @@ summarize_colocalization_scores_per_sample <- function(
 summarize_colocalization_scores_per_celltype <- function(
   proximity_scores,
   plot_markers = NULL,
+  n_markers = 40,
   test_mode = FALSE
 ) {
   pixelatorR:::assert_class(proximity_scores, "tbl_df")
   pixelatorR:::assert_single_value(test_mode, "bool")
+  pixelatorR:::assert_single_value(n_markers, "numeric")
   pixelatorR:::assert_vector(plot_markers, "character", allow_null = TRUE)
 
 
@@ -276,12 +278,12 @@ summarize_colocalization_scores_per_celltype <- function(
     ungroup() %>%
     select(
       sample_alias, condition, l1_annotation_summary, marker_1, marker_2,
-      mean_join_count_z, mean_log2_ratio
+      mean_join_count_z, mean_log2_ratio, pct_detected
     ) %>%
     complete(
       nesting(sample_alias, condition, l1_annotation_summary),
       nesting(marker_1, marker_2),
-      fill = list(mean_join_count_z = 0, mean_log2_ratio = 0)
+      fill = list(mean_join_count_z = 0, mean_log2_ratio = 0, pct_detected = 0)
     )
 
   return(summarized_data)

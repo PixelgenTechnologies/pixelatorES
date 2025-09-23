@@ -7,6 +7,7 @@
 summarize_colocalization_scores_per_celltype(
   proximity_scores,
   plot_markers = NULL,
+  n_markers = 40,
   test_mode = FALSE
 )
 }
@@ -14,6 +15,8 @@ summarize_colocalization_scores_per_celltype(
 \item{proximity_scores}{A data frame of proximity scores.}
 
 \item{plot_markers}{A character vector of markers to plot (default is NULL, which means all markers will be used).}
+
+\item{n_markers}{An integer specifying the number of top markers to select (default is 40).}
 
 \item{test_mode}{A logical indicating whether to run in test mode (default is FALSE).}
 }
