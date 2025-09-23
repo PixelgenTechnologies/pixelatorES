@@ -1731,8 +1731,6 @@ component_proximity_heatmap_celltype <- function(
   if (is.null(plot_markers)) {
     top_markers <-
       processed_data %>%
-      # filter(l1_annotation_summary == "B",
-      #        marker_1 == "CD8" | marker_2 == "CD8") %>%
       filter(pct_detected >= min_pct_detected) %>%
       group_by(l1_annotation_summary, marker = marker_1) %>%
       summarize(

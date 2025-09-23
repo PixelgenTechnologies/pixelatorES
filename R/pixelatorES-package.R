@@ -78,6 +78,7 @@
 #' @importFrom ggplot2 scale_color_manual
 #' @importFrom ggplot2 scale_fill_gradientn
 #' @importFrom ggplot2 scale_fill_manual
+#' @importFrom ggplot2 scale_size_continuous
 #' @importFrom ggplot2 scale_x_continuous
 #' @importFrom ggplot2 scale_x_discrete
 #' @importFrom ggplot2 scale_x_log10

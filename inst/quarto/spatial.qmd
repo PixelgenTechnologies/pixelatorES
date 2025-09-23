@@ -50,7 +50,6 @@ tabset_plotlist(plots, level = 5)
 plots <- component_proximity_heatmap_celltype(
   proximity_scores,
   heatmap_gradient,
-  plot_markers = proximity_top_markers,
   test_mode = params$test_mode
 )
 tabset_nested_plotlist(plots, level = 5)
