@@ -89,7 +89,7 @@ filter_proximity_scores <- function(
 ) {
   # Set proximity score cutoff
   background_threshold_pct <-
-    quantile(pg_data_processed$isotype_fraction, 0.9)
+    stats::quantile(pg_data_processed$isotype_fraction, 0.9)
 
   # Fall back to a small cutoff if the background threshold is too low
   background_threshold_pct <- max(background_threshold_pct, 0.0025)

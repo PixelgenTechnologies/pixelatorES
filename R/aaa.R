@@ -42,7 +42,7 @@ globalVariables(
     "sumsq", "term", "top_markers", "top3_fraction", "top5_fraction",
     "total_edges_in", "total_reads", "type", "V1", "V2", "valid_reads",
     "valid_reads_saturation", "value", "violinwidth", "x", "xmax",
-    "xmin", "y", "z"
+    "xmin", "y", "z", "pct_detected"
   ),
   package = "pixelatorES",
   add = TRUE
