@@ -115,6 +115,7 @@
 #' @importFrom pixelatorR SequenceSaturationCurve
 #' @importFrom pixelatorR sequencing_saturation
 #' @importFrom pixelatorR SummarizeProximityScores
+#' @importFrom purrr keep
 #' @importFrom purrr map
 #' @importFrom purrr reduce
 #' @importFrom RcppSimdJson fload
