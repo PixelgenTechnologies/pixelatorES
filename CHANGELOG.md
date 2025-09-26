@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] 2025-09-24
 
+## [0.5.0] 2025-09-26
+
 ### Updated
 
 - Proximity Score filtering is now harsher, requiring markers to be detected higher than the 90th percentile of `isotype_fraction` and 0.25% of counts. 
 - The protein selection for colocalization heatmaps are now done per each cell type. 
+- The colocalization heatmap color legend range has been decreased to range -0.8 to 0.8 to better visualize the differences in colocalization.
 
 ## [0.4.5] 2025-09-19
 

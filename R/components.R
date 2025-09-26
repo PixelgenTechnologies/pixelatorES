@@ -1575,6 +1575,7 @@ component_proximity_heatmap_sample <- function(
   proximity_scores,
   heatmap_gradient,
   n_markers = 40,
+  min_pct_detected = 0.25,
   plot_markers = NULL,
   test_mode = FALSE
 ) {
@@ -1590,34 +1591,31 @@ component_proximity_heatmap_sample <- function(
       proximity_scores,
       plot_markers = plot_markers,
       test_mode = test_mode
-    )
+    ) %>%
+    bind_rows(select(.,
+                     marker_2 = marker_1,
+                     marker_1 = marker_2,
+                     everything()
+    )) %>%
+    distinct()
 
   if (is.null(plot_markers)) {
+
     plot_markers <-
-      processed_data %>%
-      bind_rows(select(processed_data,
-        marker_2 = marker_1,
-        marker_1 = marker_2,
-        everything()
-      )) %>%
-      group_by(marker_1) %>%
-      summarise(sd = sd(mean_log2_ratio)) %>%
-      arrange(desc(sd)) %>%
-      head(n_markers) %>%
-      pull(marker_1)
+      find_top_proximity_markers(
+        processed_data,
+        n_markers = n_markers,
+        min_pct_detected = min_pct_detected,
+        min_range = 0.2
+      )
+
   }
 
   # Filter and symmetrise data
   processed_data <-
     processed_data %>%
     filter(marker_1 %in% plot_markers & marker_2 %in% plot_markers) %>%
-    bind_rows(select(.,
-      marker_2 = marker_1,
-      marker_1 = marker_2,
-      everything()
-    )) %>%
     mutate(pct_detected = 100 * pct_detected) %>%
-    distinct() %>%
     group_by(sample_alias)
 
 
@@ -1667,9 +1665,9 @@ component_proximity_heatmap_sample <- function(
           fontsize = 8,
           colors = heatmap_gradient,
           border_color = "white",
-          legend_range = c(-1, 1)
+          legend_range = c(-1, 1) * 0.75
         ) +
-        scale_size_continuous(range = c(0, 6), limits = c(0, 100)) +
+        scale_size_continuous(range = c(0, 5), limits = c(0, 100)) +
         labs(
           title = paste(samp_id),
           subtitle = cond,
@@ -1729,20 +1727,24 @@ component_proximity_heatmap_celltype <- function(
     distinct()
 
   if (is.null(plot_markers)) {
-    top_markers <-
+
+    grouped_data <-
       processed_data %>%
-      filter(pct_detected >= min_pct_detected) %>%
-      group_by(l1_annotation_summary, marker = marker_1) %>%
-      summarize(
-        sd = sd(mean_log2_ratio),
-        max = max(mean_log2_ratio),
-        min = min(mean_log2_ratio)
-      ) %>%
-      filter(max >= 0.2 | min <= -0.2) %>%
-      group_by(l1_annotation_summary) %>%
-      top_n(n = n_markers, wt = sd) %>%
-      slice_head(n = n_markers) %>%
-      select(-sd)
+      group_by(l1_annotation_summary)
+
+    top_markers <-
+      grouped_data %>%
+      group_split() %>%
+      set_names(group_keys(grouped_data)$l1_annotation_summary) %>%
+      map(. %>%
+            find_top_proximity_markers(
+              n_markers = n_markers,
+              min_pct_detected = min_pct_detected,
+              min_range = 0.2
+            ) %>%
+            as_tibble() %>%
+            rename(marker = value)) %>%
+      bind_rows(.id = "l1_annotation_summary")
 
     processed_data <-
       processed_data %>%
@@ -1820,9 +1822,9 @@ component_proximity_heatmap_celltype <- function(
               fontsize = 8,
               colors = heatmap_gradient,
               border_color = "white",
-              legend_range = c(-1, 1)
+              legend_range = c(-1, 1) * 0.8
             ) +
-            scale_size_continuous(range = c(0, 6), limits = c(0, 100)) +
+            scale_size_continuous(range = c(0, 5), limits = c(0, 100)) +
             labs(
               title = paste(samp_id, "-", cellpop),
               subtitle = cond,
