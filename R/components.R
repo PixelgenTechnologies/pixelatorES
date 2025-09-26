@@ -1575,6 +1575,7 @@ component_proximity_heatmap_sample <- function(
   proximity_scores,
   heatmap_gradient,
   n_markers = 40,
+  min_pct_detected = 0.25,
   plot_markers = NULL,
   test_mode = FALSE
 ) {
@@ -1590,34 +1591,33 @@ component_proximity_heatmap_sample <- function(
       proximity_scores,
       plot_markers = plot_markers,
       test_mode = test_mode
-    )
+    ) %>%
+    bind_rows(select(.,
+                     marker_2 = marker_1,
+                     marker_1 = marker_2,
+                     everything()
+    )) %>%
+    distinct()
 
   if (is.null(plot_markers)) {
+
     plot_markers <-
-      processed_data %>%
-      bind_rows(select(processed_data,
-        marker_2 = marker_1,
-        marker_1 = marker_2,
-        everything()
-      )) %>%
-      group_by(marker_1) %>%
-      summarise(sd = sd(mean_log2_ratio)) %>%
-      arrange(desc(sd)) %>%
-      head(n_markers) %>%
-      pull(marker_1)
+      find_top_proximity_markers(
+        processed_data,
+        n_markers = n_markers,
+        min_pct_detected = min_pct_detected,
+        min_range = 0.2
+      )
+
   }
 
   # Filter and symmetrise data
   processed_data <-
     processed_data %>%
     filter(marker_1 %in% plot_markers & marker_2 %in% plot_markers) %>%
-    bind_rows(select(.,
-      marker_2 = marker_1,
-      marker_1 = marker_2,
-      everything()
-    )) %>%
-    distinct() %>%
+    mutate(pct_detected = 100 * pct_detected) %>%
     group_by(sample_alias)
+
 
   plot_order <-
     processed_data %>%
@@ -1641,11 +1641,11 @@ component_proximity_heatmap_sample <- function(
     processed_data %>%
     group_split() %>%
     set_names(group_keys(processed_data)$sample_alias) %>%
-    lapply(function(g_data) {
-      sampl <- unique(g_data$sample_alias)
-      cond <- unique(g_data$condition)
+    lapply(function(sample_data) {
+      samp_id <- unique(sample_data$sample_alias)
+      cond <- unique(sample_data$condition)
 
-      g_data %>%
+      sample_data %>%
         mutate(
           marker_1 = factor(marker_1, levels = plot_order),
           marker_2 = factor(marker_2, levels = plot_order)
@@ -1655,18 +1655,26 @@ component_proximity_heatmap_sample <- function(
           marker1_col = "marker_1",
           marker2_col = "marker_2",
           value_col = "mean_log2_ratio",
+          type = "dots",
+          size_col = "pct_detected",
           cluster_rows = FALSE,
           cluster_cols = FALSE,
+          symmetrise = FALSE,
           cellwidth = 8,
           cellheight = 8,
           fontsize = 8,
           colors = heatmap_gradient,
           border_color = "white",
-          legend_range = c(-1, 1),
-          legend_title = "Mean\nProximity\nlogratio",
-          main = paste("Mean colocalization:", sampl, "-", cond)
-        ) %>%
-        as.ggplot()
+          legend_range = c(-1, 1) * 0.75
+        ) +
+        scale_size_continuous(range = c(0, 5), limits = c(0, 100)) +
+        labs(
+          title = paste(samp_id),
+          subtitle = cond,
+          fill = "Mean\nProximity\nlogratio",
+          size = "% cells\ndetected"
+        ) +
+        theme(axis.title = element_blank())
     })
 
   return(plots)
@@ -1680,6 +1688,8 @@ component_proximity_heatmap_sample <- function(
 #' @param proximity_scores A data frame containing proximity scores for different markers.
 #' @param heatmap_gradient A color palette for the heatmaps.
 #' @param n_markers The number of markers to plot (default is 40).
+#' @param min_pct_detected Minimum percentage of cells in which a marker must be detected to be included
+#' (default is 0.5).
 #' @param plot_markers A vector of markers to plot (default is NULL).
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
@@ -1691,6 +1701,7 @@ component_proximity_heatmap_celltype <- function(
   proximity_scores,
   heatmap_gradient,
   n_markers = 40,
+  min_pct_detected = 0.25,
   plot_markers = NULL,
   test_mode = FALSE
 ) {
@@ -1702,59 +1713,58 @@ component_proximity_heatmap_celltype <- function(
   pixelatorR:::assert_class(test_mode, "logical")
 
   processed_data <-
+    proximity_scores %>%
+    filter(l1_annotation_summary %in% displayed_cell_types) %>%
     summarize_colocalization_scores_per_celltype(
-      proximity_scores,
       plot_markers = plot_markers,
       test_mode = test_mode
-    )
-
-
-  if (is.null(plot_markers)) {
-    plot_markers <-
-      processed_data %>%
-      bind_rows(select(processed_data,
-        marker_2 = marker_1,
-        marker_1 = marker_2,
-        everything()
-      )) %>%
-      group_by(marker_1) %>%
-      summarise(sd = sd(mean_log2_ratio)) %>%
-      arrange(desc(sd)) %>%
-      head(n_markers) %>%
-      pull(marker_1)
-  }
-  # Filter and symmetrise data
-  processed_data <-
-    processed_data %>%
-    filter(l1_annotation_summary %in% displayed_cell_types) %>%
-    filter(marker_1 %in% plot_markers & marker_2 %in% plot_markers) %>%
-    mutate(l1_annotation_summary = factor(l1_annotation_summary, displayed_cell_types)) %>%
+    ) %>%
     bind_rows(select(.,
       marker_2 = marker_1,
       marker_1 = marker_2,
       everything()
     )) %>%
-    distinct() %>%
+    distinct()
+
+  if (is.null(plot_markers)) {
+
+    grouped_data <-
+      processed_data %>%
+      group_by(l1_annotation_summary)
+
+    top_markers <-
+      grouped_data %>%
+      group_split() %>%
+      set_names(group_keys(grouped_data)$l1_annotation_summary) %>%
+      map(. %>%
+            find_top_proximity_markers(
+              n_markers = n_markers,
+              min_pct_detected = min_pct_detected,
+              min_range = 0.2
+            ) %>%
+            as_tibble() %>%
+            rename(marker = value)) %>%
+      bind_rows(.id = "l1_annotation_summary")
+
+    processed_data <-
+      processed_data %>%
+      inner_join(top_markers, by = c("l1_annotation_summary", "marker_1" = "marker")) %>%
+      inner_join(top_markers, by = c("l1_annotation_summary", "marker_2" = "marker"))
+  } else {
+    processed_data <-
+      processed_data %>%
+      filter(marker_1 %in% plot_markers & marker_2 %in% plot_markers)
+  }
+
+
+  processed_data <-
+    processed_data %>%
+    mutate(
+      l1_annotation_summary = factor(l1_annotation_summary, displayed_cell_types),
+      pct_detected = 100 * pct_detected
+    ) %>%
     group_by(celltype = l1_annotation_summary) %>%
     arrange(celltype)
-
-  plot_order <-
-    processed_data %>%
-    group_by(marker_1, marker_2) %>%
-    summarise(
-      mean_log2_ratio = mean(mean_log2_ratio, na.rm = TRUE)
-    ) %>%
-    ungroup() %>%
-    pivot_wider(
-      names_from = marker_2,
-      values_from = mean_log2_ratio,
-      values_fill = 0
-    ) %>%
-    column_to_rownames("marker_1") %>%
-    as.matrix() %>%
-    dist() %>%
-    hclust(method = "ward.D2") %>%
-    with(labels[order])
 
   plots <-
     processed_data %>%
@@ -1765,15 +1775,34 @@ component_proximity_heatmap_celltype <- function(
         cell_type_data %>%
         group_by(sample_alias)
 
+      plot_order <-
+        cell_type_data %>%
+        group_by(marker_1, marker_2) %>%
+        summarise(
+          mean_log2_ratio = mean(mean_log2_ratio, na.rm = TRUE),
+          .groups = "drop"
+        ) %>%
+        ungroup() %>%
+        pivot_wider(
+          names_from = marker_2,
+          values_from = mean_log2_ratio,
+          values_fill = 0
+        ) %>%
+        column_to_rownames("marker_1") %>%
+        as.matrix() %>%
+        dist() %>%
+        hclust(method = "ward.D2") %>%
+        with(labels[order])
+
       cell_type_data %>%
         group_split() %>%
         set_names(group_keys(cell_type_data)$sample_alias) %>%
-        lapply(function(g_data) {
-          cellpop <- unique(g_data$celltype)
-          samp_id <- unique(g_data$sample_alias)
-          cond_ <- unique(g_data$condition)
+        lapply(function(sample_data) {
+          cellpop <- unique(sample_data$celltype)
+          samp_id <- unique(sample_data$sample_alias)
+          cond <- unique(sample_data$condition)
 
-          g_data %>%
+          sample_data %>%
             mutate(
               marker_1 = factor(marker_1, levels = plot_order),
               marker_2 = factor(marker_2, levels = plot_order)
@@ -1783,18 +1812,26 @@ component_proximity_heatmap_celltype <- function(
               marker1_col = "marker_1",
               marker2_col = "marker_2",
               value_col = "mean_log2_ratio",
+              type = "dots",
+              size_col = "pct_detected",
               cluster_rows = FALSE,
               cluster_cols = FALSE,
+              symmetrise = FALSE,
               cellwidth = 8,
               cellheight = 8,
               fontsize = 8,
               colors = heatmap_gradient,
               border_color = "white",
-              legend_range = c(-1, 1),
-              legend_title = "Mean\nProximity\nlogratio",
-              main = paste("Mean colocalization:", samp_id, cond_, cellpop)
-            ) %>%
-            as.ggplot()
+              legend_range = c(-1, 1) * 0.8
+            ) +
+            scale_size_continuous(range = c(0, 5), limits = c(0, 100)) +
+            labs(
+              title = paste(samp_id, "-", cellpop),
+              subtitle = cond,
+              fill = "Mean\nProximity\nlogratio",
+              size = "% cells\ndetected"
+            ) +
+            theme(axis.title = element_blank())
         })
     })
 

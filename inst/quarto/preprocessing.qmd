@@ -97,21 +97,3 @@ proximity_scores <- filter_proximity_scores(pg_data_processed, params, sample_le
 proximity_scores_complete <- complete_proximity_scores(proximity_scores)
 ```
 
-```{r}
-#| label: global_proximity_anova
-
-proximity_aov_res <-
-  proximity_scores_complete %>%
-  run_proximity_anova(
-    vars = c("sample_alias", "seurat_clusters"),
-    mc_cores = params$mc_cores
-  )
-
-proximity_top_markers <-
-  proximity_aov_res %>%
-  arrange(desc(statistic)) %>%
-  select(marker_1) %>%
-  distinct() %>%
-  head(40) %>%
-  pull(1)
-```

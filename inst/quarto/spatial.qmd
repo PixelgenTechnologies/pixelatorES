@@ -26,6 +26,11 @@ tabset_plotlist(plots, level = 5)
 ### Colocalization 
 ::: {.panel-tabset .nav-pills}
 
+In the heatmaps below, proteins were selected per sample or cell type based on detection frequency and variability in 
+Proximity Scores. Only proteins detected in at least 25% of cells were considered. From these, markers showing 
+substantial variation in colocalization (log2 ratio range ≥ ±0.2) were ranked, and up to 40 proteins with the highest 
+variance were chosen. 
+
 #### Global 
 
 ```{r}
@@ -35,7 +40,6 @@ tabset_plotlist(plots, level = 5)
 plots <- component_proximity_heatmap_sample(
   proximity_scores,
   heatmap_gradient,
-  plot_markers = proximity_top_markers,
   test_mode = params$test_mode
 )
 tabset_plotlist(plots, level = 5)
@@ -50,7 +54,6 @@ tabset_plotlist(plots, level = 5)
 plots <- component_proximity_heatmap_celltype(
   proximity_scores,
   heatmap_gradient,
-  plot_markers = proximity_top_markers,
   test_mode = params$test_mode
 )
 tabset_nested_plotlist(plots, level = 5)

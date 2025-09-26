@@ -8,6 +8,7 @@ component_proximity_heatmap_sample(
   proximity_scores,
   heatmap_gradient,
   n_markers = 40,
+  min_pct_detected = 0.25,
   plot_markers = NULL,
   test_mode = FALSE
 )

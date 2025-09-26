@@ -89,11 +89,10 @@ filter_proximity_scores <- function(
 ) {
   # Set proximity score cutoff
   background_threshold_pct <-
-    median(pg_data_processed$isotype_fraction) +
-    2 * mad(pg_data_processed$isotype_fraction)
+    stats::quantile(pg_data_processed$isotype_fraction, 0.9)
 
   # Fall back to a small cutoff if the background threshold is too low
-  background_threshold_pct <- max(background_threshold_pct, 0.001)
+  background_threshold_pct <- max(background_threshold_pct, 0.0025)
 
   proximity_scores <-
     ProximityScores(pg_data_processed,
@@ -210,12 +209,12 @@ summarize_colocalization_scores_per_sample <- function(
     ungroup() %>%
     select(
       sample_alias, condition, marker_1, marker_2,
-      mean_join_count_z, mean_log2_ratio
+      mean_join_count_z, mean_log2_ratio, pct_detected
     ) %>%
     complete(
       nesting(sample_alias, condition),
       nesting(marker_1, marker_2),
-      fill = list(mean_join_count_z = 0, mean_log2_ratio = 0)
+      fill = list(mean_join_count_z = 0, mean_log2_ratio = 0, pct_detected = 0)
     )
 
   return(summarized_data)
@@ -228,6 +227,7 @@ summarize_colocalization_scores_per_sample <- function(
 #'
 #' @param proximity_scores A data frame of proximity scores.
 #' @param plot_markers A character vector of markers to plot (default is NULL, which means all markers will be used).
+#' @param n_markers An integer specifying the number of top markers to select (default is 40).
 #' @param test_mode A logical indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A data frame summarizing the proximity scores per celltype and condition.
@@ -237,10 +237,12 @@ summarize_colocalization_scores_per_sample <- function(
 summarize_colocalization_scores_per_celltype <- function(
   proximity_scores,
   plot_markers = NULL,
+  n_markers = 40,
   test_mode = FALSE
 ) {
   pixelatorR:::assert_class(proximity_scores, "tbl_df")
   pixelatorR:::assert_single_value(test_mode, "bool")
+  pixelatorR:::assert_single_value(n_markers, "numeric")
   pixelatorR:::assert_vector(plot_markers, "character", allow_null = TRUE)
 
 
@@ -276,12 +278,12 @@ summarize_colocalization_scores_per_celltype <- function(
     ungroup() %>%
     select(
       sample_alias, condition, l1_annotation_summary, marker_1, marker_2,
-      mean_join_count_z, mean_log2_ratio
+      mean_join_count_z, mean_log2_ratio, pct_detected
     ) %>%
     complete(
       nesting(sample_alias, condition, l1_annotation_summary),
       nesting(marker_1, marker_2),
-      fill = list(mean_join_count_z = 0, mean_log2_ratio = 0)
+      fill = list(mean_join_count_z = 0, mean_log2_ratio = 0, pct_detected = 0)
     )
 
   return(summarized_data)
@@ -544,4 +546,42 @@ run_proximity_anova <-
       mutate(p_adj = p.adjust(p, method = p_adj_method))
 
     return(aov_res)
+  }
+
+
+#' Find top proximity markers based on standard deviation of mean log2 ratio
+#'
+#' This function identifies the top markers based on the standard deviation of their mean log2 ratio
+#' across samples, filtering by minimum percentage detected and range.
+#'
+#' @param proximity_score_summary A data frame containing proximity score mean summaries.
+#' @param n_markers An integer specifying the number of top markers to select (default is 40).
+#' @param min_pct_detected A numeric value specifying the minimum percentage of detection required (default is 0.25).
+#' @param min_range A numeric value specifying the minimum range of mean log2 ratio required (default is 0.2).
+#'
+#' @return A character vector of the top marker names.
+#'
+#' @noRd
+#'
+find_top_proximity_markers <-
+  function(
+    proximity_score_summary,
+    n_markers = 40,
+    min_pct_detected = 0.25,
+    min_range = 0.2
+    ) {
+
+    proximity_score_summary %>%
+      filter(pct_detected >= min_pct_detected) %>%
+      group_by(marker = marker_1) %>%
+      summarize(
+        sd = sd(mean_log2_ratio),
+        max = max(mean_log2_ratio),
+        min = min(mean_log2_ratio)
+      ) %>%
+      filter(max >= min_range | min <= -min_range) %>%
+      top_n(n = n_markers, wt = sd) %>%
+      slice_head(n = n_markers) %>%
+      select(-sd) %>%
+      pull(marker)
   }
