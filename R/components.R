@@ -1563,6 +1563,8 @@ component_clustering_summary <- function(
 #'
 #' @param proximity_scores A data frame containing proximity scores for different markers.
 #' @param heatmap_gradient A color palette for the heatmaps.
+#' @param min_pct_detected Minimum percentage of cells in which a marker must be detected to be included
+#' (default is 0.25).
 #' @param n_markers The number of markers to plot (default is 40).
 #' @param plot_markers A vector of markers to plot (default is NULL).
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
@@ -1689,7 +1691,7 @@ component_proximity_heatmap_sample <- function(
 #' @param heatmap_gradient A color palette for the heatmaps.
 #' @param n_markers The number of markers to plot (default is 40).
 #' @param min_pct_detected Minimum percentage of cells in which a marker must be detected to be included
-#' (default is 0.5).
+#' (default is 0.25).
 #' @param plot_markers A vector of markers to plot (default is NULL).
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'

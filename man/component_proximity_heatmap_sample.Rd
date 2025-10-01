@@ -20,6 +20,9 @@ component_proximity_heatmap_sample(
 
 \item{n_markers}{The number of markers to plot (default is 40).}
 
+\item{min_pct_detected}{Minimum percentage of cells in which a marker must be detected to be included
+(default is 0.25).}
+
 \item{plot_markers}{A vector of markers to plot (default is NULL).}
 
 \item{test_mode}{A boolean indicating whether to run in test mode (default is FALSE).}
