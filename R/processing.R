@@ -569,14 +569,15 @@ find_top_proximity_markers <-
     n_markers = 40,
     min_pct_detected = 0.25,
     min_range = 0.2
-    ) {
-
+  ) {
     proximity_score_summary %>%
       group_by(sample_alias, marker_1) %>%
       # ensure all possible marker_2 per sample-marker_1 combo
       complete(marker_2 = unique(proximity_score_summary$marker_2)) %>%
-      mutate(mean_log2_ratio = ifelse(pct_detected >= min_pct_detected, mean_log2_ratio, 0),
-             mean_log2_ratio = ifelse(is.na(mean_log2_ratio), 0, mean_log2_ratio)) %>%
+      mutate(
+        mean_log2_ratio = ifelse(pct_detected >= min_pct_detected, mean_log2_ratio, 0),
+        mean_log2_ratio = ifelse(is.na(mean_log2_ratio), 0, mean_log2_ratio)
+      ) %>%
       group_by(marker_1) %>%
       summarize(
         sd = sd(mean_log2_ratio),
@@ -619,23 +620,27 @@ find_top_abundance_markers <-
 
     cell_annotation <-
       FetchData(pg_data_processed,
-                vars = c("sample_alias", group_col)) %>%
+        vars = c("sample_alias", group_col)
+      ) %>%
       as_tibble(rownames = "cell_id")
 
 
     cell_annotation %>%
       group_by(across(all_of(c("sample_alias", group_col)))) %>%
-      reframe(mean = enframe(rowMeans(norm_data[, cell_id, drop = FALSE]),
-                             "marker", "mean")) %>%
+      reframe(mean = enframe(
+        rowMeans(norm_data[, cell_id, drop = FALSE]),
+        "marker", "mean"
+      )) %>%
       unnest(cols = c(mean)) %>%
       group_by(across(all_of(c("marker", group_col)))) %>%
-      summarize(max = max(mean),
-                mean = mean(mean),
-                .groups = "drop") %>%
+      summarize(
+        max = max(mean),
+        mean = mean(mean),
+        .groups = "drop"
+      ) %>%
       group_by(across(all_of(c(group_col)))) %>%
       arrange(desc(!!sym(summary_method))) %>%
       slice_head(n = n_markers) %>%
       ungroup() %>%
       select(any_of(c("marker", group_col)))
-
   }
