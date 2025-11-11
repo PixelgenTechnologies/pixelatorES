@@ -1611,7 +1611,6 @@ component_proximity_heatmap_sample <- function(
         summary_method = "mean"
       ) %>%
       pull(marker)
-
   }
 
   # Filter and symmetrise data
@@ -1733,7 +1732,6 @@ component_proximity_heatmap_celltype <- function(
     distinct()
 
   if (is.null(plot_markers)) {
-
     top_markers <-
       find_top_abundance_markers(pg_data_processed,
         n_markers = n_markers,
@@ -1745,7 +1743,6 @@ component_proximity_heatmap_celltype <- function(
       processed_data %>%
       inner_join(top_markers, by = c("l1_annotation_summary", "marker_1" = "marker")) %>%
       inner_join(top_markers, by = c("l1_annotation_summary", "marker_2" = "marker"))
-
   } else {
     processed_data <-
       processed_data %>%
