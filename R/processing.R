@@ -571,16 +571,70 @@ find_top_proximity_markers <-
     min_range = 0.2
   ) {
     proximity_score_summary %>%
-      filter(pct_detected >= min_pct_detected) %>%
-      group_by(marker = marker_1) %>%
+      group_by(sample_alias, marker_1) %>%
+      # ensure all possible marker_2 per sample-marker_1 combo
+      complete(marker_2 = unique(proximity_score_summary$marker_2)) %>%
+      mutate(mean_log2_ratio = ifelse(pct_detected >= min_pct_detected, mean_log2_ratio, 0),
+             mean_log2_ratio = ifelse(is.na(mean_log2_ratio), 0, mean_log2_ratio)) %>%
+      group_by(marker_1) %>%
       summarize(
         sd = sd(mean_log2_ratio),
         max = max(mean_log2_ratio),
         min = min(mean_log2_ratio)
       ) %>%
+      ungroup() %>%
       filter(max >= min_range | min <= -min_range) %>%
       top_n(n = n_markers, wt = sd) %>%
       slice_head(n = n_markers) %>%
       select(-sd) %>%
-      pull(marker)
+      pull(marker_1)
+  }
+
+
+#' Find top abundance markers based on mean expression
+#'
+#' This function identifies the top abundance markers based on mean abundance across samples and cell types.
+#'
+#' @param pg_data_processed A Seurat object containing processed data.
+#' @param n_markers An integer specifying the number of top markers to select (default is 40).
+#' @param summary_method A string specifying the summary method to use ("max" or "mean"; default is "max").
+#' @param group_col An optional string specifying the column to group by (default is NULL).
+#'
+#' @return A data frame with the top markers for each cell type.
+#'
+#' @noRd
+#'
+find_top_abundance_markers <-
+  function(
+    pg_data_processed,
+    n_markers = 40,
+    summary_method = c("max", "mean"),
+    group_col = NULL
+  ) {
+    summary_method <- match.arg(summary_method, c("max", "mean"))
+
+    norm_data <-
+      LayerData(pg_data_processed, "data")
+
+    cell_annotation <-
+      FetchData(pg_data_processed,
+                vars = c("sample_alias", group_col)) %>%
+      as_tibble(rownames = "cell_id")
+
+
+    cell_annotation %>%
+      group_by(across(all_of(c("sample_alias", group_col)))) %>%
+      reframe(mean = enframe(rowMeans(norm_data[, cell_id, drop = FALSE]),
+                             "marker", "mean")) %>%
+      unnest(cols = c(mean)) %>%
+      group_by(across(all_of(c("marker", group_col)))) %>%
+      summarize(max = max(mean),
+                mean = mean(mean),
+                .groups = "drop") %>%
+      group_by(across(all_of(c(group_col)))) %>%
+      arrange(desc(!!sym(summary_method))) %>%
+      slice_head(n = n_markers) %>%
+      ungroup() %>%
+      select(any_of(c("marker", group_col)))
+
   }
