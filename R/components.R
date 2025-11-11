@@ -1743,7 +1743,6 @@ component_proximity_heatmap_celltype <- function(
       processed_data %>%
       inner_join(top_markers, by = c("l1_annotation_summary", "marker_1" = "marker")) %>%
       inner_join(top_markers, by = c("l1_annotation_summary", "marker_2" = "marker"))
-
   } else {
     processed_data <-
       processed_data %>%
