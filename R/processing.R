@@ -628,7 +628,7 @@ find_top_abundance_markers <-
     cell_annotation %>%
       group_by(across(all_of(c("sample_alias", group_col)))) %>%
       reframe(mean = enframe(
-        rowMeans(norm_data[, cell_id, drop = FALSE]),
+        Matrix::rowMeans(norm_data[, cell_id, drop = FALSE]),
         "marker", "mean"
       )) %>%
       unnest(cols = c(mean)) %>%
