@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] 2025-09-24
 
+### Updated
+
+- The protein selection for colocalization heatmaps is now done by abundance instead of colocalization variance. 
+
 ## [0.5.0] 2025-09-26
 
 ### Updated
