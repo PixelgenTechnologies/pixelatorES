@@ -174,6 +174,18 @@ test_that("Components work as expected", {
   expect_no_error(
     component <- component_proximity_heatmap_sample(
       proximity_scores,
+      temp,
+      heatmap_gradient = c("red", "cyan"),
+      n_markers = 2,
+      plot_markers = NULL,
+      test_mode = TRUE
+    )
+  )
+  # component_proximity_heatmap_celltype
+  expect_no_error(
+    component <- component_proximity_heatmap_celltype(
+      proximity_scores,
+      temp,
       heatmap_gradient = c("red", "cyan"),
       n_markers = 2,
       plot_markers = NULL,

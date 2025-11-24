@@ -1562,6 +1562,7 @@ component_clustering_summary <- function(
 #' This function creates plots visualizing the proximity scores as heatmaps per sample and condition.
 #'
 #' @param proximity_scores A data frame containing proximity scores for different markers.
+#' @param pg_data_processed A processed data object.
 #' @param heatmap_gradient A color palette for the heatmaps.
 #' @param min_pct_detected Minimum percentage of cells in which a marker must be detected to be included
 #' (default is 0.25).
@@ -1575,6 +1576,7 @@ component_clustering_summary <- function(
 #'
 component_proximity_heatmap_sample <- function(
   proximity_scores,
+  pg_data_processed,
   heatmap_gradient,
   n_markers = 40,
   min_pct_detected = 0.25,
@@ -1582,6 +1584,7 @@ component_proximity_heatmap_sample <- function(
   test_mode = FALSE
 ) {
   pixelatorR:::assert_class(proximity_scores, "tbl_df")
+  pixelatorR:::assert_class(pg_data_processed, "Seurat")
   pixelatorR:::assert_class(heatmap_gradient, "character")
   pixelatorR:::assert_class(n_markers, "numeric")
   pixelatorR:::assert_within_limits(n_markers, c(1, 100))
@@ -1595,22 +1598,19 @@ component_proximity_heatmap_sample <- function(
       test_mode = test_mode
     ) %>%
     bind_rows(select(.,
-                     marker_2 = marker_1,
-                     marker_1 = marker_2,
-                     everything()
+      marker_2 = marker_1,
+      marker_1 = marker_2,
+      everything()
     )) %>%
     distinct()
 
   if (is.null(plot_markers)) {
-
     plot_markers <-
-      find_top_proximity_markers(
-        processed_data,
+      find_top_abundance_markers(pg_data_processed,
         n_markers = n_markers,
-        min_pct_detected = min_pct_detected,
-        min_range = 0.2
-      )
-
+        summary_method = "mean"
+      ) %>%
+      pull(marker)
   }
 
   # Filter and symmetrise data
@@ -1688,6 +1688,7 @@ component_proximity_heatmap_sample <- function(
 #' This function creates plots visualizing the proximity scores as heatmaps per celltype and condition.
 #'
 #' @param proximity_scores A data frame containing proximity scores for different markers.
+#' @param pg_data_processed A processed data object.
 #' @param heatmap_gradient A color palette for the heatmaps.
 #' @param n_markers The number of markers to plot (default is 40).
 #' @param min_pct_detected Minimum percentage of cells in which a marker must be detected to be included
@@ -1701,6 +1702,7 @@ component_proximity_heatmap_sample <- function(
 #'
 component_proximity_heatmap_celltype <- function(
   proximity_scores,
+  pg_data_processed,
   heatmap_gradient,
   n_markers = 40,
   min_pct_detected = 0.25,
@@ -1708,6 +1710,7 @@ component_proximity_heatmap_celltype <- function(
   test_mode = FALSE
 ) {
   pixelatorR:::assert_class(proximity_scores, "tbl_df")
+  pixelatorR:::assert_class(pg_data_processed, "Seurat")
   pixelatorR:::assert_class(heatmap_gradient, "character")
   pixelatorR:::assert_class(n_markers, "numeric")
   pixelatorR:::assert_within_limits(n_markers, c(1, 100))
@@ -1729,24 +1732,12 @@ component_proximity_heatmap_celltype <- function(
     distinct()
 
   if (is.null(plot_markers)) {
-
-    grouped_data <-
-      processed_data %>%
-      group_by(l1_annotation_summary)
-
     top_markers <-
-      grouped_data %>%
-      group_split() %>%
-      set_names(group_keys(grouped_data)$l1_annotation_summary) %>%
-      map(. %>%
-            find_top_proximity_markers(
-              n_markers = n_markers,
-              min_pct_detected = min_pct_detected,
-              min_range = 0.2
-            ) %>%
-            as_tibble() %>%
-            rename(marker = value)) %>%
-      bind_rows(.id = "l1_annotation_summary")
+      find_top_abundance_markers(pg_data_processed,
+        n_markers = n_markers,
+        summary_method = "mean",
+        group_col = "l1_annotation_summary"
+      )
 
     processed_data <-
       processed_data %>%
@@ -1757,7 +1748,6 @@ component_proximity_heatmap_celltype <- function(
       processed_data %>%
       filter(marker_1 %in% plot_markers & marker_2 %in% plot_markers)
   }
-
 
   processed_data <-
     processed_data %>%
