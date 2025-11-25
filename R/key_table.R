@@ -285,7 +285,7 @@ get_qc_metrics <-
         n_markers = c(3, 5)
       )
     ) %>%
-      lapply(order_sample_alias_factors, levels = sample_sheet$sample_alias)
+      order_sample_alias_factors(levels = sample_sheet$sample_alias)
   }
 
 #' Create a key metric table for samples
