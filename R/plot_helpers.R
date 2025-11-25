@@ -875,6 +875,8 @@ set_sample_levels <-
     pixelatorR:::assert_vector(sample_levels, "character", n = 1, allow_null = TRUE)
 
     if (!is.null(sample_levels)) {
+      sample_levels <- intersect(sample_levels, unique(df$sample_alias))
+
       df <-
         df %>%
         mutate(sample_alias = factor(sample_alias, sample_levels))
