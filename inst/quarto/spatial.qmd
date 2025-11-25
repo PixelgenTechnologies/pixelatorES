@@ -39,10 +39,12 @@ variance were chosen.
 #| fig-height: 8
 plots <- component_proximity_heatmap_sample(
   proximity_scores,
+  pg_data_processed,
   heatmap_gradient,
   test_mode = params$test_mode
 )
 tabset_plotlist(plots, level = 5)
+
 ```
 
 #### Per Celltype 
@@ -53,10 +55,12 @@ tabset_plotlist(plots, level = 5)
 #| fig-height: 8
 plots <- component_proximity_heatmap_celltype(
   proximity_scores,
+  pg_data_processed,
   heatmap_gradient,
   test_mode = params$test_mode
 )
 tabset_nested_plotlist(plots, level = 5)
+
 ```
 
 :::
