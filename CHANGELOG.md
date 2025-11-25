@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] 2025-09-24
 
+### Updated
+
+- `order_sample_alias_factors` can now be used to order factors of any column. 
+
 ## [0.5.0] 2025-09-26
 
 ### Updated

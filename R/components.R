@@ -1595,14 +1595,13 @@ component_proximity_heatmap_sample <- function(
       test_mode = test_mode
     ) %>%
     bind_rows(select(.,
-                     marker_2 = marker_1,
-                     marker_1 = marker_2,
-                     everything()
+      marker_2 = marker_1,
+      marker_1 = marker_2,
+      everything()
     )) %>%
     distinct()
 
   if (is.null(plot_markers)) {
-
     plot_markers <-
       find_top_proximity_markers(
         processed_data,
@@ -1610,7 +1609,6 @@ component_proximity_heatmap_sample <- function(
         min_pct_detected = min_pct_detected,
         min_range = 0.2
       )
-
   }
 
   # Filter and symmetrise data
@@ -1729,7 +1727,6 @@ component_proximity_heatmap_celltype <- function(
     distinct()
 
   if (is.null(plot_markers)) {
-
     grouped_data <-
       processed_data %>%
       group_by(l1_annotation_summary)
@@ -1739,13 +1736,13 @@ component_proximity_heatmap_celltype <- function(
       group_split() %>%
       set_names(group_keys(grouped_data)$l1_annotation_summary) %>%
       map(. %>%
-            find_top_proximity_markers(
-              n_markers = n_markers,
-              min_pct_detected = min_pct_detected,
-              min_range = 0.2
-            ) %>%
-            as_tibble() %>%
-            rename(marker = value)) %>%
+        find_top_proximity_markers(
+          n_markers = n_markers,
+          min_pct_detected = min_pct_detected,
+          min_range = 0.2
+        ) %>%
+        as_tibble() %>%
+        rename(marker = value)) %>%
       bind_rows(.id = "l1_annotation_summary")
 
     processed_data <-

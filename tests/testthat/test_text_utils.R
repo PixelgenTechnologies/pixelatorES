@@ -48,3 +48,36 @@ test_that("`compact_num` works as expected", {
     )
   )
 })
+
+test_that("`order_sample_alias_factors` works as expected", {
+  a_tibble <-
+    tibble(
+      sample_alias = letters,
+      another_alias = letters
+    ) %>%
+    mutate(another_column = 1:26)
+
+
+  expect_equal(
+    order_sample_alias_factors(a_tibble, levels = rev(letters)),
+    structure(list(
+      sample_alias = structure(26:1, levels = c(
+        "z",
+        "y", "x", "w", "v", "u", "t", "s", "r", "q", "p", "o", "n", "m",
+        "l", "k", "j", "i", "h", "g", "f", "e", "d", "c", "b", "a"
+      ), class = "factor"),
+      another_alias = c(
+        "a", "b", "c", "d", "e", "f", "g", "h",
+        "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
+        "u", "v", "w", "x", "y", "z"
+      ), another_column = 1:26
+    ), row.names = c(
+      NA,
+      -26L
+    ), class = c("tbl_df", "tbl", "data.frame"))
+  )
+
+  expect_no_error(order_sample_alias_factors(a_tibble, levels = rev(letters), column_name = "another_alias"))
+  expect_error(order_sample_alias_factors(a_tibble, levels = letters[1:4]))
+  expect_error(order_sample_alias_factors(a_tibble, levels = LETTERS))
+})

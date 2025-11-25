@@ -2,18 +2,22 @@
 % Please edit documentation in R/text_utils.R
 \name{order_sample_alias_factors}
 \alias{order_sample_alias_factors}
-\title{Order sample alias factors in a data frame}
+\title{Order factors in a data frame or list}
 \usage{
-order_sample_alias_factors(object, levels)
+order_sample_alias_factors(object, levels, column_name = "sample_alias")
 }
 \arguments{
-\item{object}{A data frame containing a \code{sample_alias} column.}
+\item{object}{A data frame containing a column named \code{column_name}.}
 
-\item{levels}{A character vector specifying the levels to order the \code{sample_alias} factor.}
+\item{levels}{A character vector specifying the levels to order the \code{column_name} factor.}
+
+\item{column_name}{A character string specifying the name of the column to order
+(default is "sample_alias").}
 }
 \value{
-A data frame with the \code{sample_alias} factor ordered according to the specified levels.
+A data frame with the \code{column_name} factor ordered according to the specified levels.
 }
 \description{
-This function orders the \code{sample_alias} factor in a data frame according to the specified levels.
+This function formats the column \code{column_name} to a factor in a data frame
+(or list of data frames) according to the specified \code{levels}.
 }

@@ -569,8 +569,7 @@ find_top_proximity_markers <-
     n_markers = 40,
     min_pct_detected = 0.25,
     min_range = 0.2
-    ) {
-
+  ) {
     proximity_score_summary %>%
       filter(pct_detected >= min_pct_detected) %>%
       group_by(marker = marker_1) %>%

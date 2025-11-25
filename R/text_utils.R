@@ -43,27 +43,37 @@ order_cd_markers <-
   }
 
 
-#' Order sample alias factors in a data frame
+#' Order factors in a data frame or list
 #'
-#' This function orders the `sample_alias` factor in a data frame according to the specified levels.
+#' This function formats the column `column_name` to a factor in a data frame
+#' (or list of data frames) according to the specified `levels`.
 #'
-#' @param object A data frame containing a `sample_alias` column.
-#' @param levels A character vector specifying the levels to order the `sample_alias` factor.
+#' @param object A data frame containing a column named `column_name`.
+#' @param levels A character vector specifying the levels to order the `column_name` factor.
+#' @param column_name A character string specifying the name of the column to order
+#' (default is "sample_alias").
 #'
-#' @return A data frame with the `sample_alias` factor ordered according to the specified levels.
+#' @return A data frame with the `column_name` factor ordered according to the specified levels.
 #'
 #' @export
 #'
 order_sample_alias_factors <-
-  function(object, levels) {
+  function(object, levels, column_name = "sample_alias") {
+    pixelatorR:::assert_class(object, c("data.frame", "list"))
+    pixelatorR:::assert_vector(levels, "character", n = 1)
+
     if (inherits(object, "data.frame")) {
+      pixelatorR:::assert_col_in_data(column_name, object)
+      pixelatorR:::assert_x_in_y(levels, object[[column_name]])
+      pixelatorR:::assert_x_in_y(unique(object[[column_name]]), levels)
+
       ordered_object <-
         object %>%
-        mutate(sample_alias = factor(sample_alias, levels))
+        mutate(!!sym(column_name) := factor(!!sym(column_name), levels))
     } else if (inherits(object, "list")) {
       ordered_object <-
         object %>%
-        lapply(order_sample_alias_factors, levels = levels)
+        lapply(order_sample_alias_factors, levels = levels, column_name = column_name)
     }
 
     return(ordered_object)
