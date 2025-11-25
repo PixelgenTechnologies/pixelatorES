@@ -37,7 +37,7 @@ params:
   harmonization_vars: ["condition"]
   norm_method: "CLR"
   clustering_resolution: 1
-  annotation_method: "Seurat"
+  annotation_method: "nmf"
   mc_cores: 1
   debug_mode: FALSE
   test_mode: FALSE
