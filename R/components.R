@@ -1611,6 +1611,7 @@ component_proximity_heatmap_sample <- function(
         summary_method = "mean"
       ) %>%
       pull(marker)
+
   }
 
   # Filter and symmetrise data
