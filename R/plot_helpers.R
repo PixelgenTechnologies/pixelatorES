@@ -199,7 +199,7 @@ plot_void <-
 #'
 #' @export
 #'
-extract_legend <-
+.extract_legend <-
   function(
     plot,
     legend_position = "bottom",
@@ -215,6 +215,23 @@ extract_legend <-
     if (legend_position == "none") {
       return(plot_void())
     }
+
+    if (legend_position == "bottom") {
+      plot <-
+        plot +
+        theme(
+          legend.title.position = "bottom"
+        )
+    }
+
+    plot <-
+      plot +
+      theme(
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.key = element_blank()
+      )
+
     # Extract the legend from the plot
     g <- ggplotGrob(plot)
 
@@ -228,7 +245,7 @@ extract_legend <-
       # get legend height in mm (sum of the gtable row heights)
       legend_height_mm <-
         sum(grid::convertUnit(guide_grob$heights, "mm", valueOnly = TRUE)) +
-        4 # add some padding
+        8 # add some padding
       # convert to inches
       legend_height_in <- legend_height_mm / 25.4
 
@@ -392,7 +409,7 @@ plot_embedding <-
     }
 
     if (extract_legend) {
-      legend <- extract_legend(p,
+      legend <- .extract_legend(p,
         legend_position = legend_position,
         plot_height = plot_height
       )
