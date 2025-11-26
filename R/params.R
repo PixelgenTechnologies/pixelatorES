@@ -10,7 +10,7 @@ default_params <-
     norm_method = "CLR",
     clustering_resolution = 1,
     proximity_count_cutoff = 25,
-    annotation_method = "Seurat",
+    annotation_method = "nmf",
     mc_cores = 1,
     debug_mode = FALSE,
     test_mode = FALSE

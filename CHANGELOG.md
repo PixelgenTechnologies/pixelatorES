@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `order_sample_alias_factors` can now be used to order factors of any column. 
 - The protein selection for colocalization heatmaps is now done by abundance instead of colocalization variance. 
+- Switched to NMF algorithm for cell annotation. 
 
 ## [0.5.0] 2025-09-26
 
