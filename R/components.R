@@ -2010,7 +2010,7 @@ component_annotation <-
       plot_data %>%
       ggplot(aes(sample_alias, frac, fill = l1_annotation_summary)) +
       geom_col(position = "stack") +
-      geom_text(aes(label = scales::percent(frac)),
+      geom_text(aes(label = scales::percent(frac, accuracy = 0.1)),
         position = position_stack(vjust = 0.5), size = 2
       ) +
       scale_fill_manual(values = cell_palette) +
