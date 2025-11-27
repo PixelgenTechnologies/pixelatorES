@@ -16,6 +16,7 @@ format:
     grid:
       body-width: 900px
     css: styles.css
+    include-after-body: custom.js
 knitr:
   opts_chunk:
     out.width: "100%"
@@ -39,8 +40,8 @@ params:
   clustering_resolution: 1
   annotation_method: "nmf"
   mc_cores: 1
-  debug_mode: FALSE
-  test_mode: FALSE
+  debug_mode: TRUE
+  test_mode: TRUE
 ---
 
 ```{r, child="preprocessing.qmd"}
