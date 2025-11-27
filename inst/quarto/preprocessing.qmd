@@ -79,9 +79,6 @@ if (params$debug_mode) {
 #| results: 'asis'
 sample_qc_metrics <-
   read_qc_files(qc_files, sample_sheet)
-
-qc_metrics_tables <-
-  get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)
 ```
 
 ```{r}

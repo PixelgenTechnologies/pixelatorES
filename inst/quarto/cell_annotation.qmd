@@ -4,6 +4,7 @@
 ```{r}
 #| label: dimred_plots
 #| results: 'asis'
+#| fig-height: 5
 component <-
   component_dimred_plots(
     pg_data_processed,
@@ -11,7 +12,7 @@ component <-
     sample_palette = sample_palette,
     cluster_palette = cluster_palette,
     sample_plots = TRUE,
-    plot_height = 2.5
+    plot_height = 5
   )
 
 tabset_nested_plotlist(component, level = 3)
@@ -24,7 +25,8 @@ tabset_nested_plotlist(component, level = 3)
 The Proxiome Experiment Summary performs automatic cell annotation by matching each cell’s protein profile to annotated 
 cells in a reference PBMC dataset. These automated labels should be interpreted with caution, particularly when the 
 sample composition differs substantially from the PBMC reference. In such cases, for example in certain stimulated 
-samples or cell lines, the annotations may be unreliable.
+samples or cell lines, the annotations may be unreliable. We therefore recommend performing cell annotation as part of 
+downstream analysis to ensure accurate and context-appropriate results.
 
 :::
 
@@ -39,7 +41,6 @@ component <-
   component_annotation(pg_data_processed,
     heatmap_gradient = cherry_gradient
   )
-
 ```
 
 ```{r}
@@ -47,7 +48,7 @@ component <-
 #| fig-height: 4
 #| results: 'asis'
 
-tabset_figure_table(  
+tabset_figure_table(
   component$celltype_composition,
   component$celltype_composition_table,
   level = 5
@@ -79,7 +80,6 @@ tabset_plotlist(component$celltype_composition_barplots2, level = 5)
 #| results: 'asis'
 
 tabset_plotlist(component$dimred_plots, level = 5)
-
 ```
 
 #### Cluster abundance heatmap

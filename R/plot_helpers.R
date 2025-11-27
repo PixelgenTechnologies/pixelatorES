@@ -216,14 +216,6 @@ plot_void <-
       return(plot_void())
     }
 
-    if (legend_position == "bottom") {
-      plot <-
-        plot +
-        theme(
-          legend.title.position = "bottom"
-        )
-    }
-
     plot <-
       plot +
       theme(
@@ -243,18 +235,15 @@ plot_void <-
 
     if (justify_top) {
       # get legend height in mm (sum of the gtable row heights)
-      legend_height_mm <-
-        sum(grid::convertUnit(guide_grob$heights, "mm", valueOnly = TRUE)) +
-        8 # add some padding
-      # convert to inches
-      legend_height_in <- legend_height_mm / 25.4
+      legend_height <-
+        sum(grid::convertUnit(guide_grob$heights, "in", valueOnly = TRUE))
 
       # create a column for the legend where the top row is the legend and the bottom row is spacer
       # use heights proportional to the absolute heights (so the legend gets the space it needs)
       legend_plot <-
         legend_plot /
         plot_spacer() +
-        plot_layout(heights = c(legend_height_in, max(0, plot_height - legend_height_in)))
+        plot_layout(heights = c(legend_height, max(0, plot_height - legend_height)))
     }
 
     return(legend_plot)

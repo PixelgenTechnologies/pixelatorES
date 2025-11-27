@@ -1862,7 +1862,8 @@ component_dimred_plots <-
             metavars = "seurat_clusters",
             pal = cluster_palette,
             plot_title = "Clusters"
-          )
+          ) +
+          theme(plot.title = element_text(hjust = 0.5))
         p2 <-
           plot_embedding(object, red,
             metavars = "condition",
@@ -1872,8 +1873,12 @@ component_dimred_plots <-
             legend_position = "bottom",
             yaxis_title = FALSE,
             extract_legend = TRUE,
-            plot_height = plot_height
+            plot_height = plot_height / 4
           )
+
+        p2$plot <-
+          p2$plot +
+          theme(plot.title = element_text(hjust = 0.5))
 
         if (sample_plots) {
           samplewise_plots <-
@@ -1889,14 +1894,14 @@ component_dimred_plots <-
               Combined =
                 p1 + p2$plot +
                   plot_void() + p2$legend +
-                  plot_layout(nrow = 2, heights = c(1, 0.5)),
+                  plot_layout(nrow = 2, heights = c(3, 1)),
               Samplewise = samplewise_plots
             )
         } else {
           plot_list <-
             p1 + p2$plot +
             plot_void() + p2$legend +
-            plot_layout(nrow = 2, heights = c(1, 0.5))
+            plot_layout(nrow = 2, heights = c(3, 1))
         }
 
         return(plot_list)
