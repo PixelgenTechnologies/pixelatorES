@@ -199,7 +199,7 @@ plot_void <-
 #'
 #' @export
 #'
-extract_legend <-
+.extract_legend <-
   function(
     plot,
     legend_position = "bottom",
@@ -215,6 +215,15 @@ extract_legend <-
     if (legend_position == "none") {
       return(plot_void())
     }
+
+    plot <-
+      plot +
+      theme(
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.key = element_blank()
+      )
+
     # Extract the legend from the plot
     g <- ggplotGrob(plot)
 
@@ -226,18 +235,15 @@ extract_legend <-
 
     if (justify_top) {
       # get legend height in mm (sum of the gtable row heights)
-      legend_height_mm <-
-        sum(grid::convertUnit(guide_grob$heights, "mm", valueOnly = TRUE)) +
-        4 # add some padding
-      # convert to inches
-      legend_height_in <- legend_height_mm / 25.4
+      legend_height <-
+        sum(grid::convertUnit(guide_grob$heights, "in", valueOnly = TRUE))
 
       # create a column for the legend where the top row is the legend and the bottom row is spacer
       # use heights proportional to the absolute heights (so the legend gets the space it needs)
       legend_plot <-
         legend_plot /
         plot_spacer() +
-        plot_layout(heights = c(legend_height_in, max(0, plot_height - legend_height_in)))
+        plot_layout(heights = c(legend_height, max(0, plot_height - legend_height)))
     }
 
     return(legend_plot)
@@ -392,7 +398,7 @@ plot_embedding <-
     }
 
     if (extract_legend) {
-      legend <- extract_legend(p,
+      legend <- .extract_legend(p,
         legend_position = legend_position,
         plot_height = plot_height
       )

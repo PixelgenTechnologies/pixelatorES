@@ -44,7 +44,6 @@ plots <- component_proximity_heatmap_sample(
   test_mode = params$test_mode
 )
 tabset_plotlist(plots, level = 5)
-
 ```
 
 #### Per Celltype 
@@ -60,7 +59,6 @@ plots <- component_proximity_heatmap_celltype(
   test_mode = params$test_mode
 )
 tabset_nested_plotlist(plots, level = 5)
-
 ```
 
 :::
