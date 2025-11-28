@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed an issue where the plot legend of dimensionality reduction plots would overlap with the plot x-axis title. 
 - Fixed an issue where the screen would "jump" to the top of the page when changing tabs.
+- Removed `draw_quantiles` in favor of `ggplot2` functionality doing the same thing but less error prone. 
 
 ## [0.5.0] 2025-09-26
 
