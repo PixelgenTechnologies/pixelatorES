@@ -17,7 +17,7 @@ title_plotlist <- function(plots, level = 2) {
   if (is.null(nams)) nams <- rep(" ", length(plots))
 
   # Loop through each plot and create a tab for each
-  for (tab in seq_len(length(plots))) {
+  for (tab in seq_along(plots)) {
     # Generate a header for each plot in the tabset
     cat(paste0(strrep("#", level), " ", nams[tab], "\n\n"))
 
@@ -96,7 +96,7 @@ tabset_nested_plotlist <-
     cat("\n\n")
     cat("::: {.panel-tabset .nav-pills}\n")
 
-    for (tab in seq_len(length(plots))) {
+    for (tab in seq_along(plots)) {
       if (inherits(plots[[tab]], "list")) {
         # If the plot is a list, call tabset_nested_plotlist recursively
 
