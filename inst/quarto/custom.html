@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   tabsets.forEach(tabset => {
 
-    tabset.addEventListener('show.bs.tab', function (e) {
+    tabset.addEventListener('show.bs.tab', function () {
       // Lock height before transition
       const tabContent = tabset.querySelector('.tab-content');
 
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
 
-    tabset.addEventListener('shown.bs.tab', function (e) {
+    tabset.addEventListener('shown.bs.tab', function () {
       // Release height after transition
       const tabContent = tabset.querySelector('.tab-content');
       if (tabContent) {
