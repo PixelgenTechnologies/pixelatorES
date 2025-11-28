@@ -623,6 +623,25 @@ plot_violin <- function(
       }
     }
 
+  if (!is.null(draw_quantiles)) {
+    p <- p +
+      geom_violin(
+        data = function(d) {
+          d %>%
+            group_by(!!sym(x)) %>%
+            filter(n() >= 2)
+        },
+        position = position_dodge(width = 0.9),
+        quantiles = draw_quantiles,
+        quantile.linetype = 1L,
+        quantile.color = "black",
+        color = NA,
+        fill = NA,
+        scale = "width",
+        drop = FALSE
+      )
+  }
+
   if (!is.null(facet_var)) {
     p <- p + facet_grid(as.formula(paste("~", facet_var)))
   }
@@ -672,16 +691,6 @@ plot_violin <- function(
   if (!is.null(fill)) {
     p <- p +
       scale_fill_manual(values = palette)
-  }
-  if (!is.null(draw_quantiles)) {
-    p <-
-      p +
-      geom_violin(
-        draw_quantiles = draw_quantiles,
-        quantile.color = "black",
-        scale = "width",
-        color = NA
-      )
   }
   if (use_log10) {
     p <- p +
