@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] 2025-11-25
+## [0.6.0] 2025-11-28
 
 ### Updated
 
@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed an issue where the plot legend of dimensionality reduction plots would overlap with the plot x-axis title. 
+- Fixed an issue where the screen would "jump" to the top of the page when changing tabs.
 
 ## [0.5.0] 2025-09-26
 

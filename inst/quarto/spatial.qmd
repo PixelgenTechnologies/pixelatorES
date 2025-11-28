@@ -1,4 +1,6 @@
 
+### Spatial metrics
+
 In PNA, each cell is represented as a graph where proteins are nodes and edges reflect spatial proximity. 
 For each protein pair, the observed number of edges (join count) is compared to the expected number under random 
 permutations, which account for protein abundance.  
@@ -11,7 +13,7 @@ Learn more at [PNA Proximity Scores](https://software.pixelgen.com/pixelator/alg
 
 ::: {.panel-tabset .nav-pills}
 
-### Clustering 
+#### Clustering 
 
 ```{r}
 #| label: global_proximity_per_marker_logratio
@@ -23,7 +25,7 @@ tabset_plotlist(plots, level = 5)
 ```
 
 
-### Colocalization 
+#### Colocalization 
 ::: {.panel-tabset .nav-pills}
 
 In the heatmaps below, proteins were selected per sample or cell type based on detection frequency and variability in 
@@ -31,7 +33,7 @@ Proximity Scores. Only proteins detected in at least 25% of cells were considere
 substantial variation in colocalization (log2 ratio range ≥ ±0.2) were ranked, and up to 40 proteins with the highest 
 variance were chosen. 
 
-#### Global 
+##### Global 
 
 ```{r}
 #| label: coloc_global_summary_heatmap_logratio
@@ -43,10 +45,10 @@ plots <- component_proximity_heatmap_sample(
   heatmap_gradient,
   test_mode = params$test_mode
 )
-tabset_plotlist(plots, level = 5)
+tabset_plotlist(plots, level = 6)
 ```
 
-#### Per Celltype 
+##### Per Celltype 
 
 ```{r}
 #| label: coloc_celltype_summary_heatmap_logratio
@@ -58,7 +60,7 @@ plots <- component_proximity_heatmap_celltype(
   heatmap_gradient,
   test_mode = params$test_mode
 )
-tabset_nested_plotlist(plots, level = 5)
+tabset_nested_plotlist(plots, level = 6)
 ```
 
 :::

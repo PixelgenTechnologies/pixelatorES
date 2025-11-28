@@ -16,7 +16,7 @@ format:
     grid:
       body-width: 900px
     css: styles.css
-    include-after-body: custom.js
+    include-after-body: custom.html
 knitr:
   opts_chunk:
     out.width: "100%"
