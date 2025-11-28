@@ -87,9 +87,3 @@ p.subtitle {
 #toc-title {
   display: none;
 }
-
-/* Prevent jump by keeping the parent container from scrolling */
-.panel-tabset .tab-content {
-  scroll-behavior: auto !important;
-  overflow-anchor: none !important; /* prevents anchor-based jumps */
-}
