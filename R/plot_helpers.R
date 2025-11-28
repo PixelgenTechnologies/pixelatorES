@@ -629,6 +629,7 @@ plot_violin <- function(
         data = function(d) {
           d %>%
             group_by(!!sym(x)) %>%
+            filter(!is.na(!!sym(y))) %>%
             filter(n() >= 2)
         },
         position = position_dodge(width = 0.9),

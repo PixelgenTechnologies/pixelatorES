@@ -20,7 +20,11 @@ Learn more at [PNA Proximity Scores](https://software.pixelgen.com/pixelator/alg
 #| fig-height: 8
 #| results: 'asis'
 
-plots <- component_proximity_per_marker(proximity_scores, sample_palette = sample_palette, test_mode = params$test_mode)
+plots <- component_proximity_per_marker(proximity_scores,
+  sample_palette = sample_palette,
+  sample_levels = sample_aliases,
+  test_mode = params$test_mode
+)
 tabset_plotlist(plots, level = 5)
 ```
 
