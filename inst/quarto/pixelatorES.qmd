@@ -1,6 +1,6 @@
 ---
 title: "PROXIOME EXPERIMENT SUMMARY"
-subtitle: "v0.5.0" 
+subtitle: "v0.6.0" 
 format:
   html:
     theme: default
@@ -16,6 +16,7 @@ format:
     grid:
       body-width: 900px
     css: styles.css
+    include-after-body: custom.html
 knitr:
   opts_chunk:
     out.width: "100%"

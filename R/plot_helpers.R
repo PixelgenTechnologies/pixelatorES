@@ -17,7 +17,7 @@ title_plotlist <- function(plots, level = 2) {
   if (is.null(nams)) nams <- rep(" ", length(plots))
 
   # Loop through each plot and create a tab for each
-  for (tab in seq_len(length(plots))) {
+  for (tab in seq_along(plots)) {
     # Generate a header for each plot in the tabset
     cat(paste0(strrep("#", level), " ", nams[tab], "\n\n"))
 
@@ -96,7 +96,7 @@ tabset_nested_plotlist <-
     cat("\n\n")
     cat("::: {.panel-tabset .nav-pills}\n")
 
-    for (tab in seq_len(length(plots))) {
+    for (tab in seq_along(plots)) {
       if (inherits(plots[[tab]], "list")) {
         # If the plot is a list, call tabset_nested_plotlist recursively
 
@@ -623,6 +623,31 @@ plot_violin <- function(
       }
     }
 
+  if (!is.null(draw_quantiles)) {
+    p <- p +
+      geom_violin(
+        data = function(d) {
+          if (is.null(facet_var)) {
+            d <- group_by(d, !!sym(x))
+          } else {
+            d <- group_by(d, !!sym(x), !!sym(facet_var))
+          }
+
+          d %>%
+            filter(!is.na(!!sym(y))) %>%
+            filter(n() >= 2)
+        },
+        position = position_dodge(width = 0.9),
+        quantiles = draw_quantiles,
+        quantile.linetype = 1L,
+        quantile.color = "black",
+        color = NA,
+        fill = NA,
+        scale = "width",
+        drop = FALSE
+      )
+  }
+
   if (!is.null(facet_var)) {
     p <- p + facet_grid(as.formula(paste("~", facet_var)))
   }
@@ -673,14 +698,6 @@ plot_violin <- function(
     p <- p +
       scale_fill_manual(values = palette)
   }
-  if (!is.null(draw_quantiles)) {
-    p <-
-      p +
-      draw_quantiles(p,
-        draw_quantiles = draw_quantiles,
-        facet_var = facet_var
-      )
-  }
   if (use_log10) {
     p <- p +
       scale_y_log10(expand = expand)
@@ -712,154 +729,6 @@ plot_violin <- function(
 
   return(p)
 }
-
-
-
-#' Draw quantiles on a violin plot
-#'
-#' This function adds quantile lines to a violin plot created with ggplot2.
-#' It calculates the quantiles for each violin and draws horizontal lines at those quantiles.
-#'
-#' @param p A ggplot object representing the violin plot.
-#' @param draw_quantiles A numeric vector of quantiles to draw (default is 0.5, which represents the median).
-#' @param linewidth The width of the quantile lines (default is 1).
-#' @param color The color of the quantile lines (default is "gray20").
-#' @param facet_var An optional variable to facet the plot by (default is NULL).
-#' @param use_real_quantile Logical indicating whether to use the actual quantile values (default is TRUE).
-#' @param ... Additional arguments passed to `geom_segment`.
-#'
-#' @return A ggplot object with quantile lines added to the violin plot.
-#'
-#' @export
-#'
-draw_quantiles <-
-  function(
-    p,
-    draw_quantiles = 0.5,
-    linewidth = 1,
-    color = "gray20",
-    facet_var = NULL,
-    use_real_quantile = TRUE,
-    ...
-  ) {
-    pixelatorR:::assert_class(p, "ggplot")
-    pixelatorR:::assert_single_value(draw_quantiles, "numeric", allow_null = TRUE)
-    pixelatorR:::assert_single_value(linewidth, "numeric")
-    pixelatorR:::assert_within_limits(linewidth, c(0, Inf))
-    pixelatorR:::assert_single_value(color, "string")
-    pixelatorR:::assert_valid_color(color)
-    pixelatorR:::assert_single_value(facet_var, "string", allow_null = TRUE)
-    pixelatorR:::assert_single_value(use_real_quantile, "bool")
-
-    build <- ggplot_build(p)
-
-    # Grab the data of the first violin layer:
-    violin_data <- build$data[[which(lapply(build$plot$layers, function(l) class(l$geom)[1]) == "GeomViolin")[1]]]
-
-    if (is.null(violin_data)) {
-      return(NULL)
-    }
-    if (nrow(violin_data) == 0) {
-      return(NULL)
-    }
-
-
-    violin_data <-
-      violin_data %>%
-      group_by(x, PANEL) %>%
-      filter(sum(!is.na(density)) > 1) %>%
-      filter(!is.na(density)) %>% # Remove rows with NA density
-      filter(!all(violinwidth == 1))
-
-    if (nrow(violin_data) == 0) {
-      # If there is no data after filtering, return NULL
-      return(NULL)
-    }
-
-    quantile_data <-
-      violin_data %>%
-      group_map(~ {
-        .x <-
-          bind_cols(.y, .x)
-
-        # Get density distribution
-        dens <- cumsum(.x$density) / sum(.x$density)
-        # Create approximate cumulative density to actual density function
-        ecdf <- stats::approxfun(dens, .x$y, ties = "ordered")
-
-        # Get quantile
-        if (use_real_quantile) {
-          # Use the actual quantile values
-          mask <-
-            unclass(factor(p$data[[as_label(p$mapping$x)]])) == .y$x
-
-          if (!is.null(facet_var)) {
-            mask <-
-              mask &
-                (unclass(factor(p$data[[facet_var]])) == .y$PANEL)
-          }
-
-          ys <-
-            stats::quantile(
-              p$data[[as_label(p$mapping$y)]][mask],
-              probs = draw_quantiles,
-              na.rm = TRUE
-            )
-        } else {
-          # Use the quantiles from the density distribution
-          ys <- ecdf(draw_quantiles)
-        }
-
-
-        # Get violin width at quantile and coordinates
-        bind_cols(
-          .y,
-          tibble(
-            y = ys,
-            violinwidth = with(
-              .x,
-              stats::approxfun(
-                y,
-                violinwidth *
-                  (xmax - xmin)
-              )
-            )(ys)
-          ) %>%
-            mutate(
-              xmin = .x$x[1] - violinwidth / 2,
-              xmax = .x$x[1] + violinwidth / 2,
-            )
-        )
-      }) %>%
-      bind_rows() %>%
-      select(x, y, PANEL, xmin, xmax)
-
-    if (!is.null(facet_var)) {
-      # If a facet variable is provided, add it to the quantile data
-      facet_levels <- levels(p$data[[facet_var]])
-      if (is.null(facet_levels)) {
-        # If the facet variable has no levels, use the unique values
-        facet_levels <- unique(p$data[[facet_var]])
-      }
-
-      quantile_data <-
-        quantile_data %>%
-        mutate(facet = factor(
-          facet_levels[PANEL],
-          facet_levels
-        )) %>%
-        rename(!!facet_var := facet)
-    }
-
-    geom_segment(
-      data = quantile_data,
-      aes(x = xmin, y = y, xend = xmax, yend = y),
-      inherit.aes = FALSE,
-      linewidth = linewidth,
-      color = color,
-      ...
-    )
-  }
 
 #' Set sample levels in a data frame
 #'

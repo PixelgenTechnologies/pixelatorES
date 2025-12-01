@@ -1,0 +1,31 @@
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+  const tabsets = document.querySelectorAll('.panel-tabset');
+
+  tabsets.forEach(tabset => {
+
+    tabset.addEventListener('show.bs.tab', function () {
+      // Lock height before transition
+      const tabContent = tabset.querySelector('.tab-content');
+
+      if (tabContent) {
+        const currentHeight = tabContent.offsetHeight;
+        tabContent.style.height = currentHeight + "px";
+        tabContent.style.overflow = "hidden";
+      }
+    });
+
+    tabset.addEventListener('shown.bs.tab', function () {
+      // Release height after transition
+      const tabContent = tabset.querySelector('.tab-content');
+      if (tabContent) {
+        tabContent.style.height = "auto";
+        tabContent.style.overflow = "visible";
+      }
+    });
+
+  });
+
+});
+</script>

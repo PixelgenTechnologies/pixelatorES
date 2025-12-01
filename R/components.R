@@ -1379,6 +1379,7 @@ component_proximity_selected <-
 #' @param proximity_scores A data frame containing proximity scores for different markers.
 #' @param sample_palette A color palette for the samples.
 #' @param per_celltype A boolean indicating whether to add a plot per cell type (default is TRUE).
+#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots for each marker.
@@ -1389,6 +1390,7 @@ component_proximity_per_marker <- function(
   proximity_scores,
   sample_palette,
   per_celltype = TRUE,
+  sample_levels = NULL,
   test_mode = FALSE) {
   plot_data <-
     proximity_scores %>%
@@ -1405,9 +1407,6 @@ component_proximity_per_marker <- function(
     ) %>%
     group_by(marker_1)
 
-
-
-
   plots <-
     plot_data %>%
     group_split() %>%
@@ -1418,6 +1417,7 @@ component_proximity_per_marker <- function(
         complete(
           sample_alias = levels(g_data$sample_alias)
         ) %>%
+        set_sample_levels(sample_levels = sample_levels) %>%
         plot_violin(
           x = "sample_alias",
           y = "log2_ratio",
@@ -1444,6 +1444,7 @@ component_proximity_per_marker <- function(
           sample_alias = levels(g_data$sample_alias),
           l1_annotation_summary = displayed_cell_types
         ) %>%
+        set_sample_levels(sample_levels = sample_levels) %>%
         plot_violin(
           x = "sample_alias",
           y = "log2_ratio",

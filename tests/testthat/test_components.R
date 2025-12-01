@@ -103,7 +103,7 @@ test_that("Components work as expected", {
   expect_equal(
     component[[1]]$data,
     structure(list(
-      sample_alias = c("S1", "S1", "S1", "S1", "S1"),
+      sample_alias = structure(c(1L, 1L, 1L, 1L, 1L), levels = "S1", class = "factor"),
       l1_annotation_summary = c(
         "B", "CD4 T", "CD8 T", "Mono",
         "NK"
@@ -140,9 +140,9 @@ test_that("Components work as expected", {
         NA, "1", NA, NA,
         NA
       )
-    ), class = c("tbl_df", "tbl", "data.frame"), row.names = c(
-      NA,
-      -5L
+    ), row.names = c(NA, -5L), class = c(
+      "tbl_df", "tbl",
+      "data.frame"
     ))
   )
 

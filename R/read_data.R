@@ -268,7 +268,7 @@ downsample_data <-
         .[!. %in% control_markers]
       } %>%
       {
-        .[sample(seq_len(length(.)), size = n_markers - length(control_markers), replace = FALSE)]
+        .[sample(seq_along(.), size = n_markers - length(control_markers), replace = FALSE)]
       } %>%
       union(control_markers)
 
