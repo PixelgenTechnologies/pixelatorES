@@ -627,8 +627,7 @@ plot_violin <- function(
     p <- p +
       geom_violin(
         data = function(d) {
-
-          if(is.null(facet_var)) {
+          if (is.null(facet_var)) {
             d <- group_by(d, !!sym(x))
           } else {
             d <- group_by(d, !!sym(x), !!sym(facet_var))
