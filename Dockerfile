@@ -1,4 +1,5 @@
-FROM ghcr.io/pixelgentechnologies/pixelatorr:sha-f48fa6d
+# ----------------------- Base image -----------------------
+FROM ghcr.io/pixelgentechnologies/pixelatorr:sha-30da50e as build
 ARG QUARTO_VERSION="1.5.54"
 ARG GITHUB_PAT=
 # Set the environment variable for the GitHub Personal Access Token
@@ -29,3 +30,14 @@ RUN R -e "devtools::install()"
 
 # Setup runable entrypoint
 COPY experiment-summary /usr/local/bin/experiment-summary
+
+# -----------------------Test image -----------------------
+
+# Based on base image
+FROM build AS test
+
+WORKDIR /workspace
+
+# Copy test data and package
+COPY . /workspace
+COPY tests/testdata /workspace/testdata
