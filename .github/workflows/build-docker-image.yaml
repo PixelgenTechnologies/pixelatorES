@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Set up build environment
         id: setup_build_env
@@ -76,7 +76,7 @@ jobs:
             -w /workspace \
             experiment-summary-test:${{ steps.meta.outputs.version }} \
             /bin/bash -c "\
-              R CMD check && \
+              R CMD check /workspace && \
               quarto render pixelatorES.qmd \
                 -P sample_sheet='tests/testdata/es_test_data/es_test_data_samplesheet.csv' \
                 -P data_folder='tests/testdata/es_test_data/' \
