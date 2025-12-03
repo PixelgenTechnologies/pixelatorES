@@ -79,8 +79,8 @@ jobs:
             experiment-summary-test:${{ steps.meta.outputs.version }} \
             /bin/bash -c "\
               quarto render inst/quarto/pixelatorES.qmd \
-                -P sample_sheet='tests/testdata/es_test_data/es_test_data_samplesheet.csv' \
-                -P data_folder='tests/testdata/es_test_data/' \
+                -P sample_sheet='../../tests/testdata/es_test_data/es_test_data_samplesheet.csv' \
+                -P data_folder='../../tests/testdata/es_test_data/' \
                 -P debug_mode=TRUE \
                 -P test_mode=TRUE \
                 --output testrun.html"
