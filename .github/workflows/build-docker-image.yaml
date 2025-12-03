@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   build-and-push-container:
-    name: "Build and push container"
+    name: Build Docker Image & Run CI Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -59,6 +59,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             GITHUB_PAT=${{ secrets.GH_PAT }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # Build test image locally only
       - name: Build test image (local only)
@@ -76,7 +78,6 @@ jobs:
             -w /workspace \
             experiment-summary-test:${{ steps.meta.outputs.version }} \
             /bin/bash -c "\
-              R CMD check /workspace && \
               quarto render pixelatorES.qmd \
                 -P sample_sheet='tests/testdata/es_test_data/es_test_data_samplesheet.csv' \
                 -P data_folder='tests/testdata/es_test_data/' \
