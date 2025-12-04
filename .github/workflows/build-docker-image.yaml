@@ -89,17 +89,21 @@ jobs:
       # Build test image locally only
       - name: Build test image (local only)
         run: |
+          TAG="${{ steps.picksha.outputs.sha_image }}"
+          TAG="${TAG##*:}"
           docker build \
             --target test \
-            -t experiment-summary-test:${{ steps.picksha.outputs.sha_image##*: }} .
+            -t experiment-summary-test:$TAG .
 
       # Run CI tests inside local test image
       - name: Run R CMD check & Quarto smoke test
         run: |
+          TAG="${{ steps.picksha.outputs.sha_image }}"
+          TAG="${TAG##*:}"
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            experiment-summary-test:${{ steps.picksha.outputs.sha_image##*: }} \
+            experiment-summary-test:$TAG \
             /bin/bash -c "\
               quarto render inst/quarto/pixelatorES.qmd \
                 -P sample_sheet='../../tests/testdata/es_test_data/es_test_data_samplesheet.csv' \
