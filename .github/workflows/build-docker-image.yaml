@@ -67,7 +67,7 @@ jobs:
         run: |
           # get the first tag containing "sha" from metadata
           SHA_TAG=$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | grep sha | head -n 1 | sed 's|.*/||')
-	  echo "sha_tag=$SHA_TAG" >> $GITHUB_OUTPUT
+          echo "sha_tag=$SHA_TAG" >> $GITHUB_OUTPUT
 
       # Test the base image
       - name: Smoke-test base image
