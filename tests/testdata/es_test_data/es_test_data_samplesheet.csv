@@ -1,0 +1,2 @@
+sample,sample_alias,condition,design,panel,fastq_1,fastq_2
+samle1,S1,cond1,pna-2,proxiome-immuno-155-v2,/mnt/nas/sequencing/NextSeq2000/es_test_data/PNA091_S09_S9_R1_001.filtered.fastq.gz,/mnt/nas/sequencing/NextSeq2000/es_test_data/PNA091_S09_S9_R2_001.filtered.fastq.gz
