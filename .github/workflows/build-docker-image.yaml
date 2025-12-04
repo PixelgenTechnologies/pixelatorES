@@ -47,8 +47,34 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-      # Build base image and push
-      - name: Build and push base Docker image
+      # Build base image
+      - name: Build base Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          target: build
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+
+      # Extract single sha tag for local use
+      - name: Select SHA tag
+        id: tag
+        run: |
+          echo "tag=$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | grep sha | head -n 1)" >> $GITHUB_OUTPUT
+
+      # Test the base image
+      - name: Smoke-test base image
+        run: |
+          docker run --rm ${{ steps.tag.outputs.tag }} echo "Base image OK"
+
+      # Push base image
+      - name: Push base Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -57,8 +83,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            GITHUB_PAT=${{ secrets.GH_PAT }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -67,8 +91,7 @@ jobs:
         run: |
           docker build \
             --target test \
-            --build-arg GITHUB_PAT=${{ secrets.GH_PAT }} \
-            -t experiment-summary-test:${{ steps.meta.outputs.version }} .
+            -t experiment-summary-test:${{ steps.tag.outputs.tag }} .
 
       # Run CI tests inside local test image
       - name: Run R CMD check & Quarto smoke test
@@ -76,7 +99,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            experiment-summary-test:${{ steps.meta.outputs.version }} \
+            experiment-summary-test:${{ steps.tag.outputs.tag }} \
             /bin/bash -c "\
               quarto render inst/quarto/pixelatorES.qmd \
                 -P sample_sheet='../../tests/testdata/es_test_data/es_test_data_samplesheet.csv' \
