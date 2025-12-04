@@ -63,16 +63,15 @@ jobs:
 
       # Extract single sha tag for local use
       - name: Select SHA tag
-        id: tag
+        id: picksha
         run: |
           # get the first tag containing "sha" from metadata
-          SHA_TAG=$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | grep sha | head -n 1 | sed 's|.*/||')
-          echo "sha_tag=$SHA_TAG" >> $GITHUB_OUTPUT
+          echo "sha_image=$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | grep 'sha-')" >> $GITHUB_OUTPUT
 
       # Test the base image
       - name: Smoke-test base image
         run: |
-          docker run --rm ${{ steps.tag.outputs.sha_tag }} echo "Base image OK"
+          docker run --rm ${{ steps.picksha.outputs.sha_image }} echo "Base image OK"
 
       # Push base image
       - name: Push base Docker image
@@ -92,7 +91,7 @@ jobs:
         run: |
           docker build \
             --target test \
-            -t experiment-summary-test:${{ steps.tag.outputs.sha_tag }} .
+            -t experiment-summary-test:${{ steps.picksha.outputs.sha_image##*: }} .
 
       # Run CI tests inside local test image
       - name: Run R CMD check & Quarto smoke test
@@ -100,7 +99,7 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/workspace \
             -w /workspace \
-            experiment-summary-test:${{ steps.tag.outputs.sha_tag }} \
+            experiment-summary-test:${{ steps.picksha.outputs.sha_image##*: }} \
             /bin/bash -c "\
               quarto render inst/quarto/pixelatorES.qmd \
                 -P sample_sheet='../../tests/testdata/es_test_data/es_test_data_samplesheet.csv' \
