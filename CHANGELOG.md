@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - The ES now tolerates chunk errors and will in most cases render a report even if some chunks fail.
+- Fixed issue where the ES would fail if `pg_data` contains fewer cells than the number of PCs to compute.
 
 ## [0.6.0] 2025-11-28
 

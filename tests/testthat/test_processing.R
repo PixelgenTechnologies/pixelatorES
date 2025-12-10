@@ -1,5 +1,39 @@
 pg_data <- get_test_data()
 
+test_that("process_data works as expected", {
+  expect_no_error(
+    dat_processed <-
+      process_data(
+        pg_data,
+        params = list(
+          test_mode = FALSE,
+          norm_method = "CLR",
+          do_harmonize = FALSE,
+          harmonization_vars = "sample_alias",
+          clustering_resolution = 1,
+          annotation_method = "nmf"
+        )
+      )
+  )
+
+  # With few cells
+  expect_no_error(
+    dat_processed <-
+      process_data(
+        pg_data |>
+          subset(cells = 1:5),
+        params = list(
+          test_mode = FALSE,
+          norm_method = "CLR",
+          do_harmonize = FALSE,
+          harmonization_vars = "sample_alias",
+          clustering_resolution = 1,
+          annotation_method = "nmf"
+        )
+      )
+  )
+})
+
 test_that("Abundance ANOVAs work as expected", {
   set.seed(37)
   test_data <-

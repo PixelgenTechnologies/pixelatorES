@@ -46,7 +46,8 @@ Imports:
     broom,
     stats,
     htmlwidgets,
-    magick
+    magick, 
+    RcppML
 Remotes: 
     PixelgenTechnologies/pixelatorR
 Suggests: 
