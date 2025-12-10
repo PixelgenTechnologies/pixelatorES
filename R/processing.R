@@ -20,6 +20,11 @@ process_data <-
     max_dims <- ifelse(params$test_mode, 5, 20)
     npcs <- ifelse(params$test_mode, 5, 50)
     n_neighbors <- ifelse(params$test_mode, 5, 30)
+
+    npcs <- min(npcs, ncol(object) - 1)
+    max_dims <- min(max_dims, npcs)
+    n_neighbors <- min(n_neighbors, ncol(object) - 1)
+
     object <-
       object %>%
       NormalizeData(normalization.method = params$norm_method, margin = 2) %>%
