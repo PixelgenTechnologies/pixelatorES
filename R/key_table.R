@@ -376,27 +376,17 @@ key_metric_table <-
       return(table_content)
     }
 
+    # Add tooltips to column headers
+    colnames(table_content) <- sapply(colnames(table_content), function(col) {
+      desc <- key_metric_definitions$description[key_metric_definitions$display_name == col]
+      if (length(desc) == 1) {
+        format_with_info_bootstrap(col, desc)
+      } else {
+        col
+      }
+    })
+
     table_content %>%
-      # Pivot
-      pivot_longer(
-        cols = -`Sample ID`,
-        names_to = "Metric",
-        values_to = "Value"
-      ) %>%
-      pivot_wider(
-        names_from = "Sample ID",
-        values_from = "Value"
-      ) %>%
-      left_join(
-        key_metric_definitions %>%
-          select(display_name, description),
-        by = c("Metric" = "display_name")
-      ) %>%
-      mutate(
-        Metric = format_with_info_bootstrap(Metric, description)
-      ) %>%
-      select(-description) %>%
-      # Show table
       style_table(
         escape = FALSE,
         tooltips = TRUE
