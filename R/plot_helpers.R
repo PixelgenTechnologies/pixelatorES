@@ -622,20 +622,24 @@ plot_violin <- function(
     }
 
   if (!is.null(draw_quantiles)) {
+    group_vars <- unique(c(x, fill, facet_var))
+
+    group_aes <-
+      if (length(group_vars) == 1) {
+        aes(group = !!sym(group_vars))
+      } else {
+        aes(group = interaction(!!!syms(group_vars)))
+      }
+
     p <- p +
       geom_violin(
         data = function(d) {
-          if (is.null(facet_var)) {
-            d <- group_by(d, !!sym(x), !!sym(fill))
-          } else {
-            d <- group_by(d, !!sym(x), !!sym(fill), !!sym(facet_var))
-          }
-
           d %>%
+            group_by(across(all_of(group_vars))) %>%
             filter(!is.na(!!sym(y))) %>%
             filter(n() >= 2)
         },
-        aes(group = interaction(!!sym(x), !!sym(fill))),
+        mapping = group_aes,
         position = position_dodge(width = 0.9),
         quantiles = draw_quantiles,
         quantile.linetype = 1L,
