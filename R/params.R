@@ -115,7 +115,7 @@ print_pixelator_version <-
         con <-
           DBI::dbConnect(
             duckdb::duckdb(),
-            fs_map$pxl_file[i],
+            x,
             read_only = TRUE
           )
 

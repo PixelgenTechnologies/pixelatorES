@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] 2025-12-09
 
+### Added
+- Added `print_pixelator_version` to print a table with the Pixelator version and panel file for each sample.
+
 ### Updated
 - The key metrics table is now in long format to avoid horizontal scrolling with high number of samples.
+- The `Run settings` tab is now its own module.
 
 ### Fixed
 - The ES now tolerates chunk errors and will in most cases render a report even if some chunks fail.
