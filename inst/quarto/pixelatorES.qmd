@@ -54,6 +54,8 @@ params:
   
 ## Samples 
 
+### Sample description
+
 ```{r}
 #| label: samples
 #| results: 'asis'
