@@ -477,7 +477,6 @@ get_test_qc_metrics <-
   }
 
 
-
 #' Get test data
 #'
 #' Generates a minimal Seurat object for testing purposes.

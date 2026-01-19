@@ -2150,7 +2150,6 @@ component_annotation <-
   }
 
 
-
 #' Create the component sequencing saturation
 #'
 #' This function creates a component that visualizes the sequencing saturation
