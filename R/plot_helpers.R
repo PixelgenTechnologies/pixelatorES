@@ -628,15 +628,16 @@ plot_violin <- function(
       geom_violin(
         data = function(d) {
           if (is.null(facet_var)) {
-            d <- group_by(d, !!sym(x))
+            d <- group_by(d, !!sym(x), !!sym(fill))
           } else {
-            d <- group_by(d, !!sym(x), !!sym(facet_var))
+            d <- group_by(d, !!sym(x), !!sym(fill), !!sym(facet_var))
           }
 
           d %>%
             filter(!is.na(!!sym(y))) %>%
             filter(n() >= 2)
         },
+        aes(group = interaction(!!sym(x), !!sym(fill))),
         position = position_dodge(width = 0.9),
         quantiles = draw_quantiles,
         quantile.linetype = 1L,
