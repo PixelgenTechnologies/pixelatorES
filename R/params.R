@@ -141,6 +141,8 @@ print_pixelator_version <-
       unnest(cols = everything()) |>
       style_table(
         escape = FALSE,
-        search = FALSE
+        search = FALSE,
+        interactive = FALSE,
+        buttons = FALSE
       )
   }

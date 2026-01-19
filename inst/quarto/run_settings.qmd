@@ -8,14 +8,27 @@ execute:
   error: true
 ---
 
+### Pixelator version
+
 ```{r}
-#| label: run_settings
+#| label: run_settings_version
 
 # Print Pixelator version
 print_pixelator_version(pg_data_processed, sample_sheet)
+```
 
+### Run parameters
+
+```{r}
+#| label: run_settings_params
 # Print parameters
 print_params(params)
+```
+
+### Session info
+
+```{r}
+#| label: run_settings_session_info
 
 # Print session info
 print_session_info()
