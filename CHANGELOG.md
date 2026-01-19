@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] 2025-12-09
 
+### Updated
+- The key metrics table is now in long format to avoid horizontal scrolling with high number of samples.
+
 ### Fixed
 - The ES now tolerates chunk errors and will in most cases render a report even if some chunks fail.
 - Fixed issue where the ES would fail if `pg_data` contains fewer cells than the number of PCs to compute.
