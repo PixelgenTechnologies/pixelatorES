@@ -553,6 +553,7 @@ component_sequencing_saturation_curve <-
       lapply(function(x) {
         seqsat_curve_data %>%
           mutate(selected_sample = sample_alias == x) %>%
+          arrange(selected_sample) %>%
           ggplot(aes(reads_per_component, saturation, color = selected_sample)) +
           geom_line(
             data = seqsat_curve_data_mean %>%
