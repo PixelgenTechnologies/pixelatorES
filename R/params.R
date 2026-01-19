@@ -84,3 +84,63 @@ print_session_info <- function() {
     select(package, loadedversion) %>%
     style_table(caption = "Sample settings", interactive = FALSE, buttons = FALSE)
 }
+
+#' Print Pixelator Version table
+#'
+#' Print the Pixelator version information from the pxl files.
+#'
+#' @param object A Seurat object.
+#' @param sample_sheet A sample sheet.
+#'
+#' @return A printed table of Pixelator version information.
+#' @export
+#'
+print_pixelator_version <-
+  function(object, sample_sheet) {
+    save_fields <-
+      tibble::tribble(
+        ~var, ~display_name,
+        "sample_alias", "Sample Alias",
+        "sample_name", "Sample Name",
+        "version", "Pixelator Version",
+        "panel_name", "Panel Name"
+      )
+
+    fs_map <- pixelatorR::FSMap(object)
+
+    fs_map$pxl_file |>
+      set_names(sample_sheet$sample_alias) |>
+      sapply(function(x) {
+        # Open connection
+        con <-
+          DBI::dbConnect(
+            duckdb::duckdb(),
+            fs_map$pxl_file[i],
+            read_only = TRUE
+          )
+
+        # Get metadata
+        metadata <-
+          DBI::dbGetQuery(
+            con,
+            "SELECT * FROM metadata"
+          )
+
+        # Close connection
+        DBI::dbDisconnect(con, shutdown = TRUE)
+
+        metadata_parsed <-
+          metadata$value |>
+          RcppSimdJson::fparse()
+
+        return(metadata_parsed)
+      }) |>
+      t() |>
+      as_tibble(rownames = "sample_alias") |>
+      select(all_of(save_fields$var)) |>
+      unnest(cols = everything()) |>
+      style_table(
+        escape = FALSE,
+        search = FALSE
+      )
+  }

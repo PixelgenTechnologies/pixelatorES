@@ -84,13 +84,7 @@ print_metadata_table(sample_sheet)
 
 ## Run settings
 
-```{r}
-#| label: run_settings
-# Print parameters
-print_params(params)
-
-# Print session info
-print_session_info()
+```{r, child="run_settings.qmd"}
 ```
 
 
