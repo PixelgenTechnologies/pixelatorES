@@ -129,7 +129,7 @@ tabset_nested_plotlist <-
 #'
 #' @export
 tabset_figure_table <- function(figure, table, level = 2,
-                                  mode = "tabset") {
+                                mode = "tabset") {
   pixelatorR:::assert_class(table, "datatables")
   mode <- match.arg(mode, c("tabset", "title"))
 
@@ -273,20 +273,19 @@ plot_void <-
 #' @export
 plot_embedding <-
   function(object,
-             plot_reduction = "pca",
-             dims = 1:2,
-             metavars = "seurat_clusters",
-             pal = NULL,
-             label = TRUE,
-             plot_title = "",
-             xaxis_title = TRUE,
-             yaxis_title = TRUE,
-             fix_aspect_ratio = TRUE,
-             legend_position = "none",
-             legend_cols = 2,
-             extract_legend = FALSE,
-             plot_height = 5
-  ) {
+           plot_reduction = "pca",
+           dims = 1:2,
+           metavars = "seurat_clusters",
+           pal = NULL,
+           label = TRUE,
+           plot_title = "",
+           xaxis_title = TRUE,
+           yaxis_title = TRUE,
+           fix_aspect_ratio = TRUE,
+           legend_position = "none",
+           legend_cols = 2,
+           extract_legend = FALSE,
+           plot_height = 5) {
     pixelatorR:::assert_class(object, "Seurat")
     pixelatorR:::assert_single_value(plot_reduction, type = "string")
     pixelatorR:::assert_vector(dims, "numeric", n = 2)
@@ -490,7 +489,6 @@ plot_embeddings_samplewise <-
           scale_y_continuous(limits = V2_range)
       })
   }
-
 
 
 #' Make a violin plot

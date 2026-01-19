@@ -25,15 +25,14 @@ displayed_cell_types <-
 #' @export
 #'
 annotate_cells <-
-  function(
-             object,
-             reference,
-             summarize_by_column = NULL,
-             reference_assay = "PNA",
-             query_assay = "PNA",
-             normalization_method = "LogNormalize",
-             reduction = "cca",
-             ...) {
+  function(object,
+           reference,
+           summarize_by_column = NULL,
+           reference_assay = "PNA",
+           query_assay = "PNA",
+           normalization_method = "LogNormalize",
+           reduction = "cca",
+           ...) {
     pixelatorR:::assert_class(object, "Seurat")
     pixelatorR:::assert_class(reference, "Seurat")
     pixelatorR:::assert_class(summarize_by_column, "character",

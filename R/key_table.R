@@ -12,8 +12,8 @@
 #' @export
 get_top_markers <-
   function(object,
-             group,
-             n_markers = c(3, 5)) {
+           group,
+           n_markers = c(3, 5)) {
     pixelatorR:::assert_class(object, "Seurat")
     pixelatorR:::assert_single_value(group, type = "string")
     pixelatorR:::assert_vector(n_markers, "numeric", n = 1)

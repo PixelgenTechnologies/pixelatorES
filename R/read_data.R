@@ -190,7 +190,7 @@ load_pxl_data_list <-
 #'
 merge_data <-
   function(pg_data,
-             sample_sheet) {
+           sample_sheet) {
     pg_data <-
       pg_data %>%
       map(. %>%
@@ -249,9 +249,9 @@ merge_data <-
 #'
 downsample_data <-
   function(pg_data,
-             control_markers = NULL,
-             n_cells = 50,
-             n_markers = 20) {
+           control_markers = NULL,
+           n_cells = 50,
+           n_markers = 20) {
     set.seed(37)
 
     keep_cells <-
@@ -290,7 +290,7 @@ downsample_data <-
 #' @export
 read_qc_files <-
   function(qc_files,
-             sample_sheet) {
+           sample_sheet) {
     pixelatorR:::assert_within_limits(nrow(qc_files), c(1, Inf))
     pixelatorR:::assert_class(qc_files, "data.frame")
     for (f in qc_files$filename) pixelatorR:::assert_file_exists(f)
@@ -475,7 +475,6 @@ get_test_qc_metrics <-
 
     return(sample_qc_metrics)
   }
-
 
 
 #' Get test data
