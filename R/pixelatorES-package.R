@@ -128,6 +128,7 @@
 #' @importFrom rlang as_label
 #' @importFrom rlang set_names
 #' @importFrom rlang sym
+#' @importFrom rlang syms
 #' @importFrom scales percent
 #' @importFrom sessioninfo package_info
 #' @importFrom Seurat FindClusters
