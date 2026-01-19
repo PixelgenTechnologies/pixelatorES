@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed issue where the ES would fail if `pg_data` contains fewer cells than the number of PCs to compute.
 - Fixed DuckDB issue with temporary directory
 - Fixed issue with violin median lines displaying per x coordinate rather than per group when also using the `fill` argument. 
+- Fixed issue where DT tables would not render in full until switching back and fourth between tabs.
 
 ## [0.6.0] 2025-11-28
 

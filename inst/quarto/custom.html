@@ -6,22 +6,25 @@ document.addEventListener("DOMContentLoaded", function() {
   tabsets.forEach(tabset => {
 
     tabset.addEventListener('show.bs.tab', function () {
-      // Lock height before transition
+      // Lock height before transition to prevent page jump
       const tabContent = tabset.querySelector('.tab-content');
-
       if (tabContent) {
-        const currentHeight = tabContent.offsetHeight;
-        tabContent.style.height = currentHeight + "px";
-        tabContent.style.overflow = "hidden";
+        tabContent.style.minHeight = tabContent.offsetHeight + "px";
       }
     });
 
     tabset.addEventListener('shown.bs.tab', function () {
-      // Release height after transition
       const tabContent = tabset.querySelector('.tab-content');
       if (tabContent) {
-        tabContent.style.height = "auto";
-        tabContent.style.overflow = "visible";
+        // Release height after transition
+        tabContent.style.minHeight = "";
+      }
+
+      // Force DataTables to recalc layout if any are visible
+      if (window.jQuery && window.jQuery.fn && window.jQuery.fn.dataTable) {
+        window.jQuery.fn.dataTable.tables({ visible: true }).forEach(function (table) {
+          window.jQuery(table).DataTable().columns.adjust();
+        });
       }
     });
 
