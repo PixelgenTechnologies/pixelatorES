@@ -10,7 +10,8 @@
 #' @export
 #'
 component_bleedover_noise <- function(
-  qc_metrics_tables) {
+  qc_metrics_tables
+) {
   pixelatorR:::assert_class(qc_metrics_tables, "list")
   p <-
     qc_metrics_tables$denoising %>%
@@ -49,7 +50,8 @@ component_bleedover_noise <- function(
 #' @export
 #'
 component_control_markers <- function(
-  pg_data) {
+  pg_data
+) {
   pixelatorR:::assert_class(pg_data, "Seurat")
   plot_data <-
     pg_data[[]] %>%
@@ -115,7 +117,8 @@ component_control_markers <- function(
 #'
 component_molecule_rank_plot <- function(
   pg_data,
-  params) {
+  params
+) {
   plots <-
     FetchData(pg_data, "sample_alias") %>%
     pull(sample_alias) %>%
@@ -267,7 +270,8 @@ component_qc_molecule_rank_plot <- function(
 #'
 component_molecule_plot <- function(
   pg_data,
-  sample_palette) {
+  sample_palette
+) {
   p <- pg_data[[]] %>%
     plot_violin(
       x = "sample_alias",
@@ -553,6 +557,7 @@ component_sequencing_saturation_curve <-
       lapply(function(x) {
         seqsat_curve_data %>%
           mutate(selected_sample = sample_alias == x) %>%
+          arrange(selected_sample) %>%
           ggplot(aes(reads_per_component, saturation, color = selected_sample)) +
           geom_line(
             data = seqsat_curve_data_mean %>%
@@ -1391,7 +1396,8 @@ component_proximity_per_marker <- function(
   sample_palette,
   per_celltype = TRUE,
   sample_levels = NULL,
-  test_mode = FALSE) {
+  test_mode = FALSE
+) {
   plot_data <-
     proximity_scores %>%
     filter(marker_1 == marker_2) %>%

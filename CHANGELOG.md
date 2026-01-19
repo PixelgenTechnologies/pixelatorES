@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The ES now tolerates chunk errors and will in most cases render a report even if some chunks fail.
 - Fixed issue where the ES would fail if `pg_data` contains fewer cells than the number of PCs to compute.
 - Fixed DuckDB issue with temporary directory
+- Fixed issue where DT tables would not render in full until switching back and fourth between tabs.
 
 ## [0.6.0] 2025-11-28
 

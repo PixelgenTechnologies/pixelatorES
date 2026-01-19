@@ -32,7 +32,8 @@ style_table <- function(
   buttons = TRUE,
   tooltips = FALSE,
   escape = FALSE,
-  ...) {
+  ...
+) {
   pixelatorR:::assert_class(df, "data.frame")
   pixelatorR:::assert_single_value(pageLength, "integer", allow_null = TRUE)
   pixelatorR:::assert_single_value(caption, "string", allow_null = TRUE)
