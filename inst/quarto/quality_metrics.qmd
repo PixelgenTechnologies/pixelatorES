@@ -13,7 +13,7 @@ execute:
 ```{r}
 #| label: key_metrics
 #| results: 'asis'
-key_metric_table(qc_metrics_tables, detailed = FALSE, pageLength = 10)
+key_metric_table(qc_metrics_tables, detailed = FALSE)
 ```
 
 
