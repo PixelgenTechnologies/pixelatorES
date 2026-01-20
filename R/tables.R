@@ -43,7 +43,9 @@ style_table <- function(
   pixelatorR:::assert_single_value(buttons, "bool")
 
   # Options
-  opts <- list(pageLength = ifelse(is.null(pageLength), nrow(df), pageLength))
+  opts <- list(
+    pageLength = ifelse(is.null(pageLength), nrow(df), pageLength)
+  )
 
   dom <- ""
 
@@ -103,8 +105,12 @@ style_table <- function(
   ")
   }
 
-
   opts$dom <- dom
+
+  # Build extensions list
+  extensions <- c()
+  if (buttons) extensions <- c(extensions, "Buttons")
+  if (length(extensions) == 0) extensions <- list()
 
   table_widget <- DT::datatable(
     df,
@@ -112,7 +118,9 @@ style_table <- function(
     rownames = FALSE,
     escape = escape,
     options = opts,
-    extensions = if (buttons) "Buttons" else list(),
+    extensions = extensions,
+    class = "display compact",
+    width = "100%",
     ...
   )
 

@@ -389,7 +389,8 @@ key_metric_table <-
     table_content %>%
       style_table(
         escape = FALSE,
-        tooltips = TRUE
+        tooltips = TRUE,
+        pageLength = 10
       )
   }
 
