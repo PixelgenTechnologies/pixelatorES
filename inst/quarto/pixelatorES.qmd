@@ -1,6 +1,6 @@
 ---
 title: "PROXIOME EXPERIMENT SUMMARY"
-subtitle: "v0.6.0" 
+subtitle: "v0.7.0" 
 format:
   html:
     theme: default
@@ -54,6 +54,8 @@ params:
   
 ## Samples 
 
+### Sample description
+
 ```{r}
 #| label: samples
 #| results: 'asis'
@@ -82,13 +84,7 @@ print_metadata_table(sample_sheet)
 
 ## Run settings
 
-```{r}
-#| label: run_settings
-# Print parameters
-print_params(params)
-
-# Print session info
-print_session_info()
+```{r, child="run_settings.qmd"}
 ```
 
 
