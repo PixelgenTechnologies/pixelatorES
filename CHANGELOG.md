@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased] 2025-12-09
 
 ### Updated
-- The key metrics table is now in long format to avoid horizontal scrolling with high number of samples.
+- The key metrics table is now in long format to avoid horizontal scrolling with high number of samples. Pagination has also been added to prevent very long tables from being displayed.
 
 ### Fixed
 - The ES now tolerates chunk errors and will in most cases render a report even if some chunks fail.
