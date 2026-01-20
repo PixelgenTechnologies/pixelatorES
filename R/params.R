@@ -100,10 +100,10 @@ print_pixelator_version <-
     save_fields <-
       tibble::tribble(
         ~var, ~display_name,
-        "sample_alias", "Sample Alias",
-        "sample_name", "Sample Name",
-        "version", "Pixelator Version",
-        "panel_name", "Panel Name"
+        "sample_alias", "Sample alias",
+        "sample_name", "Sample name",
+        "version", "Pixelator version",
+        "panel_name", "Panel name"
       )
 
     fs_map <- pixelatorR::FSMap(object)
@@ -139,6 +139,7 @@ print_pixelator_version <-
       as_tibble(rownames = "sample_alias") |>
       select(all_of(save_fields$var)) |>
       unnest(cols = everything()) |>
+      set_names(save_fields$display_name) |>
       style_table(
         escape = FALSE,
         search = FALSE,
