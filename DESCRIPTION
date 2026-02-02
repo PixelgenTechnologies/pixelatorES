@@ -44,7 +44,9 @@ Imports:
     patchwork,
     broom,
     htmlwidgets,
-    magick
+    magick,
+    dbplyr,
+    RcppML
 Remotes: 
     PixelgenTechnologies/pixelatorR
 Suggests: 
