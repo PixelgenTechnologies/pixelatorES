@@ -108,8 +108,8 @@ print_pixelator_version <-
 
     fs_map <- pixelatorR::FSMap(object)
 
-    fs_map$pxl_file |>
-      set_names(sample_sheet$sample_alias) |>
+    fs_map$pxl_file %>%
+      set_names(sample_sheet$sample_alias) %>%
       sapply(function(x) {
         # Open connection
         con <-
@@ -130,16 +130,16 @@ print_pixelator_version <-
         DBI::dbDisconnect(con, shutdown = TRUE)
 
         metadata_parsed <-
-          metadata$value |>
+          metadata$value %>%
           RcppSimdJson::fparse()
 
         return(metadata_parsed)
-      }) |>
-      t() |>
-      as_tibble(rownames = "sample_alias") |>
-      select(all_of(save_fields$var)) |>
-      unnest(cols = everything()) |>
-      set_names(save_fields$display_name) |>
+      }) %>%
+      t() %>%
+      as_tibble(rownames = "sample_alias") %>%
+      select(all_of(save_fields$var)) %>%
+      unnest(cols = everything()) %>%
+      set_names(save_fields$display_name) %>%
       style_table(
         escape = FALSE,
         search = FALSE,
