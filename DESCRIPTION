@@ -41,12 +41,11 @@ Imports:
     DT,
     scales,
     methods,
-    dbplyr,
     patchwork,
     broom,
-    stats,
     htmlwidgets,
-    magick, 
+    magick,
+    dbplyr,
     RcppML
 Remotes: 
     PixelgenTechnologies/pixelatorR
