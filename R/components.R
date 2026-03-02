@@ -2016,6 +2016,7 @@ component_annotation <-
         celltype,
         fill = list(n = 0, frac = 0)
       ) %>%
+      mutate(celltype = factor(celltype, displayed_cell_types)) %>%
       group_by(sample_alias)
 
     p4 <-
