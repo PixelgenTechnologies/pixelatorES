@@ -53,7 +53,7 @@ test_that("Components work as expected", {
     pg_data %>%
     subset(features = rownames(pg_data)[1:3])
 
-  temp[["l1_annotation_summary"]] <- sample(
+  temp[["celltype"]] <- sample(
     c("CD4 T", "CD8 T", "B"),
     ncol(temp),
     replace = TRUE
@@ -77,8 +77,9 @@ test_that("Components work as expected", {
     pg_data_small %>%
     subset(features = rownames(pg_data_small)[1:3])
 
-  temp[["l1_annotation_summary"]] <- sample(
-    c("CD4 T", "CD8 T", "B"),
+  set.seed(37)
+  temp[["celltype"]] <- sample(
+    c("T", "B"),
     ncol(temp),
     replace = TRUE
   )
@@ -104,46 +105,42 @@ test_that("Components work as expected", {
     component[[1]]$data,
     structure(list(
       sample_alias = structure(c(1L, 1L, 1L, 1L, 1L), levels = "S1", class = "factor"),
-      l1_annotation_summary = c(
-        "B", "CD4 T", "CD8 T", "Mono",
-        "NK"
-      ), marker_1 = structure(c(NA, 1L, NA, NA, NA), levels = c(
+      celltype = c("B", "Mono & DC", "NK", "Platelets", "T"), marker_1 = structure(c(
+        1L,
+        NA, NA, NA, NA
+      ), levels = c("CD11b", "B2M", "HLA-ABC"), class = "factor"),
+      marker_2 = structure(c(1L, NA, NA, NA, NA), levels = c(
         "CD11b",
         "B2M", "HLA-ABC"
-      ), class = "factor"), marker_2 = structure(c(
-        NA,
-        1L, NA, NA, NA
-      ), levels = c("CD11b", "B2M", "HLA-ABC"), class = "factor"),
-      join_count = c(NA, 57, NA, NA, NA), join_count_expected_mean = c(
-        NA,
-        45.18, NA, NA, NA
+      ), class = "factor"), join_count = c(
+        57,
+        NA, NA, NA, NA
+      ), join_count_expected_mean = c(
+        45.18, NA,
+        NA, NA, NA
       ), join_count_expected_sd = c(
-        NA, 6.58338895258438,
-        NA, NA, NA
+        6.58338895258438,
+        NA, NA, NA, NA
       ), join_count_z = c(
-        NA, 1.79542786931341, NA, NA,
-        NA
-      ), join_count_p = c(NA, 0.0362927777357692, NA, NA, NA),
-      log2_ratio = c(NA, 0.335277648546382, NA, NA, NA), sample_component = c(
-        NA,
-        "0a45497c6bfbfb22", NA, NA, NA
-      ), count_1 = c(
-        NA, 929L, NA,
+        1.79542786931341, NA, NA,
         NA, NA
-      ), count_2 = c(NA, 929L, NA, NA, NA), p1 = c(
-        NA, 0.312163978494624,
-        NA, NA, NA
-      ), p2 = c(NA, 0.312163978494624, NA, NA, NA), condition = c(
-        NA,
-        "good", NA, NA, NA
-      ), seurat_clusters = c(
-        NA, "1", NA, NA,
+      ), join_count_p = c(
+        0.0362927777357692, NA, NA, NA,
         NA
-      )
-    ), row.names = c(NA, -5L), class = c(
-      "tbl_df", "tbl",
-      "data.frame"
-    ))
+      ), log2_ratio = c(0.335277648546382, NA, NA, NA, NA), sample_component = c(
+        "0a45497c6bfbfb22",
+        NA, NA, NA, NA
+      ), count_1 = c(929L, NA, NA, NA, NA), count_2 = c(
+        929L,
+        NA, NA, NA, NA
+      ), p1 = c(0.312163978494624, NA, NA, NA, NA), p2 = c(0.312163978494624, NA, NA, NA, NA), condition = c(
+        "good",
+        NA, NA, NA, NA
+      ), seurat_clusters = c("1", NA, NA, NA, NA)
+    ), row.names = c(
+      NA,
+      -5L
+    ), class = c("tbl_df", "tbl", "data.frame"))
   )
 
   # component_proximity_selected
