@@ -1762,7 +1762,7 @@ component_proximity_heatmap_celltype <- function(
       celltype = factor(celltype, displayed_cell_types),
       pct_detected = 100 * pct_detected
     ) %>%
-    group_by(celltype = celltype) %>%
+    group_by(celltype) %>%
     arrange(celltype)
 
   plots <-
