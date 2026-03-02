@@ -12,7 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Q30 Phred score to key metrics table. 
 
 ### Fixed
+
 - Removed unused imports from NAMESPACE
+
+### Updated
+
+- Cell types are now aggregated to "T", "B", "Mono & DC", "NK", and "Platelet".
+- Cell annotation reference is now pulled from the `pixelatorR` package instead of being stored in the ES.
 
 ## [0.7.0] 2026-01-19
 
