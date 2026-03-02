@@ -15,7 +15,15 @@ displayed_cell_types <-
 #' @export
 #'
 merged_cell_types <-
-  c("CD4 T" = "T", "CD8 T" = "T", "NK" = "NK", "Mono" = "Mono & DC", "B" = "B", "Platelets" = "Platelets")
+  c(
+    "CD4 T" = "T",
+    "CD8 T" = "T",
+    "Other T" = "T",
+    "NK" = "NK",
+    "Mono" = "Mono & DC",
+    "B" = "B",
+    "Platelets" = "Platelets"
+  )
 
 #' Merge cell types
 #'

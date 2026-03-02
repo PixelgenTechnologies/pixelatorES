@@ -49,6 +49,7 @@ create_sample_palette <-
 #'
 cell_palette <-
   c(
+    "T" = "#6D92D1",
     "CD4 T" = "#6D92D1",
     "CD4 Naive" = "#B9CDED",
     "Naive CD4 T" = "#B9CDED",
@@ -86,6 +87,7 @@ cell_palette <-
     "B memory" = "#C7A989",
     "Plasma cells" = "#DE9982",
     "Plasmablast" = "#DE9982",
+    "Mono & DC" = "#F7DFA0",
     "DC" = "#DA94C1",
     "cDC1" = "#DA94C1",
     "cDC2" = "#BB5391",
