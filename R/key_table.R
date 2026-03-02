@@ -69,6 +69,7 @@ get_seq_saturation <-
     sample_qc_metrics %>%
       lapply(function(sample_qc_data) {
         tibble(
+          Q30 = sample_qc_data$amplicon$q30_statistics$total,
           total_reads = sample_qc_data$amplicon$input_reads,
           deduped_valid_reads = sample_qc_data$collapse$output_molecules,
           valid_reads = sample_qc_data$collapse$input_reads
@@ -343,6 +344,7 @@ key_metric_table <-
           "median_isotype_count_pct",
           "median_abs_per_cell",
           "median_reads_per_cell",
+          "Q30",
           "total_reads",
           "graph_node_saturation",
           "graph_edge_saturation",
@@ -441,6 +443,8 @@ key_metric_definitions <-
     "Median number of proteins (nodes) per cell, scaled to thousands.",
     "median_reads_per_cell", "Median reads per cell [k]", 1e3,
     "Median number of reads per cell, scaled to thousands.",
+    "Q30", "Q30 [%]", 1e-2,
+    "Percentage of bases with a Q30 Phred score of at least 30. Q30 indicates a 99.9% base call accuracy.",
     "total_reads", "Total reads [M]", 1e6,
     "Total number of reads in the sample, scaled to millions.",
     "valid_reads", "Valid reads [M]", 1e6,
