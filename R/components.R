@@ -1193,19 +1193,19 @@ component_abundance_per_celltype <- function(
         vars = c(
           "sample_alias",
           "seurat_clusters",
-          "l1_annotation_summary"
+          "celltype"
         )
       ) %>%
         as_tibble(rownames = "cell_id"),
       by = "cell_id"
     ) %>%
-    filter(l1_annotation_summary %in% displayed_cell_types) %>%
+    filter(celltype %in% displayed_cell_types) %>%
     mutate(
       marker = factor(marker, order_cd_markers(
         unique(marker),
         params$control_markers
       )),
-      l1_annotation_summary = factor(l1_annotation_summary, displayed_cell_types)
+      celltype = factor(celltype, displayed_cell_types)
     ) %>%
     group_by(marker)
 
@@ -1223,7 +1223,7 @@ component_abundance_per_celltype <- function(
           y_label = "Normalized counts",
           summarize = FALSE,
           palette = sample_palette,
-          facet_var = "l1_annotation_summary",
+          facet_var = "celltype",
           use_jitter = TRUE,
           use_grid = TRUE,
           jitter_alpha = 1
@@ -1303,7 +1303,7 @@ component_proximity_selected <-
 
     processed_data <-
       proximity_scores %>%
-      filter(l1_annotation_summary %in% displayed_cell_types)
+      filter(celltype %in% displayed_cell_types)
 
     if (selected_contrasts) {
       processed_data <-
@@ -1332,7 +1332,7 @@ component_proximity_selected <-
         g_data %>%
           complete(
             sample_alias = levels(g_data$sample_alias),
-            l1_annotation_summary = displayed_cell_types,
+            celltype = displayed_cell_types,
             fill = setNames(list(NA), proximity_score)
           ) %>%
           ggplot(aes(x = sample_alias, y = !!sym(proximity_score))) +
@@ -1349,13 +1349,13 @@ component_proximity_selected <-
           ) +
           geom_text(
             data = . %>%
-              group_by(sample_alias, l1_annotation_summary) %>%
+              group_by(sample_alias, celltype) %>%
               summarise(!!sym(proximity_score) := median(!!sym(proximity_score)), .groups = "drop"),
             aes(label = round(!!sym(proximity_score), 2)),
             size = 3,
             vjust = 0
           ) +
-          facet_grid(l1_annotation_summary ~ .) +
+          facet_grid(celltype ~ .) +
           scale_fill_manual(values = sample_palette) +
           theme_violin() +
           theme(
@@ -1409,7 +1409,7 @@ component_proximity_per_marker <- function(
       }
     } %>%
     mutate(
-      l1_annotation_summary = factor(l1_annotation_summary, displayed_cell_types)
+      celltype = factor(celltype, displayed_cell_types)
     ) %>%
     group_by(marker_1)
 
@@ -1445,10 +1445,10 @@ component_proximity_per_marker <- function(
 
       p2 <-
         g_data %>%
-        filter(l1_annotation_summary %in% displayed_cell_types) %>%
+        filter(celltype %in% displayed_cell_types) %>%
         complete(
           sample_alias = levels(g_data$sample_alias),
-          l1_annotation_summary = displayed_cell_types
+          celltype = displayed_cell_types
         ) %>%
         set_sample_levels(sample_levels = sample_levels) %>%
         plot_violin(
@@ -1458,7 +1458,7 @@ component_proximity_per_marker <- function(
           y_label = "Log2 ratio Proximity Score",
           summarize = FALSE,
           palette = sample_palette,
-          facet_var = "l1_annotation_summary",
+          facet_var = "celltype",
           use_jitter = TRUE,
           use_grid = TRUE,
           jitter_alpha = 1,
@@ -1495,7 +1495,7 @@ component_clustering_summary <- function(
       proximity_metric = "join_count_z", detailed = TRUE,
       group_vars = c(
         "sample_alias",
-        "l1_annotation_summary",
+        "celltype",
         "condition"
       )
     ) %>%
@@ -1516,13 +1516,13 @@ component_clustering_summary <- function(
     filter(any(abs(mean_join_count_z) > 1)) %>%
     ungroup() %>%
     select(
-      sample_alias, condition, marker, l1_annotation_summary,
+      sample_alias, condition, marker, celltype,
       mean_join_count_z, mean_log2_ratio
     )
 
   plot_join_count_z <-
     plot_data %>%
-    ggplot(aes(marker, l1_annotation_summary, fill = mean_join_count_z)) +
+    ggplot(aes(marker, celltype, fill = mean_join_count_z)) +
     geom_tile() +
     facet_grid(condition ~ ., scales = "free", space = "free") +
     theme_bw() +
@@ -1542,7 +1542,7 @@ component_clustering_summary <- function(
 
   plot_log2_ratio <-
     plot_data %>%
-    ggplot(aes(marker, l1_annotation_summary, fill = mean_log2_ratio)) +
+    ggplot(aes(marker, celltype, fill = mean_log2_ratio)) +
     geom_tile() +
     facet_grid(condition ~ ., scales = "free", space = "free") +
     theme_bw() +
@@ -1726,7 +1726,7 @@ component_proximity_heatmap_celltype <- function(
 
   processed_data <-
     proximity_scores %>%
-    filter(l1_annotation_summary %in% displayed_cell_types) %>%
+    filter(celltype %in% displayed_cell_types) %>%
     summarize_colocalization_scores_per_celltype(
       plot_markers = plot_markers,
       test_mode = test_mode
@@ -1743,13 +1743,13 @@ component_proximity_heatmap_celltype <- function(
       find_top_abundance_markers(pg_data_processed,
         n_markers = n_markers,
         summary_method = "mean",
-        group_col = "l1_annotation_summary"
+        group_col = "celltype"
       )
 
     processed_data <-
       processed_data %>%
-      inner_join(top_markers, by = c("l1_annotation_summary", "marker_1" = "marker")) %>%
-      inner_join(top_markers, by = c("l1_annotation_summary", "marker_2" = "marker"))
+      inner_join(top_markers, by = c("celltype", "marker_1" = "marker")) %>%
+      inner_join(top_markers, by = c("celltype", "marker_2" = "marker"))
   } else {
     processed_data <-
       processed_data %>%
@@ -1759,10 +1759,10 @@ component_proximity_heatmap_celltype <- function(
   processed_data <-
     processed_data %>%
     mutate(
-      l1_annotation_summary = factor(l1_annotation_summary, displayed_cell_types),
+      celltype = factor(celltype, displayed_cell_types),
       pct_detected = 100 * pct_detected
     ) %>%
-    group_by(celltype = l1_annotation_summary) %>%
+    group_by(celltype = celltype) %>%
     arrange(celltype)
 
   plots <-
@@ -1942,7 +1942,7 @@ component_annotation <-
       plot_embedding(
         object,
         reduction,
-        metavars = "l1_annotation_summary",
+        metavars = "celltype",
         pal = cell_palette,
         label = TRUE,
         legend_position = "none",
@@ -1968,10 +1968,10 @@ component_annotation <-
       as_tibble(rownames = "marker") %>%
       pivot_longer(-marker, names_to = "cell_id", values_to = "normcount") %>%
       left_join(FetchData(object,
-        vars = c("seurat_clusters", "l1_annotation_summary")
+        vars = c("seurat_clusters", "celltype")
       ) %>%
         as_tibble(rownames = "cell_id")) %>%
-      group_by(seurat_clusters, cell_annotation = l1_annotation_summary, marker) %>%
+      group_by(seurat_clusters, cell_annotation = celltype, marker) %>%
       summarise(median = median(normcount)) %>%
       unite(id, seurat_clusters, cell_annotation) %>%
       pivot_wider(names_from = marker, values_from = median, values_fill = 0) %>%
@@ -2000,27 +2000,27 @@ component_annotation <-
       FetchData(object,
         vars = c(
           "seurat_clusters",
-          "l1_annotation_summary",
+          "celltype",
           "condition",
           "sample_alias"
         )
       ) %>%
       as_tibble(rownames = "cell_id") %>%
-      group_by(sample_alias, condition, l1_annotation_summary) %>%
+      group_by(sample_alias, condition, celltype) %>%
       count() %>%
       group_by(sample_alias, condition) %>%
       mutate(frac = n / sum(n)) %>%
       ungroup() %>%
       complete(
         nesting(sample_alias, condition),
-        l1_annotation_summary,
+        celltype,
         fill = list(n = 0, frac = 0)
       ) %>%
       group_by(sample_alias)
 
     p4 <-
       plot_data %>%
-      ggplot(aes(sample_alias, frac, fill = l1_annotation_summary)) +
+      ggplot(aes(sample_alias, frac, fill = celltype)) +
       geom_col(position = "stack") +
       geom_text(aes(label = scales::percent(frac, accuracy = 0.1)),
         position = position_stack(vjust = 0.5), size = 2
@@ -2048,7 +2048,7 @@ component_annotation <-
       set_names(group_keys(plot_data)$sample_alias) %>%
       lapply(function(g_data) {
         g_data %>%
-          ggplot(aes(l1_annotation_summary, n, fill = l1_annotation_summary)) +
+          ggplot(aes(celltype, n, fill = celltype)) +
           geom_col() +
           geom_text(aes(label = paste(n, scales::percent(frac), sep = "\n")),
             position = position_dodge(width = 0.9),
@@ -2073,13 +2073,13 @@ component_annotation <-
 
     plot_data <-
       plot_data %>%
-      arrange(l1_annotation_summary) %>%
-      group_by(l1_annotation_summary)
+      arrange(celltype) %>%
+      group_by(celltype)
 
     barplots2 <-
       plot_data %>%
       group_split() %>%
-      set_names(group_keys(plot_data)$l1_annotation_summary) %>%
+      set_names(group_keys(plot_data)$celltype) %>%
       lapply(function(g_data) {
         g_data %>%
           ggplot(aes(sample_alias, frac)) +
@@ -2106,7 +2106,7 @@ component_annotation <-
             y = "% cells",
             title = paste(
               "Fraction of",
-              unique(g_data$l1_annotation_summary),
+              unique(g_data$celltype),
               "cells per sample"
             )
           )
@@ -2118,7 +2118,7 @@ component_annotation <-
       mutate(frac = scales::percent(frac, accuracy = 0.1)) %>%
       select(
         `Sample ID` = sample_alias,
-        `Cell annotation` = l1_annotation_summary,
+        `Cell annotation` = celltype,
         frac
       ) %>%
       pivot_wider(names_from = `Cell annotation`, values_from = frac, values_fill = "0.0%") %>%
@@ -2129,7 +2129,7 @@ component_annotation <-
       ungroup() %>%
       select(
         `Sample ID` = sample_alias,
-        `Cell annotation` = l1_annotation_summary,
+        `Cell annotation` = celltype,
         n
       ) %>%
       pivot_wider(names_from = `Cell annotation`, values_from = n, values_fill = 0) %>%
