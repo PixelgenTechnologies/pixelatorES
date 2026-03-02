@@ -55,7 +55,7 @@ process_data <-
     }
 
     if (annotate_cells) {
-      reference <- read_annotation_reference()
+      reference <- pixelatorR::read_pbmc_reference()
       reference$l1_annotation <- reference$celltype.l1
       reference$l2_annotation <- reference$celltype.l2
       object <-
