@@ -219,6 +219,7 @@ test_that("get_top_markers works as expected", {
         `Median intracellular % counts` = "0",
         `Median proteins per cell [k]` = "48.64",
         `Median reads per cell [k]` = "289.86",
+        `Q30 [%]` = "95.77",
         `Total reads [M]` = "400.75",
         `Valid reads [M]` = "359.95",
         `Graph Nodes [M]` = "1.47",
