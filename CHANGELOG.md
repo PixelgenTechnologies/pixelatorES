@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Updated
 
-- Cell types are now aggregated to "T", "B", "Mono & DC", "NK", and "Platelet".
+- Cell types are now aggregated to "T", "B", "Mono & DC", "NK", and "Platelets".
 - Cell annotation reference is now pulled from the `pixelatorR` package instead of being stored in the ES.
 
 ## [0.7.0] 2026-01-19
