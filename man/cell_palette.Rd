@@ -5,7 +5,7 @@
 \alias{cell_palette}
 \title{Cell palette}
 \format{
-An object of class \code{character} of length 53.
+An object of class \code{character} of length 55.
 }
 \usage{
 cell_palette

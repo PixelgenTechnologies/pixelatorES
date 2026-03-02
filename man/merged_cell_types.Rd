@@ -5,7 +5,7 @@
 \alias{merged_cell_types}
 \title{Cell type merging}
 \format{
-An object of class \code{character} of length 6.
+An object of class \code{character} of length 7.
 }
 \usage{
 merged_cell_types
