@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added Q30 Phred score to key metrics table. 
+
 ### Fixed
 - Removed unused imports from NAMESPACE
 
