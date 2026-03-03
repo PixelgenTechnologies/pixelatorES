@@ -1,5 +1,5 @@
 test_that("Reading reference data works as expected", {
-  expect_no_error(ref_data <- read_annotation_reference())
+  expect_no_error(ref_data <- pixelatorR::read_pbmc_reference())
 
   expect_equal(
     LayerData(ref_data, "counts")[1:10, 1:10],

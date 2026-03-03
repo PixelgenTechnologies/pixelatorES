@@ -55,7 +55,7 @@ process_data <-
     }
 
     if (annotate_cells) {
-      reference <- read_annotation_reference()
+      reference <- pixelatorR::read_pbmc_reference()
       reference$l1_annotation <- reference$celltype.l1
       reference$l2_annotation <- reference$celltype.l2
       object <-
@@ -68,6 +68,15 @@ process_data <-
           summarize_by_column = "seurat_clusters",
           normalization_method = ifelse(params$annotation_method == "Seurat", "LogNormalize", "CLR"),
           method = params$annotation_method
+        )
+
+      # Merge cell types for display purposes
+      object <-
+        object %>%
+        merge_cell_types(
+          celltype_col = "l1_annotation_summary",
+          merged_col = "celltype",
+          mapping = merged_cell_types
         )
     }
 
@@ -104,7 +113,7 @@ filter_proximity_scores <- function(
       add_marker_counts = TRUE, add_marker_proportions = TRUE,
       meta_data_columns = c(
         "sample_alias", "condition",
-        "seurat_clusters", "l1_annotation_summary",
+        "seurat_clusters", "celltype",
         "condition"
       ),
       lazy = TRUE
@@ -158,7 +167,7 @@ complete_proximity_scores <-
 
     proximity_scores %>%
       complete(
-        nesting(sample_component, sample_alias, condition, seurat_clusters, l1_annotation_summary),
+        nesting(sample_component, sample_alias, condition, seurat_clusters, celltype),
         nesting(marker_1, marker_2),
         fill = list(log2_ratio = 0)
       )
@@ -265,7 +274,7 @@ summarize_colocalization_scores_per_celltype <- function(
       detailed = TRUE,
       group_vars = c(
         "sample_alias", "condition",
-        "l1_annotation_summary"
+        "celltype"
       )
     ) %>%
     rowwise() %>%
@@ -282,11 +291,11 @@ summarize_colocalization_scores_per_celltype <- function(
     } %>%
     ungroup() %>%
     select(
-      sample_alias, condition, l1_annotation_summary, marker_1, marker_2,
+      sample_alias, condition, celltype, marker_1, marker_2,
       mean_join_count_z, mean_log2_ratio, pct_detected
     ) %>%
     complete(
-      nesting(sample_alias, condition, l1_annotation_summary),
+      nesting(sample_alias, condition, celltype),
       nesting(marker_1, marker_2),
       fill = list(mean_join_count_z = 0, mean_log2_ratio = 0, pct_detected = 0)
     )
