@@ -1427,7 +1427,7 @@ component_proximity_per_marker <- function(
         plot_violin(
           x = "sample_alias",
           y = "log2_ratio",
-          fill = "sample_alias",
+          fill = "condition",
           title = unique(g_data$marker_1) %>% as.character(),
           y_label = "Log2 ratio Proximity Score",
           summarize = FALSE,
@@ -1454,7 +1454,7 @@ component_proximity_per_marker <- function(
         plot_violin(
           x = "sample_alias",
           y = "log2_ratio",
-          fill = "sample_alias",
+          fill = "condition",
           y_label = "Log2 ratio Proximity Score",
           summarize = FALSE,
           palette = sample_palette,
