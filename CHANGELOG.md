@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.8.0] 2026-03-05
+
 ### Added
 
 - Added Q30 Phred score to key metrics table. 
@@ -19,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cell types are now aggregated to "T", "B", "Mono & DC", "NK", and "Platelets".
 - Cell annotation reference is now pulled from the `pixelatorR` package instead of being stored in the ES.
--  The `annotate_cells` function has been removed from the `pixelatorES` package and is now contained in the `pixelatorR` package.
+- The `annotate_cells` function has been removed from the `pixelatorES` package and is now contained in the `pixelatorR` package.
 
 ## [0.7.0] 2026-01-19
 
