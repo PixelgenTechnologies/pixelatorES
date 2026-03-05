@@ -21,6 +21,7 @@ merged_cell_types <-
     "Other T" = "T",
     "NK" = "NK",
     "Mono" = "Mono & DC",
+    "DC" = "Mono & DC",
     "B" = "B",
     "Platelets" = "Platelets"
   )
