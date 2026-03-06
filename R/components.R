@@ -1218,7 +1218,7 @@ component_abundance_per_celltype <- function(
         plot_violin(
           x = "sample_alias",
           y = "normcount",
-          fill = "sample_alias",
+          fill = "condition",
           title = unique(g_data$marker) %>% as.character(),
           y_label = "Normalized counts",
           summarize = FALSE,
