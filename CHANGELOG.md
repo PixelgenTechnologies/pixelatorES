@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] 
 
+## [0.8.3] 2026-03-06
+
+### Fixed
+
+- Fixed an issue where per-cell type abundance violin plots would fail to render with more than 20 samples.
+
 ## [0.8.2] 2026-03-05
 
 ### Fixed
