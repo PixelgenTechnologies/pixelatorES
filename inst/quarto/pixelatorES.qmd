@@ -1,6 +1,6 @@
 ---
 title: "PROXIOME EXPERIMENT SUMMARY"
-subtitle: "v0.8.3" 
+subtitle: "v0.8.4" 
 format:
   html:
     theme: default
@@ -32,8 +32,8 @@ execute:
   error: true
 params: 
   
-  sample_sheet: "C:/Users/max/data/qc_debug/pixelator/260302_VH00725_407_222HKWJNX_samplesheet.csv"
-  data_folder: "C:/Users/max/data/qc_debug/pixelator/"
+  sample_sheet: "../../../ES_test_data/test_samplesheet.csv"
+  data_folder: "../../../ES_test_data/"
   control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
   do_harmonize: FALSE
   harmonization_vars: ["condition"]
