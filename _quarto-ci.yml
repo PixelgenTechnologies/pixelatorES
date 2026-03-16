@@ -1,5 +1,0 @@
-execute:
-  warning: true
-  message: true
-  error: false
-  freeze: false
