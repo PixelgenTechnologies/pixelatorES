@@ -13,11 +13,20 @@ test_that("Components work as expected", {
   )
 
   expect_s3_class(component$p1, "ggplot")
+  expect_no_error(
+    ggplot2::ggplot_build(component$p1)
+  )
   expect_s3_class(component$p2, "ggplot")
+  expect_no_error(
+    ggplot2::ggplot_build(component$p2)
+  )
   expect_s3_class(component$tabl, "datatables")
 
   # component_cell_recovery
   expect_no_error(component <- component_cell_recovery(sample_qc_metrics, sample_levels = NULL))
+  expect_no_error(
+    ggplot2::ggplot_build(component$plot[[1]])
+  )
 
   # component_node_degree
   expect_no_error(
@@ -25,6 +34,9 @@ test_that("Components work as expected", {
   )
 
   expect_s3_class(component$plot, "ggplot")
+  expect_no_error(
+    ggplot2::ggplot_build(component$plot)
+  )
   expect_s3_class(component$table, "datatables")
 
   # component_node_edge_count
@@ -32,7 +44,12 @@ test_that("Components work as expected", {
     component <- component_node_edge_count(sample_qc_metrics, sample_levels = NULL)
   )
 
-  for (plot in component$plots) expect_s3_class(plot, "ggplot")
+  for (plot in component$plots) {
+    expect_s3_class(plot, "ggplot")
+    expect_no_error(
+      ggplot2::ggplot_build(plot)
+    )
+  }
   expect_s3_class(component$table, "datatables")
 
   # component_sequencing_saturation
@@ -40,12 +57,20 @@ test_that("Components work as expected", {
     component <- component_sequencing_saturation(qc_metrics_tables, sample_levels = NULL)
   )
 
-  for (plot in component$plots) expect_s3_class(plot, "ggplot")
+  for (plot in component$plots) {
+    expect_s3_class(plot, "ggplot")
+    expect_no_error(
+      ggplot2::ggplot_build(plot)
+    )
+  }
   expect_s3_class(component$table, "datatables")
 
   # component_sequencing_reads_per_cell
   expect_no_error(component <- component_sequencing_reads_per_cell(pg_data))
   expect_s3_class(component$plot, "ggplot")
+  expect_no_error(
+    ggplot2::ggplot_build(component$plot)
+  )
   expect_s3_class(component$table, "datatables")
 
   # component_abundance_per_celltype
@@ -71,7 +96,9 @@ test_that("Components work as expected", {
   )
 
   expect_s3_class(component[[1]], "ggplot")
-
+  expect_no_error(
+    ggplot2::ggplot_build(component[[1]])
+  )
   # component_proximity_per_marker
   temp <-
     pg_data_small %>%
@@ -101,6 +128,9 @@ test_that("Components work as expected", {
     )
   )
   expect_s3_class(component[[1]], "ggplot")
+  expect_no_error(
+    ggplot2::ggplot_build(component[[1]])
+  )
   expect_equal(
     component[[1]]$data,
     structure(list(
@@ -158,6 +188,9 @@ test_that("Components work as expected", {
 
   expect_named(component, expected = c("B2M/B2M", "CD11b/CD11b", "HLA-ABC/HLA-ABC"))
   expect_s3_class(component[[1]], "ggplot")
+  expect_no_error(
+    ggplot2::ggplot_build(component[[1]])
+  )
 
 
   # component_dimred_plots
