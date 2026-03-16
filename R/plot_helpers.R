@@ -22,9 +22,9 @@ title_plotlist <- function(plots, level = 2) {
     cat(paste0(strrep("#", level), " ", nams[tab], "\n\n"))
 
     # Print the plot
-    msg <- try(print(plots[[tab]]))
+    msg <- try(ggplot2::ggplot_build(plots[[tab]]), silent = TRUE)
     if (inherits(msg, "try-error")) {
-      if (isTRUE(params$test_mode || params$debug_mode)) stop(msg)
+      if (getOption("pixelatorES.dev_mode", default = FALSE)) stop(msg)
 
       print(
         ggplot() +

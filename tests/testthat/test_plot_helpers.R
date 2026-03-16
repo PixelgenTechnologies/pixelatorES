@@ -1,4 +1,5 @@
 test_that("Tab setting and title setting work as expected", {
+
   g <-
     ggplot() +
     theme_void()
@@ -31,13 +32,37 @@ test_that("Tab setting and title setting work as expected", {
     )
   )
 
+  # Capture plots that will throw an error
+
+  ## Throw no error outside dev mode
+  options(pixelatorES.dev_mode = FALSE)
+
+  g_bad <-
+    ggplot(tibble(), aes(notacolumn)) +
+    theme_void()
+
+  plot_list <-
+    list("a" = g, "b" = g, "c" = g_bad)
+
+  expect_no_error(title_plotlist(plot_list))
+
+  ## Throw error in dev mode
+  options(pixelatorES.dev_mode = TRUE)
+
+  expect_error(title_plotlist(plot_list))
+
+  options(pixelatorES.dev_mode = FALSE)
+
+  # Nested plot list
+
+  plot_list <-
+    list("a" = g, "b" = g, "c" = g)
 
   nested_plot_list <-
     list(
       "a" = g, "b" = g, "c" = g,
       plot_list = plot_list
     )
-
 
   expect_equal(
     capture.output(tabset_nested_plotlist(nested_plot_list, level = 3)),

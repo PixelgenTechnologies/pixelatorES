@@ -27,6 +27,14 @@ knit_hooks$set(plot = convert_png_to_webp)
 ```
 
 ```{r}
+#| label: setup_global_options
+#| include: false
+
+# Set pixelatorES dev mode based on test_mode or debug_mode
+options(pixelatorES.dev_mode = isTRUE(params$test_mode) || isTRUE(params$debug_mode))
+```
+
+```{r}
 #| label: read_sample_sheet
 
 sample_sheet <-
