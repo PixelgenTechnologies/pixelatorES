@@ -105,7 +105,6 @@ jobs:
             -w /workspace \
             experiment-summary-test:$TAG \
             /bin/bash -c "\
+              export QUARTO_PROFILE=ci \
               quarto render inst/quarto/pixelatorES.qmd \
-                --project . \
-                --profile ci \
                 --output testrun.html"
