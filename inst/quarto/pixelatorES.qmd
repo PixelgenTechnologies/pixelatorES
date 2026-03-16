@@ -1,6 +1,6 @@
 ---
 title: "PROXIOME EXPERIMENT SUMMARY"
-subtitle: "v0.8.4" 
+subtitle: "v0.8.5" 
 format:
   html:
     theme: default
