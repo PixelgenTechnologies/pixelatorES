@@ -1,0 +1,10 @@
+project:
+  type: default
+
+execute:
+  dev: ragg_png
+  execute-dir: dir
+  echo: false
+  warning: false
+  message: false
+  error: true

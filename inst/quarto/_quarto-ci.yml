@@ -1,0 +1,7 @@
+execute:
+  dev: ragg_png
+  execute-dir: dir
+  warning: true
+  message: true
+  error: false
+  freeze: false
