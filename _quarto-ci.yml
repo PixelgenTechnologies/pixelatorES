@@ -3,8 +3,3 @@ execute:
   message: true
   error: false
   freeze: false
-params:
-  sample_sheet: 'tests/testdata/es_test_data/es_test_data_samplesheet.csv'
-  data_folder: 'tests/testdata/es_test_data/'
-  debug_mode: true
-  test_mode: true
