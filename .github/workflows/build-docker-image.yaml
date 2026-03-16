@@ -105,7 +105,7 @@ jobs:
             -w /workspace \
             experiment-summary-test:$TAG \
             /bin/bash -c "\
-              cd inst/quarto/;
+              cd inst/quarto/; \
               quarto render inst/quarto/pixelatorES.qmd \
                 --profile ci \
                 -P sample_sheet='../../tests/testdata/es_test_data/es_test_data_samplesheet.csv' \

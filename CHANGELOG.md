@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Updated
 
 - Added a `ci` quarto profile that is used for CI smoketests, disabling chunk error tolerance.
+- Added global option `pixelatorES.dev_mode = isTRUE(params$test_mode) || isTRUE(params$debug_mode)` to control whether the ES should be rendered in "dev mode", which is a mode where chunk errors are not tolerated and will cause the render to fail.
 
 ## [0.8.4] 2026-03-09
 
