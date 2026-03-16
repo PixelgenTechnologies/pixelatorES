@@ -1192,6 +1192,7 @@ component_abundance_per_celltype <- function(
       FetchData(object,
         vars = c(
           "sample_alias",
+          "condition",
           "seurat_clusters",
           "celltype"
         )
