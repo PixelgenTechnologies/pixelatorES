@@ -1,6 +1,27 @@
 project:
   type: default
 
+format:
+  html:
+    theme: default
+    page-layout: full
+    toc: true
+    toc-location: left
+    toc-depth: 4
+    embed-resources: true
+    code-folding: show
+    fig-width: 8
+    fig-height: 5
+    fig-dpi: 96
+    grid:
+      body-width: 900px
+    css: styles.css
+    include-after-body: custom.html
+
+knitr:
+  opts_chunk:
+    out.width: "100%"
+
 execute:
   dev: ragg_png
   execute-dir: dir
