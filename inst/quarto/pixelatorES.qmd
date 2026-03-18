@@ -1,37 +1,10 @@
 ---
 title: "PROXIOME EXPERIMENT SUMMARY"
-subtitle: "v0.8.3" 
-format:
-  html:
-    theme: default
-    page-layout: full
-    toc: true
-    toc-location: left
-    toc-depth: 4
-    embed-resources: true
-    code-folding: show
-    fig-width: 8
-    fig-height: 5
-    fig-dpi: 96
-    grid:
-      body-width: 900px
-    css: styles.css
-    include-after-body: custom.html
-knitr:
-  opts_chunk:
-    out.width: "100%"
+subtitle: "v0.8.5" 
 date: "`r Sys.Date()`"
 editor_options: 
   chunk_output_type: console
-execute:
-  dev: ragg_png
-  execute-dir: dir
-  echo: false
-  warning: false
-  message: false
-  error: true
 params: 
-  
   sample_sheet: "../../../ES_test_data/test_samplesheet.csv"
   data_folder: "../../../ES_test_data/"
   control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]

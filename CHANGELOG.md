@@ -5,7 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] 
+## [0.8.5] 2026-03-16
+
+### Updated
+
+- Added a `ci` quarto profile that is used for CI smoketests, disabling chunk error tolerance.
+- Added global option `pixelatorES.dev_mode = isTRUE(params$test_mode) || isTRUE(params$debug_mode)` to control whether the ES should be rendered in "dev mode", which is a mode where plot build errors in `title_plotlist()` are not tolerated and will cause the render to fail (overall chunk error tolerance is still controlled by Quarto's `execute: error:` setting).
+
+## [0.8.4] 2026-03-09
+
+### Fixed
+
+- Fixed another issue in per-cell type abundance violin plots where the plots would fail to render due to that the `condition` column is missing.
 
 ## [0.8.3] 2026-03-06
 
