@@ -19,7 +19,6 @@ Depends:
     R (>= 4.1),
     pixelatorR (>= 0.17.0)
 Imports:
-    pixelatorR,
     Seurat,
     harmony,
     cli,
