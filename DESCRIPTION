@@ -1,6 +1,6 @@
 Package: pixelatorES
 Title: Proxiome Experiment Summary
-Version: 0.8.5
+Version: 0.8.6
 Authors@R: 
     c(
     person("Max", "Karlsson", , "max.karlsson@pixelgen.com", role = c("aut", "cre"),
@@ -16,9 +16,9 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends:
-    R (>= 4.1)
+    R (>= 4.1),
+    pixelatorR (>= 0.17.0)
 Imports:
-    pixelatorR,
     Seurat,
     harmony,
     cli,

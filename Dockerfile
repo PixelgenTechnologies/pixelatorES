@@ -1,5 +1,5 @@
 # ----------------------- Base image -----------------------
-FROM ghcr.io/pixelgentechnologies/pixelatorr:sha-d9a2707 as build
+FROM ghcr.io/pixelgentechnologies/pixelatorr:sha-24de3e3 as build
 ARG QUARTO_VERSION="1.5.54"
 ARG GITHUB_PAT=
 # Set the environment variable for the GitHub Personal Access Token
