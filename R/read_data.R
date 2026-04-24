@@ -8,6 +8,12 @@ pipeline_stages <- c(
   "post_analysis", "layout"
 )
 
+#' nf-core/pixelator pool stages
+#'
+pipeline_pool_stages <- c(
+  "amplicon", "collapse",
+  "demux", "graph"
+)
 
 #' Find pixelator stage of file
 #'
@@ -151,52 +157,6 @@ get_file_paths <-
       )
     )
 
-
-    all_files <-
-      file_paths %>%
-      enframe("i", "filename") %>%
-      mutate(file_ext = str_remove(filename, ".*\\.")) %>%
-      filter(file_ext %in% c("json", "pxl")) %>%
-      filter(!str_detect(filename, "pipeline_info")) %>%
-      mutate(
-        file_basename = basename(filename),
-        stage = sapply(filename, find_stage, allow_unknown),
-        sample_alias = str_remove(file_basename, "\\..*")
-      )
-
-    all_files <-
-      all_files %>%
-      mutate(sample_alias = sample_aliases[sample_alias]) %>%
-      filter(!is.na(sample_alias))
-
-    data_files <-
-      all_files %>%
-      filter(
-        str_detect(file_basename, "\\.pxl$"),
-        stage %in% c("graph", "analysis", "post_analysis", "layout")
-      ) %>%
-      mutate(stage_i = unclass(factor(stage, c("graph", "analysis", "post_analysis", "layout")))) %>%
-      group_by(sample_alias) %>%
-      top_n(1, stage_i) %>%
-      ungroup() %>%
-      select(sample_alias, filename)
-
-    if (nrow(data_files) > length(unique(data_files$sample_alias))) {
-      dup_files <- data_files$sample_alias[duplicated(data_files$sample_alias)]
-      cli_abort(
-        c(
-          "x" = "Some samples match multiple data files: {.val {dup_files}}"
-        )
-      )
-    }
-
-    qc_files <-
-      all_files %>%
-      filter(str_detect(file_basename, "\\.report.json$")) %>%
-      filter(!(str_detect(filename, "\\.part_\\d{3}\\.") & stage == "collapse")) %>%
-      select(sample_alias, filename, stage)
-
-    return(list(data_files = data_files, qc_files = qc_files, pool_qc_files = NULL))
   }
 
 
@@ -473,7 +433,11 @@ extract_sample_qc_metrics <-
     pixelatorR:::assert_single_value(stage, type = "string")
     pixelatorR:::assert_class(sample_qc_metrics, "list")
     if ("qc_files" %in% names(sample_qc_metrics)) {
+      if (stage %in% pipeline_pool_stages & !is.null(sample_qc_metrics$pool_qc_files)) {
+        sample_qc_metrics <- sample_qc_metrics$pool_qc_files
+      } else {
       sample_qc_metrics <- sample_qc_metrics$qc_files
+      }
     }
     stage <- match.arg(stage, pipeline_stages)
 
@@ -590,7 +554,7 @@ test_samplesheet <-
 #' @export
 #'
 test_data_folder <-
-  function(type) {
+  function(type = c("default", "hashing")) {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
     type <- match.arg(type, c("default", "hashing"))
 
@@ -600,7 +564,7 @@ test_data_folder <-
     )
 
     system.file(
-      "extdata", "foldr",
+      "extdata", foldr,
       package = "pixelatorES"
     )
   }
@@ -616,7 +580,7 @@ test_data_folder <-
 #' @export
 #'
 get_test_qc_metrics <-
-  function(type) {
+  function(type = c("default", "hashing")) {
     sample_sheet <- read_samplesheet(test_samplesheet(type = type))
 
     data_paths <-

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `sample_calling` as a recognised `pixelator` pipeline stage in `find_stage()` / `get_file_paths()` file resolution.
 - Quarto parameters on `inst/quarto/pixelatorES.qmd`: `include_pool_hash_metrics`, `include_sample_hashing_section`, and `key_metrics_detailed` to control key-metrics and hashing sections in the bundled report.
 - `inst/quarto/quality_metrics.qmd` now supports hashed experiments: optional pool vs sample key-metric layouts, conditional sample hashing subsection, pool-aware sequencing and QC components, expanded graph metrics (including crossing edges and k-core heatmaps), bleedover noise, and control markers with both violin plots where applicable.
+- `pipeline_pool_stages` containing the stages of the nf-core/pixelator pipeline that produce pool-level QC files.
 
 ### Changed
 
