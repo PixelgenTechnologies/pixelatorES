@@ -16,9 +16,6 @@ params:
   mc_cores: 1
   debug_mode: FALSE
   test_mode: FALSE
-  include_pool_hash_metrics: TRUE
-  include_sample_hashing_section: TRUE
-  key_metrics_detailed: FALSE
 ---
 
 ```{r, child="preprocessing.qmd"}
