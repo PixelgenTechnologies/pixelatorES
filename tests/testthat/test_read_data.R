@@ -146,7 +146,8 @@ test_that("File location works as expected", {
           )
         ),
         row.names = c(NA, -16L), class = c("tbl_df", "tbl", "data.frame")
-      )
+      ),
+      pool_qc_files = NULL
     )
   )
 })
@@ -216,7 +217,8 @@ test_that("File reading works as expected", {
       list(
         sample = c("S01_PBMC_unstimulated_S1", "S02_PHA_S2"),
         sample_alias = c("S1", "S2"),
-        condition = c("PBMC", "PHA")
+        condition = c("PBMC", "PHA"),
+        pool = c(NA_character_, NA_character_)
       ),
       row.names = c(NA, -2L),
       class = c(
@@ -296,14 +298,14 @@ test_that("File reading works as expected", {
   )
 
   # QC data reading
-  expect_no_error(qc_metrics <- read_qc_files(data_paths$qc_files, sample_sheet))
+  expect_no_error(qc_metrics <- read_qc_files(data_paths, sample_sheet))
   expect_equal(
     names(qc_metrics),
-    c("S1", "S2")
+    c("qc_files", "pool_qc_files")
   )
 
   expect_equal(
-    qc_metrics$S1$amplicon,
+    qc_metrics$qc_files$S1$amplicon,
     list(
       sample_id = "S01_PBMC_unstimulated_S1", product_id = "single-cell-pna",
       report_type = "amplicon", input_reads = 400745924L, output_reads = 365893238L,

@@ -165,9 +165,19 @@ component_qc_molecule_rank_plot <- function(
   sample_qc_metrics,
   sample_levels = NULL
 ) {
+  if ("qc_files" %in% names(sample_qc_metrics)) {
+    qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
+      sample_qc_metrics$qc_files
+    } else {
+      sample_qc_metrics$pool_qc_files
+    }
+  } else {
+    qc_data <- sample_qc_metrics
+  }
+
   plot_data_thresholds <-
     extract_sample_qc_metrics(
-      sample_qc_metrics,
+      qc_data,
       c(
         min_size_theshold =
           "component_size_min_filtering_threshold",
@@ -178,7 +188,7 @@ component_qc_molecule_rank_plot <- function(
     )
 
   plot_data <-
-    sample_qc_metrics %>%
+    qc_data %>%
     map(. %>%
       {
         .$graph$pre_filtering_component_sizes
@@ -301,8 +311,18 @@ component_molecule_plot <- function(
 #'
 component_sequencing_reads_and_molecules <-
   function(sample_qc_metrics, sample_levels = NULL) {
+    if ("qc_files" %in% names(sample_qc_metrics)) {
+      qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
+        sample_qc_metrics$qc_files
+      } else {
+        sample_qc_metrics$pool_qc_files
+      }
+    } else {
+      qc_data <- sample_qc_metrics
+    }
+
     plot_data <-
-      sample_qc_metrics %>%
+      qc_data %>%
       lapply(function(sample_qc_data) {
         list(
           "amplicon" = list(
@@ -599,9 +619,19 @@ component_sequencing_saturation_curve <-
 #'
 component_cell_recovery <-
   function(sample_qc_metrics, sample_levels = NULL) {
+    if ("qc_files" %in% names(sample_qc_metrics)) {
+      qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
+        sample_qc_metrics$qc_files
+      } else {
+        sample_qc_metrics$pool_qc_files
+      }
+    } else {
+      qc_data <- sample_qc_metrics
+    }
+
     plot_data1 <-
       extract_sample_qc_metrics(
-        sample_qc_metrics,
+        qc_data,
         c(
           component_n_pre_filtering =
             "component_count_pre_component_size_filtering",
@@ -657,7 +687,7 @@ component_cell_recovery <-
 
     p2 <-
       component_qc_molecule_rank_plot(
-        sample_qc_metrics,
+        qc_data,
         sample_levels
       )
 
@@ -879,7 +909,8 @@ component_crossing_edges <-
   function(qc_metrics_tables, sample_levels = NULL) {
     plot_data <-
       qc_metrics_tables$crossing_edges %>%
-      mutate(label = paste0(round(percent, 2), "%"))
+      mutate(label = paste0(round(percent, 2), "%")) %>%
+      rename(sample_alias = 1)
 
     plot_data <- set_sample_levels(plot_data, sample_levels)
 
@@ -939,6 +970,7 @@ component_crossing_edges <-
 
     tabl <-
       qc_metrics_tables$crossing_edges %>%
+      rename(sample_alias = 1) %>%
       arrange(sample_alias) %>%
       mutate(
         percent = paste(round(percent, 3), "%"),
@@ -2166,8 +2198,12 @@ component_annotation <-
 #'
 component_sequencing_saturation <-
   function(qc_metrics_tables, sample_levels = NULL) {
+    ss <- qc_metrics_tables$seq_saturation %>%
+      rename(sample_alias = 1)
+    ss <- set_sample_levels(ss, sample_levels)
+
     p1 <-
-      qc_metrics_tables$seq_saturation %>%
+      ss %>%
       ggplot(aes(sample_alias, fraction_valid_reads)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = paste0(round(fraction_valid_reads, 3), " %")),
@@ -2192,7 +2228,7 @@ component_sequencing_saturation <-
       )
 
     p2 <-
-      qc_metrics_tables$seq_saturation %>%
+      ss %>%
       ggplot(aes(sample_alias, fraction_graph_reads)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = paste0(round(fraction_graph_reads, 3), " %")),
@@ -2217,7 +2253,7 @@ component_sequencing_saturation <-
       )
 
     p3 <-
-      qc_metrics_tables$seq_saturation %>%
+      ss %>%
       ggplot(aes(sample_alias, valid_reads_saturation)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = paste0(round(valid_reads_saturation, 3), " %")),
@@ -2246,7 +2282,7 @@ component_sequencing_saturation <-
       )
 
     p4 <-
-      qc_metrics_tables$seq_saturation %>%
+      ss %>%
       ggplot(aes(sample_alias, graph_edge_saturation)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = paste0(round(graph_edge_saturation, 3), " %")),
@@ -2275,7 +2311,7 @@ component_sequencing_saturation <-
       )
 
     p5 <-
-      qc_metrics_tables$seq_saturation %>%
+      ss %>%
       ggplot(aes(sample_alias, graph_node_saturation)) +
       geom_col(fill = "#DAD6D7") +
       geom_text(aes(label = paste0(round(graph_node_saturation, 3), " %")),
@@ -2304,7 +2340,7 @@ component_sequencing_saturation <-
       )
 
     tabl <-
-      qc_metrics_tables$seq_saturation %>%
+      ss %>%
       arrange(sample_alias) %>%
       mutate(across(c(
         valid_reads_saturation, graph_node_saturation,
@@ -2341,4 +2377,159 @@ component_sequencing_saturation <-
       ),
       table = tabl
     ))
+  }
+
+
+#' Create the component hashing
+#'
+#' @param qc_metrics_tables QC metrics from [get_qc_metrics()] including `sample_hash_stats`.
+#'
+#' @return List with `plot`, `table`, `heatmap_plots_hash_purity`, and `heatmap_plots_hash_fraction`.
+#'
+#' @export
+#'
+component_hashing <-
+  function(qc_metrics_tables) {
+    component_stats <- qc_metrics_tables$sample_hash_stats$component_stats
+    pixelatorR:::assert_class(component_stats, "tbl_df")
+    n_unique_hashes <- component_stats$id %>%
+      unique() %>%
+      length()
+
+    sample_stats <- qc_metrics_tables$sample_hash_stats$sample_stats
+    pixelatorR:::assert_class(sample_stats, "tbl_df")
+
+    component_stats_heatmap_purity <- qc_metrics_tables$sample_hash_stats$component_stats_heatmap_purity
+    pixelatorR:::assert_class(component_stats_heatmap_purity, "tbl_df")
+
+    component_stats_heatmap_fraction <- qc_metrics_tables$sample_hash_stats$component_stats_heatmap_fraction
+    pixelatorR:::assert_class(component_stats_heatmap_fraction, "tbl_df")
+
+    id_hash_order <- attributes(component_stats_heatmap_purity)$id_hash_order
+
+    component_hash_purity <- component_stats %>%
+      group_by(component, sample_alias, version) %>%
+      summarize(count = sum(count), .groups = "keep") %>%
+      ungroup(version) %>%
+      mutate(hash_fraction = count / sum(count)) %>%
+      group_by(component, sample_alias)
+
+    sample_top_id <- component_hash_purity %>%
+      group_by(sample_alias) %>%
+      dplyr::slice_max(hash_fraction, n = 1, with_ties = FALSE) %>%
+      ungroup() %>%
+      select(sample_alias, version) %>%
+      distinct()
+
+    p1 <- suppressMessages(
+      component_hash_purity %>%
+        dplyr::slice_max(hash_fraction, n = 1, with_ties = FALSE) %>%
+        plot_violin(
+          x = "sample_alias",
+          y = "hash_fraction",
+          use_pct = TRUE,
+          expand = c(0, 0.1),
+          palette = PixelgenPalette(n_unique_hashes, "Cells1"),
+          title = "Hash purity",
+          subtitle = "Fraction of UMIs from the most abundant hash",
+          y_label = "Hash purity"
+        ) +
+        scale_y_continuous(limits = c(0, 1), labels = scales::percent)
+    )
+
+    tabl <-
+      sample_stats %>%
+      select(
+        `Sample ID` = sample_alias,
+        `Hash purity B2M [%]` = mean_purity_B2M,
+        `Hash purity CD298 [%]` = mean_purity_CD298,
+        `Hash purity CD98 [%]` = mean_purity_CD98,
+        `Fraction hash UMIs` = hash_pct
+      ) %>%
+      mutate(across(where(is.numeric), ~ round(.x * 100, 2))) %>%
+      style_table(caption = "Hash purity", interactive = FALSE)
+
+    component_stats_heatmap_purity <-
+      component_stats_heatmap_purity %>%
+      group_by(sample_alias)
+
+    heatmap_plots_hash_purity <-
+      component_stats_heatmap_purity %>%
+      group_by(sample_alias) %>%
+      group_split() %>%
+      set_names(group_keys(component_stats_heatmap_purity)$sample_alias) %>%
+      lapply(function(g_data) {
+        if (n_distinct(g_data$sample_component) > 2000) {
+          g_data <-
+            g_data %>%
+            head(2000)
+        }
+
+        sample_top_hash_id <- sample_top_id %>%
+          filter(sample_alias == g_data$sample_alias[1]) %>%
+          pull(version)
+
+        heatmap_matrix <- g_data %>%
+          select(sample_component, matches(paste0("-", sample_top_hash_id, "$"))) %>%
+          column_to_rownames("sample_component") %>%
+          as.matrix() %>%
+          t() %>%
+          (\(x) x * 100)
+        rownames(heatmap_matrix) <- stringr::str_remove(rownames(heatmap_matrix), paste0("-", sample_top_hash_id, "$"))
+        heatmap_matrix %>%
+          ComplexHeatmap::pheatmap(
+            color = cherry_gradient,
+            breaks = seq(0, 100, 1),
+            cellheight = 10,
+            show_colnames = FALSE,
+            cluster_rows = FALSE,
+            clustering_method = "ward.D2",
+            heatmap_legend_param = list(title = "% Hash\npurity")
+          ) %>%
+          as.ggplot()
+      })
+
+    component_stats_heatmap_fraction <-
+      component_stats_heatmap_fraction %>%
+      group_by(sample_alias)
+
+    heatmap_plots_hash_fraction <-
+      component_stats_heatmap_fraction %>%
+      group_split() %>%
+      set_names(group_keys(component_stats_heatmap_fraction)$sample_alias) %>%
+      lapply(function(g_data) {
+        if (n_distinct(g_data$sample_component) > 2000) {
+          g_data <-
+            g_data %>%
+            head(2000)
+        }
+
+        heatmap_matrix <- g_data %>%
+          select(sample_component, where(is.numeric)) %>%
+          column_to_rownames("sample_component") %>%
+          as.matrix() %>%
+          t() %>%
+          (\(x) x * 100)
+
+        heatmap_matrix <- heatmap_matrix[id_hash_order, , drop = FALSE]
+
+        heatmap_matrix %>%
+          ComplexHeatmap::pheatmap(
+            color = cherry_gradient,
+            breaks = seq(0, 100, 1),
+            cellheight = 10,
+            show_colnames = FALSE,
+            cluster_rows = FALSE,
+            clustering_method = "ward.D2",
+            heatmap_legend_param = list(title = "% fraction\nhash UMIs")
+          ) %>%
+          as.ggplot()
+      })
+
+    list(
+      plot = p1,
+      table = tabl,
+      heatmap_plots_hash_purity = heatmap_plots_hash_purity,
+      heatmap_plots_hash_fraction = heatmap_plots_hash_fraction
+    )
   }

@@ -2,9 +2,9 @@ library(dplyr)
 pg_data <- get_test_data()
 pg_data_small <- get_test_data(concatenate = FALSE)
 sample_qc_metrics <- get_test_qc_metrics()
-sample_sheet <- read_samplesheet(test_samplesheet())[1, ]
+sample_sheet <- read_samplesheet(test_samplesheet())
 qc_metrics_tables <-
-  get_qc_metrics(pg_data, sample_qc_metrics[1], sample_sheet)
+  get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)
 
 test_that("Components work as expected", {
   # component_control_markers

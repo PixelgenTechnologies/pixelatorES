@@ -15,7 +15,8 @@ for each sample.}
 \item{return_data}{A logical value indicating whether to return the data instead of the formatted table.}
 }
 \value{
-A formatted table of key metrics for each sample.
+A named list with elements \code{sample} and \code{pool} (the latter may be \code{NULL}). With
+\code{return_data = TRUE}, returns pre-styled tibbles in the same structure.
 }
 \description{
 This function creates a key metric table for samples by combining various

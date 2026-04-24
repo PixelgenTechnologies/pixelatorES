@@ -1,0 +1,5 @@
+pool,sample,sample_alias,condition,hash_index,design,panel
+pool1,S1,S1,PBMC,1,pna-2,proxiome-rnd-hashing-5
+pool1,S2,S2,Raji,2,pna-2,proxiome-rnd-hashing-5
+pool2,S11,S11,PBMC,1,pna-2,proxiome-rnd-hashing-5
+pool2,S12,S12,Raji,2,pna-2,proxiome-rnd-hashing-5

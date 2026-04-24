@@ -4,21 +4,111 @@
 ```{r}
 #| label: key_metrics
 #| results: 'asis'
-key_metric_table(qc_metrics_tables, detailed = FALSE)
+key_tables <-
+  key_metric_table(qc_metrics_tables, detailed = isTRUE(params$key_metrics_detailed))
+
+eval_pool_tables <-
+  isTRUE(params$include_pool_hash_metrics) && !is.null(key_tables$pool)
+eval_standard_results <- !eval_pool_tables
 ```
 
+```{r}
+#| label: key_metrics_pool
+#| eval: !expr eval_pool_tables
+#| results: 'asis'
+cat("::: {.panel-tabset .nav-pills}\n")
+section_table(key_tables$pool, "Hash pool metrics", 3)
+section_table(key_tables$sample, "Sample metrics", 3)
+cat(":::\n")
+```
+
+```{r}
+#| label: key_metrics_sample
+#| eval: !expr eval_standard_results
+#| results: 'asis'
+section_table(key_tables$sample, "Sample metrics", 3)
+```
+
+```{r}
+#| label: sample_hashing_section_intro
+#| eval: !expr eval_pool_tables && isTRUE(params$include_sample_hashing_section)
+#| results: 'asis'
+section_intro(
+  "Sample hashing",
+  glue::glue(
+    "The hash purity for an antibody is defined as the number of UMIs from the most common ",
+    "antibody hash divided by the sum of UMIs for all antibody hashes. For instance, if B2M-1 ",
+    "is the most common hash, the hash purity for B2M is the number of UMIs for B2M-1 divided ",
+    "by the sum of UMIs for all B2M hashes.\n\n"
+  ),
+  3
+)
+```
+
+```{r}
+#| label: sample_hashing
+#| eval: !expr eval_pool_tables && isTRUE(params$include_sample_hashing_section)
+#| results: 'asis'
+component <-
+  component_hashing(qc_metrics_tables)
+
+tabset_figure_table(
+  component$plot,
+  component$table,
+  level = 4
+)
+close_tabset()
+```
+
+```{r}
+#| label: qc_metrics_nodes_hash_purity_heatmap
+#| eval: !expr eval_pool_tables && isTRUE(params$include_sample_hashing_section)
+#| fig-height: 3
+#| results: 'asis'
+tabset_plotlist(component$heatmap_plots_hash_purity, level = 4)
+```
+
+```{r}
+#| label: qc_metrics_nodes_hash_fraction_heatmap
+#| eval: !expr eval_pool_tables && isTRUE(params$include_sample_hashing_section)
+#| fig-height: 3
+#| results: 'asis'
+tabset_plotlist(component$heatmap_plots_hash_fraction, level = 4)
+```
 
 ### Sequencing
 
-#### Sequencing saturation 
+#### Reads and molecules
 
-Sequencing saturation is the fraction of a library's complexity that has been 
+Here we review the number of reads per stage of the `pixelator` pipeline, and the number of molecules that they are
+mapped to.
+
+```{r}
+#| label: qc_metrics_reads
+#| fig-height: 4
+#| results: 'asis'
+component <-
+  component_sequencing_reads_and_molecules(
+    sample_qc_metrics,
+    sample_levels = sample_aliases
+  )
+
+tabset_figure_table(
+  component$plots,
+  component$tabl,
+  level = 5
+)
+close_tabset()
+```
+
+#### Sequencing saturation
+
+Sequencing saturation is the fraction of a library's complexity that has been
 captured through sequencing.
 
 ```{r}
 #| label: qc_metrics_sequencing_saturation
 #| results: 'asis'
-
 if (params$debug_mode) {
   seqsat_comps <- 1L
 } else {
@@ -37,33 +127,27 @@ plots <-
 tabset_plotlist(plots,
   level = 5
 )
-```
 
-#### Reads and molecules 
-
-Here we review the number of reads per stage of the `pixelator` pipeline, and the number of molecules that they are 
-mapped to.
-
-```{r}
-#| label: qc_metrics_reads
-#| fig-height: 4
-#| results: 'asis'
 component <-
-  component_sequencing_reads_and_molecules(sample_qc_metrics)
+  component_sequencing_saturation(
+    qc_metrics_tables,
+    sample_levels = sample_aliases
+  )
 
 tabset_figure_table(
   component$plots,
   component$tabl,
-  level = 5
+  level = 5,
+  mode = "title"
 )
 close_tabset()
 ```
 
+#### Reads per cell
 
 ```{r}
 #| label: qc_metrics_reads_per_cell
 #| results: 'asis'
-
 component <-
   component_sequencing_reads_per_cell(pg_data)
 
@@ -75,23 +159,22 @@ tabset_figure_table(
 close_tabset()
 ```
 
-
 ### Cell recovery
 
-#### Number of components 
+#### Number of components
 
 ```{r}
-#| label: qc_metrics_molrank_plot
+#| label: qc_metrics_component_count
 #| results: 'asis'
-
 component <-
-  component_cell_recovery(sample_qc_metrics,
+  component_cell_recovery(
+    sample_qc_metrics,
     sample_levels = sample_aliases
   )
 
 tabset_figure_table(
-  component$plot[[2]],
-  component$table[[2]],
+  component$plot[[1]],
+  component$table[[1]],
   level = 5
 )
 close_tabset()
@@ -100,16 +183,70 @@ close_tabset()
 ```{r}
 #| label: qc_metrics_molecule_count
 #| results: 'asis'
-
 component_molecule_plot(pg_data, sample_palette)
+```
+
+```{r}
+#| label: qc_metrics_molrank_plot
+#| results: 'asis'
+tabset_figure_table(
+  component$plot[[2]],
+  component$table[[2]],
+  level = 5
+)
+close_tabset()
 ```
 
 ### Graph metrics
 
-#### k-coreness 
+#### A/B node degree
 
-k-coreness is a measure of the connectivity of a node in a graph. A node with a 
-high k-coreness is well connected to 
+The mean degree of A and B nodes.
+
+```{r}
+#| label: qc_metrics_ab_node_degree
+#| results: 'asis'
+component <-
+  component_node_degree(pg_data,
+    sample_levels = sample_aliases
+  )
+
+tabset_figure_table(
+  component$plot,
+  component$table,
+  level = 5
+)
+close_tabset()
+```
+
+#### Crossing edges
+
+In the `graph` stage of the `pixelator` pipeline, components corresponding to
+cells are identified by finding parts of the graph with high intraconnectivity.
+These components recovered from the graph by removing a low number of presumed
+random edges that are known as "crossing edges".
+
+```{r}
+#| label: qc_metrics_crossing_edges
+#| results: 'asis'
+component <-
+  component_crossing_edges(
+    qc_metrics_tables,
+    sample_levels = sample_aliases
+  )
+
+tabset_figure_table(
+  component$plot,
+  component$tabl,
+  level = 5
+)
+close_tabset()
+```
+
+#### k-coreness
+
+k-coreness is a measure of the connectivity of a node in a graph. A node with a
+high k-coreness is well connected to
 other nodes in the graph.
 
 ```{r}
@@ -119,7 +256,7 @@ component <-
   component_coreness(qc_metrics_tables)
 
 tabset_figure_table(
-  component$plots[[1]],
+  component$plots,
   component$tabl,
   level = 5,
   mode = "title"
@@ -127,7 +264,22 @@ tabset_figure_table(
 close_tabset()
 ```
 
-### Control markers 
+```{r}
+#| label: qc_metrics_nodes_kcore_heatmap
+#| fig-height: 3
+#| results: 'asis'
+tabset_plotlist(component$heatmap_plots, level = 5)
+```
+
+### Bleedover noise
+
+```{r}
+#| label: qc_metrics_bleedover_ratio
+#| results: 'asis'
+component_bleedover_noise(qc_metrics_tables) %>% print()
+```
+
+### Control markers
 
 ```{r}
 #| label: qc_metrics_frac_control
@@ -135,7 +287,7 @@ close_tabset()
 component <- component_control_markers(pg_data)
 
 tabset_figure_table(
-  component$p1,
+  list(component$p1, component$p2),
   component$tabl,
   level = 5,
   mode = "title"
@@ -146,5 +298,4 @@ close_tabset()
 ```{r}
 #| label: qc_metrics_cleanup
 rm(sample_qc_metrics)
-rm(pg_data)
 ```
