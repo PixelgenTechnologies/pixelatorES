@@ -432,6 +432,10 @@ extract_sample_qc_metrics <-
     pixelatorR:::assert_vector(vars, "character", n = 1)
     pixelatorR:::assert_single_value(stage, type = "string")
     pixelatorR:::assert_class(sample_qc_metrics, "list")
+
+    stage <- match.arg(stage, pipeline_stages)
+
+    # Check if the sample_qc_metrics a sample qc list, if so extract the correct sample/pool type
     if ("qc_files" %in% names(sample_qc_metrics)) {
       if (stage %in% pipeline_pool_stages & !is.null(sample_qc_metrics$pool_qc_files)) {
         sample_qc_metrics <- sample_qc_metrics$pool_qc_files
@@ -439,7 +443,6 @@ extract_sample_qc_metrics <-
       sample_qc_metrics <- sample_qc_metrics$qc_files
       }
     }
-    stage <- match.arg(stage, pipeline_stages)
 
     extracted_data <-
       sample_qc_metrics %>%
@@ -495,10 +498,6 @@ read_samplesheet <-
           condition = col_character()
         )
       )
-
-    if (!"pool" %in% names(sample_sheet)) {
-      sample_sheet$pool <- NA_character_
-    }
 
     if (!"sample_alias" %in% names(sample_sheet)) {
       sample_sheet$sample_alias <- NA
@@ -585,10 +584,8 @@ get_test_qc_metrics <-
 
     data_paths <-
       get_file_paths(
-        data_folder = test_data_folder(),
-        sample_aliases = sample_sheet %>%
-          select(sample, sample_alias) %>%
-          deframe()
+        data_folder = test_data_folder(type = type),
+        sample_sheet = sample_sheet
       )
 
     read_qc_files(data_paths, sample_sheet)

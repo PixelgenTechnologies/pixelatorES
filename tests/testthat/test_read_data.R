@@ -150,8 +150,7 @@ test_that("File location works as expected", {
       pool_qc_files = NULL
     )
   )
-  test_samplesheet()
-  get_file_paths()
+
 })
 
 
