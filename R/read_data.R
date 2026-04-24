@@ -590,7 +590,7 @@ test_samplesheet <-
 #' @export
 #'
 test_data_folder <-
-  function() {
+  function(type) {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
     type <- match.arg(type, c("default", "hashing"))
 
@@ -609,13 +609,15 @@ test_data_folder <-
 #'
 #' Reads the test samplesheet and retrieves QC metrics from the test data folder.
 #'
+#' @param type A character string specifying the type of test data to use. Options are "default"
+#' (the standard test data) and "hashing" (test data for hashing experiments). Default is "default".
 #' @return A list of QC metrics for each sample, where each element is a named list of metrics.
 #'
 #' @export
 #'
 get_test_qc_metrics <-
-  function() {
-    sample_sheet <- read_samplesheet(test_samplesheet())
+  function(type) {
+    sample_sheet <- read_samplesheet(test_samplesheet(type = type))
 
     data_paths <-
       get_file_paths(

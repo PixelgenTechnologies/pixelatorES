@@ -17,19 +17,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **`read_qc_files()`** returns a nested list `list(qc_files = <named list per sample>, pool_qc_files = NULL | <named list per pool>)`. Passing a **data frame** of QC paths (legacy) is still supported; the return value is wrapped in the same structure.
-- **`key_metric_table()`** returns `list(sample = <datatables>, pool = <datatables or NULL>)` for HTML output, and `return_data = TRUE` returns the corresponding pre-styled wide tibbles in the same shape. Hashing columns are included in definitions when `sample_hash_stats` is present.
-- **`get_file_paths()`** accepts either `sample_aliases` (previous behaviour) or `sample_sheet` (maps files via `sample`, detects pool-level JSON/PXL, returns `pool_qc_files`). The return value always includes `pool_qc_files` (set to `NULL` when using `sample_aliases` only).
-- **`read_samplesheet()`** adds a `pool` column (all `NA`) when the CSV has no pool column, so downstream code can rely on a stable schema.
-- **`merge_data()`** joins optional `pool` from the sample sheet into object metadata when that column exists.
-- **`get_qc_metrics()`** adds optional `sample_hash_stats`, normalises nested QC input, and orders `sample_alias` / `pool` factors using levels that actually appear in each derived table (avoids errors when the Seurat object does not contain every sample in the sheet).
-- **`get_seq_saturation()`** uses an inner join to object-derived graph totals so QC rows for samples absent from the object do not produce undefined saturations.
-- **`get_crossing_edges()`** and **`get_denoising_data()`** accept nested QC lists from `read_qc_files()`; legacy flat per-sample lists are still accepted via normalisation.
-- **`extract_sample_qc_metrics()`** automatically uses `qc_input$qc_files` when given the full return value of `read_qc_files()`.
-- **`component_sequencing_reads_and_molecules()`**, **`component_cell_recovery()`**, and **`component_qc_molecule_rank_plot()`** select pool-level vs sample-level QC JSON lists when `pool_qc_files` is present.
-- **`component_crossing_edges()`** and **`component_sequencing_saturation()`** rename the first grouping column to `sample_alias` for plotting so pool-level metrics render on the same code paths.
-- **`inst/quarto/preprocessing.qmd`** uses `get_file_paths(data_folder, sample_sheet = sample_sheet)`, extends `sample_aliases` with pool IDs when a `pool` column exists, and calls `read_qc_files(file_paths, sample_sheet)`.
-- **`inst/quarto/quality_metrics.qmd`** still omits dispersion and “percent nodes in largest component” subsections; the corresponding helpers are not part of this package yet.
+- `read_qc_files()` returns a nested list `list(qc_files = <named list per sample>, pool_qc_files = NULL | <named list per pool>)`. Passing a data frame of QC paths (legacy) is still supported; the return value is wrapped in the same structure.
+- `key_metric_table()` returns `list(sample = <datatables>, pool = <datatables or NULL>)` for HTML output, and `return_data = TRUE` returns the corresponding pre-styled wide tibbles in the same shape. Hashing columns are included in definitions when `sample_hash_stats` is present.
+- `get_file_paths()` accepts either `sample_aliases` (previous behaviour) or `sample_sheet` (maps files via `sample`, detects pool-level JSON/PXL, returns `pool_qc_files`). The return value always includes `pool_qc_files` (set to `NULL` when using `sample_aliases` only).
+- `read_samplesheet()` adds a `pool` column (all `NA`) when the CSV has no pool column, so downstream code can rely on a stable schema.
+- `merge_data()` joins optional `pool` from the sample sheet into object metadata when that column exists.
+- `get_qc_metrics()` adds optional `sample_hash_stats`, normalises nested QC input, and orders `sample_alias` / `pool` factors using levels that actually appear in each derived table (avoids errors when the Seurat object does not contain every sample in the sheet).
+- `get_seq_saturation()` uses an inner join to object-derived graph totals so QC rows for samples absent from the object do not produce undefined saturations.
+- `get_crossing_edges()` and `get_denoising_data()` accept nested QC lists from `read_qc_files()`; legacy flat per-sample lists are still accepted via normalisation.
+- `extract_sample_qc_metrics()` automatically uses `qc_input$qc_files` when given the full return value of `read_qc_files()`.
+- `component_sequencing_reads_and_molecules()`, `component_cell_recovery()`, and `component_qc_molecule_rank_plot()` select pool-level vs sample-level QC JSON lists when `pool_qc_files` is present.
+- `component_crossing_edges()` and `component_sequencing_saturation()` rename the first grouping column to `sample_alias` for plotting so pool-level metrics render on the same code paths.
+- `inst/quarto/preprocessing.qmd` uses `get_file_paths(data_folder, sample_sheet = sample_sheet)`, extends `sample_aliases` with pool IDs when a `pool` column exists, and calls `read_qc_files(file_paths, sample_sheet)`.
+- `inst/quarto/quality_metrics.qmd` still omits dispersion and “percent nodes in largest component” subsections; the corresponding helpers are not part of this package yet.
+- `test_samplesheet()`, `test_data_folder()`, and `get_test_qc_metrics()`, now return two types of content, controlled by `type = c("default", "hashing")`.
 
 ### Fixed
 
