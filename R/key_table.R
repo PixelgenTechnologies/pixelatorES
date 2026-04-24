@@ -50,15 +50,6 @@ get_top_markers <-
       bind_rows(.id = group)
   }
 
-.normalize_sample_qc_metrics <- function(sample_qc_metrics) {
-  if ("qc_files" %in% names(sample_qc_metrics)) {
-    sample_qc_metrics
-  } else {
-    list(qc_files = sample_qc_metrics, pool_qc_files = NULL)
-  }
-}
-
-
 #' Get sequencing saturation metrics
 #'
 #' This function calculates sequencing saturation metrics for each sample based on the provided quality control metrics.
@@ -73,7 +64,6 @@ get_top_markers <-
 get_seq_saturation <-
   function(object, sample_qc_metrics) {
     pixelatorR:::assert_class(sample_qc_metrics, "list")
-    sample_qc_metrics <- .normalize_sample_qc_metrics(sample_qc_metrics)
 
     if (!is.null(sample_qc_metrics$pool_qc_files)) {
       group_col <- "pool"
@@ -150,7 +140,6 @@ get_seq_saturation <-
 get_crossing_edges <-
   function(sample_qc_metrics) {
     pixelatorR:::assert_class(sample_qc_metrics, "list")
-    sample_qc_metrics <- .normalize_sample_qc_metrics(sample_qc_metrics)
 
     if (!is.null(sample_qc_metrics$pool_qc_files)) {
       group_col <- "pool"
@@ -208,7 +197,6 @@ get_crossing_edges <-
 get_denoising_data <-
   function(sample_qc_metrics) {
     pixelatorR:::assert_class(sample_qc_metrics, "list")
-    sample_qc_metrics <- .normalize_sample_qc_metrics(sample_qc_metrics)
 
     lapply(names(sample_qc_metrics$qc_files), function(nm) {
       tibble(
@@ -453,7 +441,6 @@ get_hash_stats <- function(object) {
 #'
 get_qc_metrics <-
   function(object, sample_qc_metrics, sample_sheet) {
-    sample_qc_metrics <- .normalize_sample_qc_metrics(sample_qc_metrics)
 
     .format <-
       function(tb) {
