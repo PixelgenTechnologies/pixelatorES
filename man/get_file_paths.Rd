@@ -7,7 +7,6 @@
 get_file_paths(
   data_folder = NULL,
   file_paths = NULL,
-  sample_aliases = NULL,
   sample_sheet = NULL,
   allow_unknown = FALSE
 )
@@ -16,9 +15,6 @@ get_file_paths(
 \item{data_folder}{A character string specifying the path to the data folder.}
 
 \item{file_paths}{A character vector with file paths including all data files.}
-
-\item{sample_aliases}{A named character vector mapping file basenames to sample aliases
-(used when \code{sample_sheet} is not supplied).}
 
 \item{sample_sheet}{A sample sheet \code{\link[tibble:tibble]{tibble::tibble()}} including \code{sample}, \code{sample_alias}, and
 optionally \code{pool} for hashed experiments. When supplied, pool-level QC files are detected.}

@@ -4,7 +4,11 @@
 \alias{test_samplesheet}
 \title{Get the path to the test samplesheet}
 \usage{
-test_samplesheet()
+test_samplesheet(type = c("default", "hashing"))
+}
+\arguments{
+\item{type}{A character string specifying the type of test samplesheet to return. Options are "default"
+(the standard test samplesheet) and "hashing" (a test samplesheet for hashing experiments). Default is "default".}
 }
 \value{
 A character string with the path to the test samplesheet CSV file.
