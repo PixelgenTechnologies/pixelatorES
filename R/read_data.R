@@ -56,8 +56,6 @@ find_stage <-
 #'
 #' @param data_folder A character string specifying the path to the data folder.
 #' @param file_paths A character vector with file paths including all data files.
-#' @param sample_aliases A named character vector mapping file basenames to sample aliases
-#'   (used when `sample_sheet` is not supplied).
 #' @param sample_sheet A sample sheet [tibble::tibble()] including `sample`, `sample_alias`, and
 #'   optionally `pool` for hashed experiments. When supplied, pool-level QC files are detected.
 #' @param allow_unknown A logical indicating whether to allow files from unknown stages (default: FALSE).
@@ -67,103 +65,92 @@ find_stage <-
 #' @export
 #'
 get_file_paths <-
-  function(data_folder = NULL, file_paths = NULL, sample_aliases = NULL, sample_sheet = NULL, allow_unknown = FALSE) {
+  function(data_folder = NULL, file_paths = NULL, sample_sheet = NULL, allow_unknown = FALSE) {
     pixelatorR:::assert_single_value(data_folder, type = "string", allow_null = TRUE)
     pixelatorR:::assert_vector(file_paths, "character", allow_null = TRUE)
     pixelatorR:::assert_single_value(allow_unknown, type = "bool")
-
-    if (is.null(sample_aliases) && is.null(sample_sheet)) {
-      cli_abort("Provide either {.arg sample_aliases} or {.arg sample_sheet}.")
-    }
-    if (!is.null(sample_aliases) && !is.null(sample_sheet)) {
-      cli_abort("Pass only one of {.arg sample_aliases} or {.arg sample_sheet}.")
-    }
 
     if (is.null(file_paths)) {
       file_paths <- list.files(data_folder, recursive = TRUE, full.names = TRUE)
     }
 
-    if (!is.null(sample_sheet)) {
-      pixelatorR:::assert_class(sample_sheet, "tbl_df")
+    pixelatorR:::assert_class(sample_sheet, "tbl_df")
 
-      all_files <-
-        file_paths %>%
-        enframe("i", "filename") %>%
-        mutate(file_ext = str_remove(filename, ".*\\.")) %>%
-        filter(file_ext %in% c("json", "pxl")) %>%
-        filter(!str_detect(filename, "pipeline_info")) %>%
-        mutate(
-          file_basename = basename(filename),
-          stage = sapply(filename, find_stage, allow_unknown),
-          file_alias = str_remove(file_basename, "\\..*")
-        )
+    all_files <-
+      file_paths %>%
+      enframe("i", "filename") %>%
+      mutate(file_ext = str_remove(filename, ".*\\.")) %>%
+      filter(file_ext %in% c("json", "pxl")) %>%
+      filter(!str_detect(filename, "pipeline_info")) %>%
+      mutate(
+        file_basename = basename(filename),
+        stage = sapply(filename, find_stage, allow_unknown),
+        file_alias = str_remove(file_basename, "\\..*")
+      )
 
-      if ("pool" %in% names(sample_sheet)) {
-        pool_ids <- unique(sample_sheet$pool)
-      } else {
-        pool_ids <- c()
-      }
+    if ("pool" %in% names(sample_sheet)) {
+      pool_ids <- unique(sample_sheet$pool)
+    } else {
+      pool_ids <- c()
+    }
 
-      all_files <-
-        all_files %>%
-        left_join(select(sample_sheet, sample, sample_alias),
-          by = c("file_alias" = "sample")
-        ) %>%
-        mutate(is_pool = ifelse(file_alias %in% pool_ids, TRUE, FALSE)) %>%
-        filter(is_pool | !is.na(sample_alias))
+    all_files <-
+      all_files %>%
+      left_join(select(sample_sheet, sample, sample_alias),
+                by = c("file_alias" = "sample")
+      ) %>%
+      mutate(is_pool = ifelse(file_alias %in% pool_ids, TRUE, FALSE)) %>%
+      filter(is_pool | !is.na(sample_alias))
 
-      data_files <-
-        all_files %>%
-        filter(!is_pool) %>%
-        filter(
-          str_detect(file_basename, "\\.pxl$"),
-          stage %in% c("graph", "analysis", "post_analysis", "layout")
-        ) %>%
-        mutate(stage_i = unclass(factor(stage, c("graph", "analysis", "post_analysis", "layout")))) %>%
-        group_by(sample_alias) %>%
-        top_n(1, stage_i) %>%
-        ungroup() %>%
-        select(sample_alias, filename)
+    data_files <-
+      all_files %>%
+      filter(!is_pool) %>%
+      filter(
+        str_detect(file_basename, "\\.pxl$"),
+        stage %in% c("graph", "analysis", "post_analysis", "layout")
+      ) %>%
+      mutate(stage_i = unclass(factor(stage, c("graph", "analysis", "post_analysis", "layout")))) %>%
+      group_by(sample_alias) %>%
+      top_n(1, stage_i) %>%
+      ungroup() %>%
+      select(sample_alias, filename)
 
-      if (nrow(data_files) > length(unique(data_files$sample_alias))) {
-        dup_files <- data_files$sample_alias[duplicated(data_files$sample_alias)]
-        cli_abort(
-          c(
-            "x" = "Some samples match multiple data files: {.val {dup_files}}"
-          )
-        )
-      }
-
-      all_qc_files <-
-        all_files %>%
-        filter(str_detect(file_basename, "\\.report.json$")) %>%
-        filter(!(str_detect(filename, "\\.part_\\d{3}\\.") & stage == "collapse"))
-
-      qc_files <-
-        all_qc_files %>%
-        filter(!is_pool) %>%
-        select(sample_alias, filename, stage)
-
-      if (any(all_files$is_pool)) {
-        pool_qc_files <-
-          all_qc_files %>%
-          filter(is_pool) %>%
-          select(pool_alias = file_alias, filename, stage)
-      } else {
-        pool_qc_files <- NULL
-      }
-
-      return(
-        list(
-          data_files = data_files,
-          qc_files = qc_files,
-          pool_qc_files = pool_qc_files
+    if (nrow(data_files) > length(unique(data_files$sample_alias))) {
+      dup_files <- data_files$sample_alias[duplicated(data_files$sample_alias)]
+      cli_abort(
+        c(
+          "x" = "Some samples match multiple data files: {.val {dup_files}}"
         )
       )
     }
 
-    pixelatorR:::assert_vector(sample_aliases, "character", n = 1, allow_null = TRUE)
-    pixelatorR:::assert_vector(names(sample_aliases), "character", n = 1, allow_null = FALSE)
+    all_qc_files <-
+      all_files %>%
+      filter(str_detect(file_basename, "\\.report.json$")) %>%
+      filter(!(str_detect(filename, "\\.part_\\d{3}\\.") & stage == "collapse"))
+
+    qc_files <-
+      all_qc_files %>%
+      filter(!is_pool) %>%
+      select(sample_alias, filename, stage)
+
+    if (any(all_files$is_pool)) {
+      pool_qc_files <-
+        all_qc_files %>%
+        filter(is_pool) %>%
+        select(pool_alias = file_alias, filename, stage)
+    } else {
+      pool_qc_files <- NULL
+    }
+
+    return(
+      list(
+        data_files = data_files,
+        qc_files = qc_files,
+        pool_qc_files = pool_qc_files
+      )
+    )
+
 
     all_files <-
       file_paths %>%
@@ -570,14 +557,24 @@ read_samplesheet <-
 #'
 #' Returns the path to the test samplesheet CSV file included in the package.
 #'
+#' @param type A character string specifying the type of test samplesheet to return. Options are "default"
+#' (the standard test samplesheet) and "hashing" (a test samplesheet for hashing experiments). Default is "default".
 #' @return A character string with the path to the test samplesheet CSV file.
 #'
 #' @export
 #'
 test_samplesheet <-
-  function() {
+  function(type = c("default", "hashing")) {
+    pixelatorR:::assert_vector(type, type = "character", n = 1)
+    type <- match.arg(type, c("default", "hashing"))
+
+    csv_file <- switch(type,
+      "default" = "test_samplesheet.csv",
+      "hashing" = "test_samplesheet_hashing.csv"
+    )
+
     system.file(
-      "extdata", "test_samplesheet.csv",
+      "extdata", csv_file,
       package = "pixelatorES"
     )
   }
@@ -586,14 +583,24 @@ test_samplesheet <-
 #'
 #' Returns the path to the test data folder containing QC JSON files included in the package.
 #'
+#' @param type A character string specifying the type of test data folder to return. Options are "default"
+#' (the standard test data folder) and "hashing" (a test data folder for hashing experiments). Default is "default".
 #' @return A character string with the path to the test data folder.
 #'
 #' @export
 #'
 test_data_folder <-
   function() {
+    pixelatorR:::assert_vector(type, type = "character", n = 1)
+    type <- match.arg(type, c("default", "hashing"))
+
+    foldr <- switch(type,
+                       "default" = "qc_jsons",
+                       "hashing" = "qc_jsons_hashing"
+    )
+
     system.file(
-      "extdata", "qc_jsons",
+      "extdata", "foldr",
       package = "pixelatorES"
     )
   }
