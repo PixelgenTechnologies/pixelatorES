@@ -154,6 +154,7 @@
 #' @importFrom tibble column_to_rownames
 #' @importFrom tibble deframe
 #' @importFrom tibble enframe
+#' @importFrom tibble rownames_to_column
 #' @importFrom tibble tibble
 #' @importFrom tibble tribble
 #' @importFrom tidyr complete

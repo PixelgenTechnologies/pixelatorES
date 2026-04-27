@@ -2429,7 +2429,7 @@ component_hashing <-
           y = "hash_fraction",
           use_pct = TRUE,
           expand = c(0, 0.1),
-          palette = PixelgenPalette(n_unique_hashes, "Cells1"),
+          palette = pixelatorR::PixelgenPalette(n_unique_hashes, "Cells1"),
           title = "Hash purity",
           subtitle = "Fraction of UMIs from the most abundant hash",
           y_label = "Hash purity"
