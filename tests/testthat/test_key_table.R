@@ -36,13 +36,18 @@ test_that("get_top_markers works as expected", {
   expect_equal(
     res,
     structure(list(
-      sample_alias = "S1", top3_fraction = 0.352019337952774,
-      top5_fraction = 0.45234721751522, top_markers = "CD44, B2M, CD59, CD45, CD43"
+      sample_alias = "S1", Q30 = 0.957683900982373,
+      total_reads = 400745924L, deduped_valid_reads = 232530522L,
+      valid_reads = 359952911L, graph_edges = 3171564L, graph_proteins = 1469442L,
+      graph_reads = 8746572L, valid_reads_saturation = 35.3997384396761,
+      graph_edge_saturation = 63.7393483984354, graph_node_saturation = 83.1997953026626,
+      fraction_valid_reads = 89.8207291560625, fraction_graph_reads = 2.18257291620014
     ), row.names = c(
       NA,
       -1L
     ), class = c("tbl_df", "tbl", "data.frame"))
   )
+
   # Read stats
   expect_no_error(res <- get_read_stats(seur))
   expect_equal(

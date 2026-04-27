@@ -29,11 +29,11 @@ test_that("File location works as expected", {
       "run_folder/pixelator/post_analysis/A_sample_S2.report.json"
     )
 
-  sample_aliases <-
-    c(
-      "A_sample_S1" = "S1",
-      "A_sample_S2" = "S2"
-    )
+  sample_sheet <-
+    structure(list(sample = c("A_sample_S1", "A_sample_S2"), sample_alias = c("S1", "S2"), condition = c("PBMC", "PHA")), row.names = c(
+      NA,
+      -2L
+    ), class = c("tbl_df", "tbl", "data.frame"))
 
   c(
     "run_folder/pixelator/A_sample_S1.amplicon.pxl",
@@ -59,7 +59,7 @@ test_that("File location works as expected", {
 
   expect_no_error(res <- get_file_paths(
     file_paths = file_paths,
-    sample_aliases = sample_aliases
+    sample_sheet = sample_sheet
   ))
 
   expect_equal(
@@ -68,8 +68,8 @@ test_that("File location works as expected", {
       data_files = structure(
         list(
           sample_alias = c(
-            A_sample_S1 = "S1",
-            A_sample_S2 = "S2"
+            "S1",
+            "S2"
           ),
           filename = c(
             "run_folder/pixelator/A_sample_S1.layout.pxl",
@@ -85,12 +85,12 @@ test_that("File location works as expected", {
       qc_files = structure(
         list(
           sample_alias = c(
-            A_sample_S1 = "S1", A_sample_S1 = "S1",
-            A_sample_S1 = "S1", A_sample_S1 = "S1", A_sample_S1 = "S1",
-            A_sample_S1 = "S1", A_sample_S1 = "S1", A_sample_S1 = "S1",
-            A_sample_S2 = "S2", A_sample_S2 = "S2", A_sample_S2 = "S2",
-            A_sample_S2 = "S2", A_sample_S2 = "S2", A_sample_S2 = "S2",
-            A_sample_S2 = "S2", A_sample_S2 = "S2"
+            "S1", "S1",
+            "S1", "S1", "S1",
+            "S1", "S1", "S1",
+            "S2", "S2", "S2",
+            "S2", "S2", "S2",
+            "S2", "S2"
           ),
           filename = c(
             "run_folder/pixelator/amplicon/A_sample_S1.report.json",
@@ -217,8 +217,7 @@ test_that("File reading works as expected", {
       list(
         sample = c("S01_PBMC_unstimulated_S1", "S02_PHA_S2"),
         sample_alias = c("S1", "S2"),
-        condition = c("PBMC", "PHA"),
-        pool = c(NA_character_, NA_character_)
+        condition = c("PBMC", "PHA")
       ),
       row.names = c(NA, -2L),
       class = c(
