@@ -470,7 +470,7 @@ extract_sample_qc_metrics <-
 
     # Check if the sample_qc_metrics a sample qc list, if so extract the correct sample/pool type
     if ("qc_files" %in% names(sample_qc_metrics)) {
-      if (stage %in% pipeline_pool_stages & !is.null(sample_qc_metrics$pool_qc_files)) {
+      if (stage %in% pipeline_pool_stages && !is.null(sample_qc_metrics$pool_qc_files)) {
         sample_qc_metrics <- sample_qc_metrics$pool_qc_files
       } else {
         sample_qc_metrics <- sample_qc_metrics$qc_files
