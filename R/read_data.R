@@ -321,6 +321,39 @@ downsample_data <-
     return(pg_data)
   }
 
+
+#' Utility function to add percentage of pool to the sample sheet
+#'
+#' Adds a column to the sample sheet indicating how much of the
+#' pool each sample makes up.
+#'
+#' @param sample_sheet A data frame containing sample metadata,
+#' including `sample_alias` and `pool` for a hashed sample.
+#' @param object A Seurat object containing the sample metadata
+#' in its `meta.data` slot.
+#'
+#' @return A modified sample sheet with an additional column `pool_fraction`.
+#'
+#' @export
+add_pct_of_pool_to_samplesheet <-
+  function(sample_sheet, object) {
+    sample_sheet <- sample_sheet %>%
+      left_join(
+        object[[]] %>%
+          select(sample_alias) %>%
+          group_by(sample_alias) %>%
+          count(),
+        by = "sample_alias"
+      ) %>%
+      group_by(pool) %>%
+      mutate(
+        pool_fraction = round((n / sum(n)) * 100, 2)
+      ) %>%
+      select(-n) %>%
+      ungroup()
+    return(sample_sheet)
+  }
+
 #' Read QC files and return metrics
 #'
 #' Reads QC files and returns a nested list suitable for [get_qc_metrics()].
