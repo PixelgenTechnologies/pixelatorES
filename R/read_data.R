@@ -103,7 +103,7 @@ get_file_paths <-
     all_files <-
       all_files %>%
       left_join(select(sample_sheet, sample, sample_alias),
-                by = c("file_alias" = "sample")
+        by = c("file_alias" = "sample")
       ) %>%
       mutate(is_pool = ifelse(file_alias %in% pool_ids, TRUE, FALSE)) %>%
       filter(is_pool | !is.na(sample_alias))
@@ -156,7 +156,6 @@ get_file_paths <-
         pool_qc_files = pool_qc_files
       )
     )
-
   }
 
 
@@ -474,7 +473,7 @@ extract_sample_qc_metrics <-
       if (stage %in% pipeline_pool_stages & !is.null(sample_qc_metrics$pool_qc_files)) {
         sample_qc_metrics <- sample_qc_metrics$pool_qc_files
       } else {
-      sample_qc_metrics <- sample_qc_metrics$qc_files
+        sample_qc_metrics <- sample_qc_metrics$qc_files
       }
     }
 
@@ -592,8 +591,8 @@ test_data_folder <-
     type <- match.arg(type, c("default", "hashing"))
 
     foldr <- switch(type,
-                       "default" = "qc_jsons",
-                       "hashing" = "qc_jsons_hashing"
+      "default" = "qc_jsons",
+      "hashing" = "qc_jsons_hashing"
     )
 
     system.file(

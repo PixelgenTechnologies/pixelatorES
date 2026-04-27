@@ -5,7 +5,7 @@
 #| label: key_metrics
 #| results: 'asis'
 key_tables <-
-  key_metric_table(qc_metrics_tables, detailed = isTRUE(params$key_metrics_detailed))
+  key_metric_table(qc_metrics_tables, detailed = FALSE)
 
 eval_standard_results_and_sample_hashing <-
   !is.null(key_tables$pool)
@@ -163,7 +163,6 @@ tabset_figure_table(
   level = 5
 )
 close_tabset()
-
 ```
 
 ```{r}

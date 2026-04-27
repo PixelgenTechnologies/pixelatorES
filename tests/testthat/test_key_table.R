@@ -35,9 +35,13 @@ test_that("get_top_markers works as expected", {
   expect_no_error(res <- get_seq_saturation(seur, sample_qc_metrics))
   expect_equal(
     res,
-    structure(list(sample_alias = "S1", top3_fraction = 0.352019337952774,
-                   top5_fraction = 0.45234721751522, top_markers = "CD44, B2M, CD59, CD45, CD43"), row.names = c(NA,
-                                                                                                                 -1L), class = c("tbl_df", "tbl", "data.frame"))
+    structure(list(
+      sample_alias = "S1", top3_fraction = 0.352019337952774,
+      top5_fraction = 0.45234721751522, top_markers = "CD44, B2M, CD59, CD45, CD43"
+    ), row.names = c(
+      NA,
+      -1L
+    ), class = c("tbl_df", "tbl", "data.frame"))
   )
   # Read stats
   expect_no_error(res <- get_read_stats(seur))

@@ -441,7 +441,6 @@ get_hash_stats <- function(object) {
 #'
 get_qc_metrics <-
   function(object, sample_qc_metrics, sample_sheet) {
-
     .format <-
       function(tb) {
         if (is.null(tb)) {
