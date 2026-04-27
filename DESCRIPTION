@@ -46,7 +46,8 @@ Imports:
     htmlwidgets,
     magick,
     dbplyr,
-    RcppML
+    RcppML, 
+    htmltools
 Remotes: 
     PixelgenTechnologies/pixelatorR
 Suggests: 
