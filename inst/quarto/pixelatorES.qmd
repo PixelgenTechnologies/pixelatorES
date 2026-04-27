@@ -27,12 +27,7 @@ params:
   
 ## Samples 
 
-### Sample description
-
-```{r}
-#| label: samples
-#| results: 'asis'
-print_metadata_table(sample_sheet)
+```{r, child="samples.qmd"}
 ```
 
 ## Quality metrics
