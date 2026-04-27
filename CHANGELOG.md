@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `inst/quarto/quality_metrics.qmd` now supports hashed experiments: optional pool vs sample key-metric layouts, conditional sample hashing subsection, pool-aware sequencing and QC components, expanded graph metrics (including crossing edges and k-core heatmaps), bleedover noise, and control markers with both violin plots where applicable.
 - `pipeline_pool_stages` containing the stages of the nf-core/pixelator pipeline that produce pool-level QC files.
 - Added a Samples tab `inst/quarto/samples.qmd`.
+- Added render utilities `section_table` and `section_intro`.
 
 ### Changed
 
