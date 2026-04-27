@@ -20,7 +20,6 @@ order_cd_markers <-
     cd_markers <- str_detect(markers, "^CD\\d")
     control_markers <- markers %in% control_markers
 
-
     cd_order <-
       tibble(marker = markers[cd_markers]) %>%
       mutate(marker_i = str_remove(marker, "^CD") %>%
@@ -38,6 +37,9 @@ order_cd_markers <-
       tibble(marker = markers[control_markers]) %>%
       arrange(marker) %>%
       pull(marker)
+
+    cd_order <- cd_order[!cd_order %in% control_order]
+    non_cd_order <- non_cd_order[!non_cd_order %in% control_order]
 
     return(c(cd_order, non_cd_order, control_order))
   }

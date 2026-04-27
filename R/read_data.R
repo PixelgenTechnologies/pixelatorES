@@ -303,6 +303,7 @@ downsample_data <-
       slice_sample(n = n_cells) %>%
       pull(cell_id)
 
+    pixelatorR:::assert_x_in_y(control_markers, rownames(pg_data))
 
     keep_markers <-
       rownames(pg_data) %>%

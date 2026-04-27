@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Removed a duplicate `read_qc_files()` invocation in `get_test_qc_metrics()`.
+- `downsample_data` will now give an informative error if `control_markers` are missing from data.
+- Bug in `order_cd_markers` which would return duplicate markers if a control marker string started with "CD".
 
 ## [0.8.6] 2026-03-23
 
