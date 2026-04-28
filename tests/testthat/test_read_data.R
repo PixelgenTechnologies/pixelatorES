@@ -440,10 +440,16 @@ test_that("File reading works as expected", {
   )
 
   expect_error(
-    read_qc_files(data_paths,
-                  structure(list(sample = c("S01_PBMC_unstimulated_S1", "S02_PHA_S2", "S3"),
-                                 sample_alias = c("S1", "S2", "S3"), condition = c("PBMC", "PHA", "S3")),
-                            row.names = c(NA, -3L), class = c("tbl_df", "tbl", "data.frame")))
+    read_qc_files(
+      data_paths,
+      structure(
+        list(
+          sample = c("S01_PBMC_unstimulated_S1", "S02_PHA_S2", "S3"),
+          sample_alias = c("S1", "S2", "S3"), condition = c("PBMC", "PHA", "S3")
+        ),
+        row.names = c(NA, -3L), class = c("tbl_df", "tbl", "data.frame")
+      )
+    )
   )
   # QC data reading
   expect_no_error(qc_metrics <- read_qc_files(data_paths, sample_sheet_hashing))
