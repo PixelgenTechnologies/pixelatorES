@@ -4,9 +4,16 @@ pipeline_stages <- c(
   "amplicon", "collapse",
   "demux", "denoise",
   "graph", "analysis",
+  "sample_calling",
   "post_analysis", "layout"
 )
 
+#' nf-core/pixelator pool stages
+#'
+pipeline_pool_stages <- c(
+  "amplicon", "collapse",
+  "demux", "graph"
+)
 
 #' Find pixelator stage of file
 #'
@@ -55,26 +62,26 @@ find_stage <-
 #'
 #' @param data_folder A character string specifying the path to the data folder.
 #' @param file_paths A character vector with file paths including all data files.
-#' @param sample_aliases A named character vector mapping sample aliases to their actual names.
+#' @param sample_sheet A sample sheet [tibble::tibble()] including `sample`, `sample_alias`, and
+#'   optionally `pool` for hashed experiments. When supplied, pool-level QC files are detected.
 #' @param allow_unknown A logical indicating whether to allow files from unknown stages (default: FALSE).
 #'
-#' @return A list containing two data frames: `data_files` and `qc_files`.
+#' @return A list with `data_files`, `qc_files`, and `pool_qc_files` (the last is `NULL` when absent).
 #'
 #' @export
 #'
 get_file_paths <-
-  function(data_folder = NULL, file_paths = NULL, sample_aliases, allow_unknown = FALSE) {
+  function(data_folder = NULL, file_paths = NULL, sample_sheet = NULL, allow_unknown = FALSE) {
     pixelatorR:::assert_single_value(data_folder, type = "string", allow_null = TRUE)
     pixelatorR:::assert_vector(file_paths, "character", allow_null = TRUE)
-    pixelatorR:::assert_vector(sample_aliases, "character", n = 1, allow_null = TRUE)
-    pixelatorR:::assert_vector(names(sample_aliases), "character", n = 1, allow_null = FALSE)
     pixelatorR:::assert_single_value(allow_unknown, type = "bool")
 
     if (is.null(file_paths)) {
       file_paths <- list.files(data_folder, recursive = TRUE, full.names = TRUE)
     }
 
-    # Look for files in data folder and filter for sample files
+    pixelatorR:::assert_class(sample_sheet, "tbl_df", allow_null = TRUE)
+
     all_files <-
       file_paths %>%
       enframe("i", "filename") %>%
@@ -84,19 +91,26 @@ get_file_paths <-
       mutate(
         file_basename = basename(filename),
         stage = sapply(filename, find_stage, allow_unknown),
-        sample_alias = str_remove(file_basename, "\\..*")
+        file_alias = str_remove(file_basename, "\\..*")
       )
 
-    if (!is.null(sample_aliases)) {
-      all_files <-
-        all_files %>%
-        mutate(sample_alias = sample_aliases[sample_alias]) %>%
-        filter(!is.na(sample_alias))
+    if ("pool" %in% names(sample_sheet)) {
+      pool_ids <- unique(sample_sheet$pool)
+    } else {
+      pool_ids <- c()
     }
 
-    # Filter for data and QC files
+    all_files <-
+      all_files %>%
+      left_join(select(sample_sheet, sample, sample_alias),
+        by = c("file_alias" = "sample")
+      ) %>%
+      mutate(is_pool = ifelse(file_alias %in% pool_ids, TRUE, FALSE)) %>%
+      filter(is_pool | !is.na(sample_alias))
+
     data_files <-
       all_files %>%
+      filter(!is_pool) %>%
       filter(
         str_detect(file_basename, "\\.pxl$"),
         stage %in% c("graph", "analysis", "post_analysis", "layout")
@@ -116,13 +130,32 @@ get_file_paths <-
       )
     }
 
-    qc_files <-
+    all_qc_files <-
       all_files %>%
       filter(str_detect(file_basename, "\\.report.json$")) %>%
-      filter(!(str_detect(filename, "\\.part_\\d{3}\\.") & stage == "collapse")) %>%
+      filter(!(str_detect(filename, "\\.part_\\d{3}\\.") & stage == "collapse"))
+
+    qc_files <-
+      all_qc_files %>%
+      filter(!is_pool) %>%
       select(sample_alias, filename, stage)
 
-    return(list(data_files = data_files, qc_files = qc_files))
+    if (any(all_files$is_pool)) {
+      pool_qc_files <-
+        all_qc_files %>%
+        filter(is_pool) %>%
+        select(pool_alias = file_alias, filename, stage)
+    } else {
+      pool_qc_files <- NULL
+    }
+
+    return(
+      list(
+        data_files = data_files,
+        qc_files = qc_files,
+        pool_qc_files = pool_qc_files
+      )
+    )
   }
 
 
@@ -182,7 +215,8 @@ load_pxl_data_list <-
 #' Merges data from list of multiple samples into a single Seurat object, adding metadata and ranks based on UMI counts.
 #'
 #' @param pg_data A list of Seurat objects, each representing a sample.
-#' @param sample_sheet A data frame containing sample metadata, including `sample_alias` and `condition`.
+#' @param sample_sheet A data frame containing sample metadata, including `sample_alias` and
+#'   `condition`, and optionally `pool` for hashed experiments.
 #'
 #' @return A merged Seurat object with added metadata.
 #'
@@ -210,26 +244,33 @@ merge_data <-
 
     metadata <-
       sample_sheet %>%
-      select(sample_alias, condition)
+      select(sample_alias, any_of("pool"), condition)
+
+    metadata_to_join <-
+      tibble(comp_id = colnames(pg_data)) %>%
+      mutate(
+        sample_alias = str_extract(comp_id, ".*_") %>%
+          str_remove("_$")
+      ) %>%
+      left_join(
+        metadata,
+        by = "sample_alias"
+      ) %>%
+      mutate(
+        sample_alias = factor(sample_alias, metadata$sample_alias),
+        condition = factor(condition, unique(metadata$condition))
+      )
+
+    if ("pool" %in% names(metadata)) {
+      metadata_to_join <-
+        metadata_to_join %>%
+        mutate(pool = factor(pool, unique(metadata$pool)))
+    }
+
 
     pg_data <-
       pg_data %>%
-      AddMetaData(colnames(pg_data) %>%
-        enframe("i", "comp_id") %>%
-        mutate(
-          sample_alias = str_extract(comp_id, ".*_") %>%
-            str_remove("_$")
-        ) %>%
-        left_join(
-          metadata,
-          by = "sample_alias"
-        ) %>%
-        mutate(
-          sample_alias = factor(sample_alias, metadata$sample_alias),
-          condition = factor(condition, unique(metadata$condition))
-        ) %>%
-        select(-i) %>%
-        column_to_rownames("comp_id"))
+      AddMetaData(column_to_rownames(metadata_to_join, "comp_id"))
 
     return(pg_data)
   }
@@ -261,6 +302,7 @@ downsample_data <-
       slice_sample(n = n_cells) %>%
       pull(cell_id)
 
+    pixelatorR:::assert_x_in_y(control_markers, rownames(pg_data))
 
     keep_markers <-
       rownames(pg_data) %>%
@@ -278,45 +320,136 @@ downsample_data <-
     return(pg_data)
   }
 
+
+#' Utility function to add percentage of pool to the sample sheet
+#'
+#' Adds a column to the sample sheet indicating how much of the
+#' pool each sample makes up.
+#'
+#' @param sample_sheet A data frame containing sample metadata,
+#' including `sample_alias` and `pool` for a hashed sample.
+#' @param object A Seurat object containing the sample metadata
+#' in its `meta.data` slot.
+#'
+#' @return A modified sample sheet with an additional column `pool_fraction`.
+#'
+#' @export
+add_pct_of_pool_to_samplesheet <-
+  function(sample_sheet, object) {
+    sample_sheet <- sample_sheet %>%
+      left_join(
+        object[[]] %>%
+          select(sample_alias) %>%
+          group_by(sample_alias) %>%
+          count(),
+        by = "sample_alias"
+      ) %>%
+      group_by(pool) %>%
+      mutate(
+        pool_fraction = round((n / sum(n)) * 100, 2)
+      ) %>%
+      select(-n) %>%
+      ungroup()
+    return(sample_sheet)
+  }
+
 #' Read QC files and return metrics
 #'
-#' Reads QC files and returns a list of metrics for each sample.
+#' Reads QC files and returns a nested list suitable for [get_qc_metrics()].
 #'
-#' @param qc_files A data frame containing the file paths of json QC files.
+#' @param qc_input Either a data frame of per-sample QC paths (legacy), or the list returned by
+#'   [get_file_paths()] (with `qc_files` and optionally `pool_qc_files`).
 #' @param sample_sheet A data frame containing sample metadata, including `sample_alias`.
 #'
-#' @return A list of QC metrics for each sample, where each element is a named list of metrics.
+#' @return A list with `qc_files` (named list per sample) and `pool_qc_files` (`NULL` or named list per pool).
 #'
 #' @export
 read_qc_files <-
-  function(qc_files,
+  function(qc_input,
            sample_sheet) {
-    pixelatorR:::assert_within_limits(nrow(qc_files), c(1, Inf))
-    pixelatorR:::assert_class(qc_files, "data.frame")
-    for (f in qc_files$filename) pixelatorR:::assert_file_exists(f)
+    if (is.data.frame(qc_input)) {
+      qc_files <- qc_input
+      pixelatorR:::assert_within_limits(nrow(qc_files), c(1, Inf))
+      for (f in qc_files$filename) pixelatorR:::assert_file_exists(f)
 
-    temp_data <-
-      qc_files %>%
-      group_by(sample_alias)
+      temp_data <-
+        qc_files %>%
+        group_by(sample_alias)
+
+      sample_qc_metrics <-
+        temp_data %>%
+        group_split() %>%
+        set_names(group_keys(temp_data)$sample_alias) %>%
+        lapply(function(sample_files) {
+          sample_files %>%
+            select(stage, filename) %>%
+            deframe() %>%
+            lapply(fload)
+        })
+
+      if (!all(sample_sheet$sample_alias %in% qc_files$sample_alias)) {
+        cli_abort(
+          "Some samples are missing .json files containing QC metrics.
+        Please check the following samples:
+        {sample_sheet$sample_alias[!sample_sheet$sample_alias %in%
+        qc_files$sample_alias]}"
+        )
+      }
+
+      return(list(qc_files = sample_qc_metrics, pool_qc_files = NULL))
+    }
+
+    pixelatorR:::assert_class(qc_input, "list")
+    pixelatorR:::assert_x_in_y(
+      c("qc_files", "pool_qc_files"),
+      names(qc_input)
+    )
+
+    files_to_read <-
+      qc_input[c("qc_files", "pool_qc_files")]
+
+    for (f in files_to_read$qc_files$filename) {
+      pixelatorR:::assert_file_exists(f)
+    }
+    if (!is.null(files_to_read$pool_qc_files)) {
+      for (f in files_to_read$pool_qc_files$filename) {
+        pixelatorR:::assert_file_exists(f)
+      }
+    }
 
     sample_qc_metrics <-
-      temp_data %>%
-      group_split() %>%
-      set_names(group_keys(temp_data)$sample_alias) %>%
-      lapply(function(sample_files) {
-        sample_files %>%
-          select(stage, filename) %>%
-          deframe() %>%
-          lapply(fload)
-      })
+      lapply(
+        files_to_read,
+        function(files) {
+          if (is.null(files)) {
+            return(NULL)
+          }
 
-    # If some qc metrics are missing
-    if (!all(sample_sheet$sample_alias %in% qc_files$sample_alias)) {
+          temp_data <-
+            files %>%
+            rename(alias = any_of(c("sample_alias", "pool_alias"))) %>%
+            group_by(alias)
+
+          temp_data %>%
+            group_split() %>%
+            set_names(group_keys(temp_data)$alias) %>%
+            lapply(function(sample_files) {
+              sample_files %>%
+                select(stage, filename) %>%
+                deframe() %>%
+                lapply(fload)
+            })
+        }
+      )
+
+
+    samples_in_data <- c(names(sample_qc_metrics$qc_files), names(sample_qc_metrics$pool_qc_files))
+    if (!all(sample_sheet$sample_alias %in% samples_in_data)) {
       cli_abort(
         "Some samples are missing .json files containing QC metrics.
         Please check the following samples:
         {sample_sheet$sample_alias[!sample_sheet$sample_alias %in%
-        qc_files$sample_alias]}"
+        samples_in_data]}"
       )
     }
 
@@ -343,7 +476,17 @@ extract_sample_qc_metrics <-
     pixelatorR:::assert_vector(vars, "character", n = 1)
     pixelatorR:::assert_single_value(stage, type = "string")
     pixelatorR:::assert_class(sample_qc_metrics, "list")
+
     stage <- match.arg(stage, pipeline_stages)
+
+    # Check if the sample_qc_metrics a sample qc list, if so extract the correct sample/pool type
+    if ("qc_files" %in% names(sample_qc_metrics)) {
+      if (stage %in% pipeline_pool_stages && !is.null(sample_qc_metrics$pool_qc_files)) {
+        sample_qc_metrics <- sample_qc_metrics$pool_qc_files
+      } else {
+        sample_qc_metrics <- sample_qc_metrics$qc_files
+      }
+    }
 
     extracted_data <-
       sample_qc_metrics %>%
@@ -381,7 +524,8 @@ extract_sample_qc_metrics <-
 #'
 #' @param filepath A character string specifying the path to the sample sheet CSV file.
 #'
-#' @return A tibble containing the sample sheet data with columns `sample`, `sample_alias`, and `condition`.
+#' @return A tibble with columns `sample`, `sample_alias`, `condition`, and `pool` (the latter all
+#'   `NA` when the file has no pool column).
 #'
 #' @export
 #'
@@ -407,7 +551,7 @@ read_samplesheet <-
     }
 
     sample_sheet %>%
-      select(sample, sample_alias, condition) %>%
+      select(sample, sample_alias, condition, any_of("pool")) %>%
       mutate(
         sample_alias = ifelse(is.na(sample_alias), sample, sample_alias),
         condition = ifelse(is.na(condition), sample_alias, condition)
@@ -420,14 +564,24 @@ read_samplesheet <-
 #'
 #' Returns the path to the test samplesheet CSV file included in the package.
 #'
+#' @param type A character string specifying the type of test samplesheet to return. Options are "default"
+#' (the standard test samplesheet) and "hashing" (a test samplesheet for hashing experiments). Default is "default".
 #' @return A character string with the path to the test samplesheet CSV file.
 #'
 #' @export
 #'
 test_samplesheet <-
-  function() {
+  function(type = c("default", "hashing")) {
+    pixelatorR:::assert_vector(type, type = "character", n = 1)
+    type <- match.arg(type, c("default", "hashing"))
+
+    csv_file <- switch(type,
+      "default" = "test_samplesheet.csv",
+      "hashing" = "test_samplesheet_hashing.csv"
+    )
+
     system.file(
-      "extdata", "test_samplesheet.csv",
+      "extdata", csv_file,
       package = "pixelatorES"
     )
   }
@@ -436,14 +590,24 @@ test_samplesheet <-
 #'
 #' Returns the path to the test data folder containing QC JSON files included in the package.
 #'
+#' @param type A character string specifying the type of test data folder to return. Options are "default"
+#' (the standard test data folder) and "hashing" (a test data folder for hashing experiments). Default is "default".
 #' @return A character string with the path to the test data folder.
 #'
 #' @export
 #'
 test_data_folder <-
-  function() {
+  function(type = c("default", "hashing")) {
+    pixelatorR:::assert_vector(type, type = "character", n = 1)
+    type <- match.arg(type, c("default", "hashing"))
+
+    foldr <- switch(type,
+      "default" = "qc_jsons",
+      "hashing" = "qc_jsons_hashing"
+    )
+
     system.file(
-      "extdata", "qc_jsons",
+      "extdata", foldr,
       package = "pixelatorES"
     )
   }
@@ -452,28 +616,23 @@ test_data_folder <-
 #'
 #' Reads the test samplesheet and retrieves QC metrics from the test data folder.
 #'
+#' @param type A character string specifying the type of test data to use. Options are "default"
+#' (the standard test data) and "hashing" (test data for hashing experiments). Default is "default".
 #' @return A list of QC metrics for each sample, where each element is a named list of metrics.
 #'
 #' @export
 #'
 get_test_qc_metrics <-
-  function() {
-    sample_sheet <- read_samplesheet(test_samplesheet())
+  function(type = c("default", "hashing")) {
+    sample_sheet <- read_samplesheet(test_samplesheet(type = type))
 
     data_paths <-
       get_file_paths(
-        data_folder = test_data_folder(),
-        sample_aliases = sample_sheet %>%
-          select(sample, sample_alias) %>%
-          deframe()
+        data_folder = test_data_folder(type = type),
+        sample_sheet = sample_sheet
       )
 
-    sample_qc_metrics <-
-      read_qc_files(data_paths$qc_files, sample_sheet)
-
-    sample_qc_metrics <- read_qc_files(data_paths$qc_files, sample_sheet)
-
-    return(sample_qc_metrics)
+    read_qc_files(data_paths, sample_sheet)
   }
 
 

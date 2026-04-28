@@ -4,16 +4,17 @@
 \alias{read_qc_files}
 \title{Read QC files and return metrics}
 \usage{
-read_qc_files(qc_files, sample_sheet)
+read_qc_files(qc_input, sample_sheet)
 }
 \arguments{
-\item{qc_files}{A data frame containing the file paths of json QC files.}
+\item{qc_input}{Either a data frame of per-sample QC paths (legacy), or the list returned by
+\code{\link[=get_file_paths]{get_file_paths()}} (with \code{qc_files} and optionally \code{pool_qc_files}).}
 
 \item{sample_sheet}{A data frame containing sample metadata, including \code{sample_alias}.}
 }
 \value{
-A list of QC metrics for each sample, where each element is a named list of metrics.
+A list with \code{qc_files} (named list per sample) and \code{pool_qc_files} (\code{NULL} or named list per pool).
 }
 \description{
-Reads QC files and returns a list of metrics for each sample.
+Reads QC files and returns a nested list suitable for \code{\link[=get_qc_metrics]{get_qc_metrics()}}.
 }

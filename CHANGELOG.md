@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] 2026-04-27
+
+### Added
+
+- `get_hash_stats()` to summarise sample hashing from per-cell `hash_counts` metadata (purity, heatmap inputs, sample-level stats).
+- `component_hashing()` to render hash purity violin, summary table, and hash purity / hash fraction heatmaps.
+- `sample_calling` as a recognised `pixelator` pipeline stage in `find_stage()` / `get_file_paths()` file resolution.
+- `inst/quarto/quality_metrics.qmd` now supports hashed experiments: optional pool vs sample key-metric layouts, conditional sample hashing subsections.
+- `pipeline_pool_stages` containing the stages of the nf-core/pixelator pipeline that produce pool-level QC files.
+- Added a Samples tab `inst/quarto/samples.qmd`.
+- Added render utilities `section_table` and `section_intro`.
+
+### Changed
+
+- `read_qc_files()` returns a nested list `list(qc_files = <named list per sample>, pool_qc_files = NULL | <named list per pool>)`. Passing a data frame of QC paths (legacy) is still supported; the return value is wrapped in the same structure.
+- `key_metric_table()` returns `list(sample = <datatables>, pool = <datatables or NULL>)` for HTML output, and `return_data = TRUE` returns the corresponding pre-styled wide tibbles in the same shape. Hashing columns are included in definitions when `sample_hash_stats` is present.
+- `get_file_paths()` now accepts `sample_sheet` instead of `sample_aliases` (previous behaviour).
+- `read_samplesheet()` adds a `pool` column when the CSV has a pool column.
+- `merge_data()` joins optional `pool` from the sample sheet into object metadata when that column exists.
+- `get_qc_metrics()` adds optional `sample_hash_stats`.
+- `get_crossing_edges()` and `get_denoising_data()` accept nested QC lists from `read_qc_files()`.
+- `extract_sample_qc_metrics()` automatically extracts content from the appropriate slot `qc_files` or `pool_qc_files` when given the full return value of `read_qc_files()`.
+- `component_sequencing_reads_and_molecules()`, `component_cell_recovery()`, and `component_qc_molecule_rank_plot()` select pool-level vs sample-level QC JSON lists when `pool_qc_files` is present.
+- `test_samplesheet()`, `test_data_folder()`, and `get_test_qc_metrics()`, now return two types of content, controlled by `type = c("default", "hashing")`.
+
+### Fixed
+
+- Removed a duplicate `read_qc_files()` invocation in `get_test_qc_metrics()`.
+- `downsample_data` will now give an informative error if `control_markers` are missing from data.
+- Bug in `order_cd_markers` which would return duplicate markers if a control marker string started with "CD".
+
 ## [0.8.6] 2026-03-23
 
 ### Updated

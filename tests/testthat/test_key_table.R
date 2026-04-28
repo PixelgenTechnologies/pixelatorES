@@ -9,13 +9,11 @@ test_that("get_top_markers works as expected", {
   data_paths <-
     get_file_paths(
       data_folder = test_data_folder(),
-      sample_aliases = sample_sheet %>%
-        select(sample, sample_alias) %>%
-        deframe()
+      sample_sheet = sample_sheet
     )
 
   sample_qc_metrics <-
-    read_qc_files(data_paths$qc_files, sample_sheet)
+    read_qc_files(data_paths, sample_sheet)
 
   # Top markers
   expect_no_error(res <- get_top_markers(seur, group = "sample_alias"))
@@ -31,6 +29,23 @@ test_that("get_top_markers works as expected", {
       row.names = c(NA, -1L),
       class = c("tbl_df", "tbl", "data.frame")
     )
+  )
+
+  # Sequencing saturation
+  expect_no_error(res <- get_seq_saturation(seur, sample_qc_metrics))
+  expect_equal(
+    res,
+    structure(list(
+      sample_alias = "S1", Q30 = 0.957683900982373,
+      total_reads = 400745924L, deduped_valid_reads = 232530522L,
+      valid_reads = 359952911L, graph_edges = 3171564L, graph_proteins = 1469442L,
+      graph_reads = 8746572L, valid_reads_saturation = 35.3997384396761,
+      graph_edge_saturation = 63.7393483984354, graph_node_saturation = 83.1997953026626,
+      fraction_valid_reads = 89.8207291560625, fraction_graph_reads = 2.18257291620014
+    ), row.names = c(
+      NA,
+      -1L
+    ), class = c("tbl_df", "tbl", "data.frame"))
   )
 
   # Read stats
@@ -197,19 +212,20 @@ test_that("get_top_markers works as expected", {
 
   expect_no_error(
     sample_qc_tables <-
-      get_qc_metrics(seur, sample_qc_metrics[1], sample_sheet[1, ])
+      get_qc_metrics(seur, sample_qc_metrics, sample_sheet)
   )
   expect_no_error(
     tabl <- key_metric_table(sample_qc_tables)
   )
-  expect_s3_class(tabl, "datatables")
+  expect_s3_class(tabl$sample, "datatables")
 
   expect_no_error(
     tabl <- key_metric_table(sample_qc_tables, return_data = TRUE)
   )
-  expect_s3_class(tabl, "data.frame")
+  expect_type(tabl, "list")
+  expect_s3_class(tabl$sample, "tbl_df")
   expect_equal(
-    tabl,
+    tabl$sample,
     structure(
       list(
         `Sample ID` = "S1",

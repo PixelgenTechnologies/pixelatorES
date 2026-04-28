@@ -44,6 +44,14 @@ sample_aliases <-
   sample_sheet %>%
   select(sample, sample_alias) %>%
   deframe()
+
+if ("pool" %in% names(sample_sheet)) {
+  pool_aliases <-
+    unique(sample_sheet$pool)
+
+  sample_aliases <-
+    c(sample_aliases, set_names(setdiff(pool_aliases, sample_aliases)))
+}
 ```
 
 ```{r}
@@ -62,7 +70,7 @@ sample_palette <- create_sample_palette(sample_sheet$condition)
 #| label: read_counts
 file_paths <- get_file_paths(
   data_folder = params$data_folder,
-  sample_aliases = sample_aliases
+  sample_sheet = sample_sheet
 )
 
 data_files <- file_paths$data_files
@@ -86,7 +94,7 @@ if (params$debug_mode) {
 #| label: read_qc_metrics
 #| results: 'asis'
 sample_qc_metrics <-
-  read_qc_files(qc_files, sample_sheet)
+  read_qc_files(file_paths, sample_sheet)
 
 qc_metrics_tables <-
   get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)

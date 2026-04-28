@@ -1,5 +1,4 @@
 test_that("Tab setting and title setting work as expected", {
-
   g <-
     ggplot() +
     theme_void()

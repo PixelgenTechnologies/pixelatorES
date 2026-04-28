@@ -1,0 +1,16 @@
+{
+    "cli": {
+        "command": "pixelator single-cell-pna demux",
+        "options": {
+            "--mismatches": 2,
+            "--output-chunk-reads": 50000000,
+            "--output-max-chunks": 8,
+            "--strategy": "independent",
+            "--threads": -1,
+            "--memory": 24576000000,
+            "--design": "pna-2",
+            "--panel": "proxiome-rnd-hashing-5",
+            "--output": "."
+        }
+    }
+}

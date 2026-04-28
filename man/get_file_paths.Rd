@@ -7,7 +7,7 @@
 get_file_paths(
   data_folder = NULL,
   file_paths = NULL,
-  sample_aliases,
+  sample_sheet = NULL,
   allow_unknown = FALSE
 )
 }
@@ -16,12 +16,13 @@ get_file_paths(
 
 \item{file_paths}{A character vector with file paths including all data files.}
 
-\item{sample_aliases}{A named character vector mapping sample aliases to their actual names.}
+\item{sample_sheet}{A sample sheet \code{\link[tibble:tibble]{tibble::tibble()}} including \code{sample}, \code{sample_alias}, and
+optionally \code{pool} for hashed experiments. When supplied, pool-level QC files are detected.}
 
 \item{allow_unknown}{A logical indicating whether to allow files from unknown stages (default: FALSE).}
 }
 \value{
-A list containing two data frames: \code{data_files} and \code{qc_files}.
+A list with \code{data_files}, \code{qc_files}, and \code{pool_qc_files} (the last is \code{NULL} when absent).
 }
 \description{
 Retrieve file paths for data and QC files from a specified data folder.

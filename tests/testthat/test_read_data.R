@@ -29,11 +29,11 @@ test_that("File location works as expected", {
       "run_folder/pixelator/post_analysis/A_sample_S2.report.json"
     )
 
-  sample_aliases <-
-    c(
-      "A_sample_S1" = "S1",
-      "A_sample_S2" = "S2"
-    )
+  sample_sheet <-
+    structure(list(sample = c("A_sample_S1", "A_sample_S2"), sample_alias = c("S1", "S2"), condition = c("PBMC", "PHA")), row.names = c(
+      NA,
+      -2L
+    ), class = c("tbl_df", "tbl", "data.frame"))
 
   c(
     "run_folder/pixelator/A_sample_S1.amplicon.pxl",
@@ -59,7 +59,7 @@ test_that("File location works as expected", {
 
   expect_no_error(res <- get_file_paths(
     file_paths = file_paths,
-    sample_aliases = sample_aliases
+    sample_sheet = sample_sheet
   ))
 
   expect_equal(
@@ -68,8 +68,8 @@ test_that("File location works as expected", {
       data_files = structure(
         list(
           sample_alias = c(
-            A_sample_S1 = "S1",
-            A_sample_S2 = "S2"
+            "S1",
+            "S2"
           ),
           filename = c(
             "run_folder/pixelator/A_sample_S1.layout.pxl",
@@ -85,12 +85,12 @@ test_that("File location works as expected", {
       qc_files = structure(
         list(
           sample_alias = c(
-            A_sample_S1 = "S1", A_sample_S1 = "S1",
-            A_sample_S1 = "S1", A_sample_S1 = "S1", A_sample_S1 = "S1",
-            A_sample_S1 = "S1", A_sample_S1 = "S1", A_sample_S1 = "S1",
-            A_sample_S2 = "S2", A_sample_S2 = "S2", A_sample_S2 = "S2",
-            A_sample_S2 = "S2", A_sample_S2 = "S2", A_sample_S2 = "S2",
-            A_sample_S2 = "S2", A_sample_S2 = "S2"
+            "S1", "S1",
+            "S1", "S1", "S1",
+            "S1", "S1", "S1",
+            "S2", "S2", "S2",
+            "S2", "S2", "S2",
+            "S2", "S2"
           ),
           filename = c(
             "run_folder/pixelator/amplicon/A_sample_S1.report.json",
@@ -146,7 +146,8 @@ test_that("File location works as expected", {
           )
         ),
         row.names = c(NA, -16L), class = c("tbl_df", "tbl", "data.frame")
-      )
+      ),
+      pool_qc_files = NULL
     )
   )
 })
@@ -226,12 +227,11 @@ test_that("File reading works as expected", {
     )
   )
 
+
   expect_no_error(data_paths <-
     get_file_paths(
       data_folder = test_data_folder(),
-      sample_aliases = sample_sheet %>%
-        select(sample, sample_alias) %>%
-        deframe()
+      sample_sheet = sample_sheet
     ))
   expect_equal(
     data_paths$data_files %>%
@@ -239,8 +239,8 @@ test_that("File reading works as expected", {
     structure(
       list(
         sample_alias = c(
-          S01_PBMC_unstimulated_S1 = "S1",
-          S02_PHA_S2 = "S2"
+          "S1",
+          "S2"
         ),
         filename = c(
           "qc_jsons/S01_PBMC_unstimulated_S1.layout.pxl",
@@ -263,12 +263,12 @@ test_that("File reading works as expected", {
     structure(
       list(
         sample_alias = c(
-          S01_PBMC_unstimulated_S1 = "S1",
-          S02_PHA_S2 = "S2", S01_PBMC_unstimulated_S1 = "S1", S02_PHA_S2 = "S2",
-          S01_PBMC_unstimulated_S1 = "S1", S02_PHA_S2 = "S2", S01_PBMC_unstimulated_S1 = "S1",
-          S02_PHA_S2 = "S2", S01_PBMC_unstimulated_S1 = "S1", S02_PHA_S2 = "S2",
-          S01_PBMC_unstimulated_S1 = "S1", S02_PHA_S2 = "S2", S01_PBMC_unstimulated_S1 = "S1",
-          S02_PHA_S2 = "S2", S01_PBMC_unstimulated_S1 = "S1", S02_PHA_S2 = "S2"
+          "S1",
+          "S2", "S1", "S2",
+          "S1", "S2", "S1",
+          "S2", "S1", "S2",
+          "S1", "S2", "S1",
+          "S2", "S1", "S2"
         ), filename = c(
           "qc_jsons/amplicon/S01_PBMC_unstimulated_S1.report.json",
           "qc_jsons/amplicon/S02_PHA_S2.report.json", "qc_jsons/analysis/S01_PBMC_unstimulated_S1.report.json",
@@ -296,14 +296,14 @@ test_that("File reading works as expected", {
   )
 
   # QC data reading
-  expect_no_error(qc_metrics <- read_qc_files(data_paths$qc_files, sample_sheet))
+  expect_no_error(qc_metrics <- read_qc_files(data_paths, sample_sheet))
   expect_equal(
     names(qc_metrics),
-    c("S1", "S2")
+    c("qc_files", "pool_qc_files")
   )
 
   expect_equal(
-    qc_metrics$S1$amplicon,
+    qc_metrics$qc_files$S1$amplicon,
     list(
       sample_id = "S01_PBMC_unstimulated_S1", product_id = "single-cell-pna",
       report_type = "amplicon", input_reads = 400745924L, output_reads = 365893238L,
@@ -352,6 +352,154 @@ test_that("File reading works as expected", {
       ),
       row.names = c(NA, -2L)
     )
+  )
+  expect_error(extract_sample_qc_metrics(qc_metrics, "amplicon",
+    vars = c("q30_statistics")
+  ))
+
+  expect_no_error(
+    extracted_qc_metrics <-
+      extract_sample_qc_metrics(qc_metrics, "amplicon",
+        vars = c(
+          "a" = "total_failed_reads",
+          "b" = "failed_partial_upi1_umi1_reads"
+        )
+      )
+  )
+  expect_equal(
+    names(extracted_qc_metrics),
+    c("sample_alias", "a", "b")
+  )
+
+
+  # Hashing
+  expect_no_error(sample_sheet_hashing <- read_samplesheet(test_samplesheet(type = "hashing")))
+  expect_equal(
+    sample_sheet_hashing,
+    structure(
+      list(
+        sample = c("S1", "S2", "S11", "S12"),
+        sample_alias = c("S1", "S2", "S11", "S12"),
+        condition = c("PBMC", "Raji", "PBMC", "Raji"),
+        pool = c("pool1", "pool1", "pool2", "pool2")
+      ),
+      row.names = c(NA, -4L),
+      class = c("tbl_df", "tbl", "data.frame")
+    )
+  )
+  expect_no_error(data_paths <-
+    get_file_paths(
+      data_folder = test_data_folder(type = "hashing"),
+      sample_sheet = sample_sheet_hashing
+    ))
+
+  expect_equal(
+    data_paths$data_files %>%
+      mutate(filename = str_remove(filename, ".*extdata/")),
+    structure(list(sample_alias = c("S1", "S11", "S12", "S2"), filename = c(
+      "qc_jsons_hashing/S1.layout.pxl",
+      "qc_jsons_hashing/S11.layout.pxl", "qc_jsons_hashing/S12.layout.pxl",
+      "qc_jsons_hashing/S2.layout.pxl"
+    )), row.names = c(NA, -4L), class = c(
+      "tbl_df",
+      "tbl", "data.frame"
+    ))
+  )
+  expect_equal(
+    data_paths$qc_files %>%
+      mutate(
+        filename = str_remove(filename, ".*extdata/"),
+        stage = unname(stage)
+      ),
+    structure(list(sample_alias = c(
+      "S1", "S11", "S12", "S2", "S1",
+      "S11", "S12", "S2", "S1", "S11", "S12", "S2", "S1", "S11", "S12",
+      "S2", "S1", "S11", "S12", "S2"
+    ), filename = c(
+      "qc_jsons_hashing/analysis/S1.report.json",
+      "qc_jsons_hashing/analysis/S11.report.json", "qc_jsons_hashing/analysis/S12.report.json",
+      "qc_jsons_hashing/analysis/S2.report.json", "qc_jsons_hashing/denoise/S1.report.json",
+      "qc_jsons_hashing/denoise/S11.report.json", "qc_jsons_hashing/denoise/S12.report.json",
+      "qc_jsons_hashing/denoise/S2.report.json", "qc_jsons_hashing/layout/S1.report.json",
+      "qc_jsons_hashing/layout/S11.report.json", "qc_jsons_hashing/layout/S12.report.json",
+      "qc_jsons_hashing/layout/S2.report.json", "qc_jsons_hashing/post_analysis/S1.report.json",
+      "qc_jsons_hashing/post_analysis/S11.report.json", "qc_jsons_hashing/post_analysis/S12.report.json",
+      "qc_jsons_hashing/post_analysis/S2.report.json", "qc_jsons_hashing/sample_calling/S1.report.json",
+      "qc_jsons_hashing/sample_calling/S11.report.json", "qc_jsons_hashing/sample_calling/S12.report.json",
+      "qc_jsons_hashing/sample_calling/S2.report.json"
+    ), stage = c(
+      "analysis",
+      "analysis", "analysis", "analysis", "denoise", "denoise", "denoise",
+      "denoise", "layout", "layout", "layout", "layout", "post_analysis",
+      "post_analysis", "post_analysis", "post_analysis", "sample_calling",
+      "sample_calling", "sample_calling", "sample_calling"
+    )), row.names = c(
+      NA,
+      -20L
+    ), class = c("tbl_df", "tbl", "data.frame"))
+  )
+
+  expect_error(
+    read_qc_files(
+      data_paths,
+      structure(
+        list(
+          sample = c("S01_PBMC_unstimulated_S1", "S02_PHA_S2", "S3"),
+          sample_alias = c("S1", "S2", "S3"), condition = c("PBMC", "PHA", "S3")
+        ),
+        row.names = c(NA, -3L), class = c("tbl_df", "tbl", "data.frame")
+      )
+    )
+  )
+  # QC data reading
+  expect_no_error(qc_metrics <- read_qc_files(data_paths, sample_sheet_hashing))
+  expect_equal(
+    names(qc_metrics),
+    c("qc_files", "pool_qc_files")
+  )
+
+  expect_equal(
+    qc_metrics$pool_qc_files$pool1$amplicon,
+    list(
+      sample_id = "pool1", product_id = "single-cell-pna", report_type = "amplicon",
+      input_reads = 2240712L, output_reads = 1974950L, passed_missing_uei_reads = 102163L,
+      passed_partial_uei_reads = 41185L, passed_missing_lbs1_anchor = 37884L,
+      failed_too_many_n_reads = 70306L, failed_partial_upi1_umi1_reads = 0L,
+      failed_partial_upi2_umi2_reads = 0L, failed_missing_upi1_umi1_reads = 124069L,
+      failed_missing_upi2_umi2_reads = 69176L, failed_lbs_detected_in_umi_reads = 1868L,
+      failed_low_complexity_umi_reads = 343L, total_failed_reads = 265762L,
+      q30_statistics = list(
+        total = 0.96389646747869, umi1 = 0.97554708437465,
+        pid1 = 0.978029064026937, lbs1 = 0.950325084457053, uei = 0.915778762331536,
+        lbs2 = 0.926549302757264, pid2 = 0.969809109091369, umi2 = 0.972393044308536
+      ),
+      basepair_counts = list(
+        input = 273366864L, input_read1 = 98591328L,
+        input_read2 = 174775536L, quality_trimmed = 2770353L,
+        quality_trimmed_read1 = 2168472L, quality_trimmed_read2 = 601881L,
+        output = 280442900L
+      ), failed_invalid_amplicon_reads = 193245L,
+      fraction_discarded_reads = 0.118606050219752
+    )
+  )
+
+  expect_no_error(
+    extracted_qc_metrics <-
+      extract_sample_qc_metrics(qc_metrics,
+        stage = "amplicon",
+        vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads")
+      )
+  )
+
+  expect_equal(
+    extracted_qc_metrics,
+    structure(list(sample_alias = c("pool1", "pool2"), total_failed_reads = c(
+      265762L,
+      265762L
+    ), failed_partial_upi1_umi1_reads = c(0L, 0L)), row.names = c(
+      NA,
+      -2L
+    ), class = c("tbl_df", "tbl", "data.frame"))
   )
   expect_error(extract_sample_qc_metrics(qc_metrics, "amplicon",
     vars = c("q30_statistics")

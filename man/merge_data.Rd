@@ -9,7 +9,8 @@ merge_data(pg_data, sample_sheet)
 \arguments{
 \item{pg_data}{A list of Seurat objects, each representing a sample.}
 
-\item{sample_sheet}{A data frame containing sample metadata, including \code{sample_alias} and \code{condition}.}
+\item{sample_sheet}{A data frame containing sample metadata, including \code{sample_alias} and
+\code{condition}, and optionally \code{pool} for hashed experiments.}
 }
 \value{
 A merged Seurat object with added metadata.

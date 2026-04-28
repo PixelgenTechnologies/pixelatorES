@@ -62,12 +62,15 @@ print_metadata_table <-
   function(sample_sheet) {
     sample_sheet %>%
       select(
+        "Pool" = any_of("pool"),
         "Sample Alias" = sample_alias,
         "Sample name" = sample,
-        "Condition" = condition
+        "Condition" = condition,
+        "% of pool" = any_of("pool_fraction"),
       ) %>%
       style_table(caption = "Sample settings", interactive = FALSE)
   }
+
 
 #' Print Session Info table
 #'

@@ -1,0 +1,13 @@
+{
+    "cli": {
+        "command": "pixelator single-cell-pna sample-calling",
+        "options": {
+            "--samplesheet": "pna_hashed_filtered.samplesheet.csv",
+            "--remove-incompatible": true,
+            "--save-undetermined": false,
+            "--confidence-threshold": 0.9,
+            "--panel": "proxiome-rnd-hashing-5",
+            "--output": "."
+        }
+    }
+}

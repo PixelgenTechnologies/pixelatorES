@@ -1,0 +1,11 @@
+
+### Sample description
+
+```{r}
+#| label: samples
+#| results: 'asis'
+if ("pool" %in% names(sample_sheet)) {
+  sample_sheet <- add_pct_of_pool_to_samplesheet(sample_sheet, pg_data)
+}
+print_metadata_table(sample_sheet)
+```
