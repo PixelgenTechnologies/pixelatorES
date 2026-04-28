@@ -22,6 +22,12 @@ test_that("Components work as expected", {
   )
   expect_s3_class(component$tabl, "datatables")
 
+  # component_crossing_edges
+  expect_no_error(component <- component_crossing_edges(qc_metrics_tables))
+  expect_no_error(
+    ggplot2::ggplot_build(component$plot)
+  )
+
   # component_cell_recovery
   expect_no_error(component <- component_cell_recovery(sample_qc_metrics, sample_levels = NULL))
   expect_no_error(
