@@ -80,7 +80,7 @@ get_file_paths <-
       file_paths <- list.files(data_folder, recursive = TRUE, full.names = TRUE)
     }
 
-    pixelatorR:::assert_class(sample_sheet, "tbl_df")
+    pixelatorR:::assert_class(sample_sheet, "tbl_df", allow_null = TRUE)
 
     all_files <-
       file_paths %>%
@@ -441,6 +441,17 @@ read_qc_files <-
             })
         }
       )
+
+
+    samples_in_data <- c(names(sample_qc_metrics$qc_files), names(sample_qc_metrics$pool_qc_files))
+    if (!all(sample_sheet$sample_alias %in% samples_in_data)) {
+      cli_abort(
+        "Some samples are missing .json files containing QC metrics.
+        Please check the following samples:
+        {sample_sheet$sample_alias[!sample_sheet$sample_alias %in%
+        samples_in_data]}"
+      )
+    }
 
     return(sample_qc_metrics)
   }

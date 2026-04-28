@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `read_qc_files()` returns a nested list `list(qc_files = <named list per sample>, pool_qc_files = NULL | <named list per pool>)`. Passing a data frame of QC paths (legacy) is still supported; the return value is wrapped in the same structure.
 - `key_metric_table()` returns `list(sample = <datatables>, pool = <datatables or NULL>)` for HTML output, and `return_data = TRUE` returns the corresponding pre-styled wide tibbles in the same shape. Hashing columns are included in definitions when `sample_hash_stats` is present.
-- `get_file_paths()` now accepts `sample_sheet` instead of `sample_aliases` (previous behaviour). T
+- `get_file_paths()` now accepts `sample_sheet` instead of `sample_aliases` (previous behaviour).
 - `read_samplesheet()` adds a `pool` column when the CSV has a pool column.
 - `merge_data()` joins optional `pool` from the sample sheet into object metadata when that column exists.
 - `get_qc_metrics()` adds optional `sample_hash_stats`.
