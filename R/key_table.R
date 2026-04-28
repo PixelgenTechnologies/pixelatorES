@@ -198,13 +198,17 @@ get_denoising_data <-
   function(sample_qc_metrics) {
     pixelatorR:::assert_class(sample_qc_metrics, "list")
 
-    lapply(names(sample_qc_metrics$qc_files), function(nm) {
+    if (!is.null(sample_qc_metrics$qc_files)) {
+      sample_qc_metrics <- sample_qc_metrics$qc_files
+    }
+
+    lapply(names(sample_qc_metrics), function(nm) {
       tibble(
         sample_alias = nm,
         ratio =
-          sample_qc_metrics$qc_files[[nm]]$denoise$ratio_of_umis_removed * 100,
+          sample_qc_metrics[[nm]]$denoise$ratio_of_umis_removed * 100,
         number_of_umis_removed =
-          sample_qc_metrics$qc_files[[nm]]$denoise$number_of_umis_removed
+          sample_qc_metrics[[nm]]$denoise$number_of_umis_removed
       )
     }) %>%
       bind_rows()
