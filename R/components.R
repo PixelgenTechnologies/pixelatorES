@@ -909,6 +909,7 @@ component_crossing_edges <-
   function(qc_metrics_tables, sample_levels = NULL) {
     plot_data <-
       qc_metrics_tables$crossing_edges %>%
+      rename(sample_alias = 1) %>%
       mutate(label = paste0(round(percent, 2), "%"))
 
     plot_data <- set_sample_levels(plot_data, sample_levels)

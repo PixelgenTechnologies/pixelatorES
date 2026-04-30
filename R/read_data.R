@@ -617,7 +617,7 @@ test_data_folder <-
 #' Reads the test samplesheet and retrieves QC metrics from the test data folder.
 #'
 #' @param type A character string specifying the type of test data to use. Options are "default"
-#' (the standard test data) and "hashing" (test data for hashing experiments). Default is "default".
+#' (the standard test data) and "hashing" (test data for hashing experiments).
 #' @return A list of QC metrics for each sample, where each element is a named list of metrics.
 #'
 #' @export
@@ -641,6 +641,8 @@ get_test_qc_metrics <-
 #' Generates a minimal Seurat object for testing purposes.
 #'
 #' @param concatenate A logical indicating whether to concatenate the data 6 times (default is TRUE).
+#' @param type A character string specifying the type of test data to generate. Options are "default"
+#' (the standard test data) and "hashing" (test data for hashing experiments).
 #'
 #' @return A Seurat object containing test data with normalized and scaled data, PCA results, and merged layers.
 #'
@@ -648,8 +650,13 @@ get_test_qc_metrics <-
 #'
 get_test_data <-
   function(
-    concatenate = TRUE
+    concatenate = TRUE,
+    type = c("default", "hashing")
   ) {
+    pixelatorR:::assert_single_value(concatenate, type = "bool")
+    pixelatorR:::assert_vector(type, type = "character", n = 1)
+    type <- match.arg(type, c("default", "hashing"))
+
     seur <-
       minimal_pna_pxl_file() %>%
       ReadPNA_Seurat(load_proximity_scores = FALSE)
@@ -677,6 +684,11 @@ get_test_data <-
 
     seur[[]]$sample_alias <-
       "S1"
+
+    if (type == "hashing") {
+      seur[[]]$pool <-
+        "pool1"
+    }
 
     seur <-
       seur %>%
