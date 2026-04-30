@@ -8,7 +8,7 @@ get_test_qc_metrics(type = c("default", "hashing"))
 }
 \arguments{
 \item{type}{A character string specifying the type of test data to use. Options are "default"
-(the standard test data) and "hashing" (test data for hashing experiments). Default is "default".}
+(the standard test data) and "hashing" (test data for hashing experiments).}
 }
 \value{
 A list of QC metrics for each sample, where each element is a named list of metrics.

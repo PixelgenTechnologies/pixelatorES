@@ -617,7 +617,7 @@ test_data_folder <-
 #' Reads the test samplesheet and retrieves QC metrics from the test data folder.
 #'
 #' @param type A character string specifying the type of test data to use. Options are "default"
-#' (the standard test data) and "hashing" (test data for hashing experiments). Default is "default".
+#' (the standard test data) and "hashing" (test data for hashing experiments).
 #' @return A list of QC metrics for each sample, where each element is a named list of metrics.
 #'
 #' @export
@@ -642,7 +642,7 @@ get_test_qc_metrics <-
 #'
 #' @param concatenate A logical indicating whether to concatenate the data 6 times (default is TRUE).
 #' @param type A character string specifying the type of test data to generate. Options are "default"
-#' (the standard test data) and "hashing" (test data for hashing experiments
+#' (the standard test data) and "hashing" (test data for hashing experiments).
 #'
 #' @return A Seurat object containing test data with normalized and scaled data, PCA results, and merged layers.
 #'

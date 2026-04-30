@@ -10,7 +10,7 @@ get_test_data(concatenate = TRUE, type = c("default", "hashing"))
 \item{concatenate}{A logical indicating whether to concatenate the data 6 times (default is TRUE).}
 
 \item{type}{A character string specifying the type of test data to generate. Options are "default"
-(the standard test data) and "hashing" (test data for hashing experiments}
+(the standard test data) and "hashing" (test data for hashing experiments).}
 }
 \value{
 A Seurat object containing test data with normalized and scaled data, PCA results, and merged layers.
