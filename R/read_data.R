@@ -648,8 +648,13 @@ get_test_qc_metrics <-
 #'
 get_test_data <-
   function(
-    concatenate = TRUE
+    concatenate = TRUE,
+    type = c("default", "hashing")
   ) {
+    pixelatorR:::assert_single_value(concatenate, type = "bool")
+    pixelatorR:::assert_vector(type, type = "character", n = 1)
+    type <- match.arg(type, c("default", "hashing"))
+
     seur <-
       minimal_pna_pxl_file() %>%
       ReadPNA_Seurat(load_proximity_scores = FALSE)
@@ -677,6 +682,11 @@ get_test_data <-
 
     seur[[]]$sample_alias <-
       "S1"
+
+    if (type == "hashing") {
+      seur[[]]$pool <-
+        "pool1"
+    }
 
     seur <-
       seur %>%

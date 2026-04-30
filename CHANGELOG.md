@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] 2026-04-30
+
+### Added
+
+- Expanded component and data reading tests to include hashing data.
+
+### Fixed
+
+- Fixed a bug in `component_crossing_edges` that would throw an error for hashed data.
+
 ## [0.9.0] 2026-04-27
 
 ### Added
