@@ -641,6 +641,8 @@ get_test_qc_metrics <-
 #' Generates a minimal Seurat object for testing purposes.
 #'
 #' @param concatenate A logical indicating whether to concatenate the data 6 times (default is TRUE).
+#' @param type A character string specifying the type of test data to generate. Options are "default"
+#' (the standard test data) and "hashing" (test data for hashing experiments
 #'
 #' @return A Seurat object containing test data with normalized and scaled data, PCA results, and merged layers.
 #'
