@@ -306,14 +306,16 @@ get_degree_distribution <-
           map(
             . %>%
               unlist() %>%
-              enframe("degree", "n")) %>%
+              enframe("degree", "n")
+          ) %>%
           bind_rows(.id = "umi_type")
-
       }) %>%
       bind_rows(.id = group_col) %>%
       group_by(!!sym(group_col)) %>%
-      mutate(degree = as.integer(degree),
-             percent_nodes = 100 * n / sum(n)) %>%
+      mutate(
+        degree = as.integer(degree),
+        percent_nodes = 100 * n / sum(n)
+      ) %>%
       ungroup()
   }
 
