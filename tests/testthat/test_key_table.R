@@ -137,16 +137,20 @@ for (data_type in data_types) {
               default =
                 structure(list(sample_alias = c("S1", "S1", "S1", "S1", "S1",
                                                 "S1"), umi_type = c("umi1", "umi1", "umi1", "umi1", "umi1", "umi1"
-                                                ), degree = c("1", "2", "3", "4", "5", "6"), n = c(27439568L,
-                                                                                                   7545696L, 5571202L, 4951939L, 4609669L, 4290856L)), row.names = c(NA,
-                                                                                                                                                                     -6L), class = c("tbl_df", "tbl", "data.frame")),
+                                                ), degree = 1:6, n = c(27439568L, 7545696L, 5571202L, 4951939L,
+                                                                       4609669L, 4290856L), percent_nodes = c(19.0277655876346, 5.23250711102857,
+                                                                                                              3.86330884281272, 3.43388549325068, 3.19654089191878, 2.97546237383531
+                                                                       )), row.names = c(NA, -6L), class = c("tbl_df", "tbl", "data.frame"
+                                                                       )),
               hashing =
                 structure(list(pool = c("pool1", "pool1", "pool1", "pool1", "pool1",
                                         "pool1"), umi_type = c("umi1", "umi1", "umi1", "umi1", "umi1",
-                                                               "umi1"), degree = c("1", "2", "3", "4", "5", "6"), n = c(75201L,
-                                                                                                                        55220L, 45622L, 33576L, 22807L, 14510L)), row.names = c(NA, -6L
-                                                                                                                        ), class = c("tbl_df", "tbl", "data.frame"))
-      )
+                                                               "umi1"), degree = 1:6, n = c(75201L, 55220L, 45622L, 33576L,
+                                                                                            22807L, 14510L), percent_nodes = c(14.6206175184554, 10.7359011099467,
+                                                                                                                               8.86985295976078, 6.52786337681224, 4.43414879780071, 2.82104174402983
+                                                                                            )), row.names = c(NA, -6L), class = c("tbl_df", "tbl", "data.frame"
+                                                                                            ))
+    )
     )
 
     # Denoising
