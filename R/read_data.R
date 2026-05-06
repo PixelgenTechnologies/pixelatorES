@@ -661,9 +661,24 @@ get_test_data <-
 
     data_files <- get_file_paths(data_folder, sample_sheet = samplesheet)$data_files
 
+    # Copy PXL files to a unique tempdir to avoid duckdb
+    # "blocked by another connection" errors when get_test_data() is called
+    # multiple times (each call gets fresh paths so connections never collide)
+    # and to ensure duckdb can write its sidecar files in a writable location.
+    tmp_dir <- tempfile("pixelatorES_test_data_")
+    dir.create(tmp_dir)
+    data_files <- data_files %>%
+      mutate(
+        filename = vapply(filename, function(f) {
+          dest <- file.path(tmp_dir, basename(f))
+          file.copy(f, dest, overwrite = TRUE)
+          dest
+        }, character(1))
+      )
+
     seur <-
       load_pxl_data_list(
-        data_folder = data_folder,
+        data_folder = tmp_dir,
         data_files = data_files,
         sample_sheet = samplesheet
       ) %>%

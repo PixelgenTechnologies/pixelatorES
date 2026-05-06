@@ -14,8 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Added new slots to example data jsons with degree distribution. 
-- ".pxl" files are now tracked with Git LFS.
+- .pxl files are now tracked with Git LFS.
 - `get_test_data` now loads data from `extdata` to allow easier update of test data and more representative test data.
+- `get_test_data` now creates a temporary folder where it puts the .pxl files to be read. This avoids `Duckdb` file accession collisions in CI.
 
 ## [0.9.1] 2026-04-30
 
