@@ -473,6 +473,7 @@ get_hash_stats <- function(object, sample_qc_metrics) {
     pivot_wider(names_from = id, values_from = mean_purity, names_prefix = "mean_purity_") %>%
     left_join(sample_hash_counts %>% select(sample_alias, hash_pct), by = "sample_alias")
 
+  # Sample confidence per component and sample
   component_sample_confidence <-
     sample_qc_metrics$pool_qc_files %>%
     lapply(function(pool) {
@@ -481,7 +482,14 @@ get_hash_stats <- function(object, sample_qc_metrics) {
         bind_rows(.id = "sample_alias") %>%
         rename(sample_confidence = 2)
     }) %>%
-    bind_rows(.id = "pool")
+    bind_rows(.id = "pool") %>%
+    mutate(
+      sample_alias =
+        ifelse(str_detect(sample_alias, "undetermined$"),
+          str_remove(sample_alias, paste0(pool, "_")),
+          sample_alias
+        )
+    )
 
   list(
     component_stats = component_stats,
@@ -515,6 +523,7 @@ get_qc_metrics <-
         if ("sample_alias" %in% names(tb)) {
           sample_levels <-
             sample_sheet$sample_alias[sample_sheet$sample_alias %in% unique(tb$sample_alias)]
+          if ("undetermined" %in% tb$sample_alias) sample_levels <- c(sample_levels, "undetermined")
           tb <- order_sample_alias_factors(tb, levels = sample_levels)
         }
         if ("pool" %in% names(tb)) {
