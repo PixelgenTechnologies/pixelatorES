@@ -61,38 +61,40 @@ for (data_type in data_types) {
       res,
       switch(data_type,
         default =
-          structure(list(sample_alias = c("S1", "S2"), Q30 = c(
-            0.957683900982373,
-            0.958092725597593
-          ), total_reads = c(400745924L, 210603520L),
-          deduped_valid_reads = c(
-            232530522L,
-            124914607L
-          ), valid_reads = c(
-            359952911L,
-            188742157L
-          ), graph_edges = c(
-            384168L,
-            384168L
-          ), graph_proteins = c(
-            230890L,
-            230890L
-          ), graph_reads = c(923084L, 923084L), valid_reads_saturation = c(
-            35.3997384396761,
-            33.8173257180694
-          ), graph_edge_saturation = c(
-            58.3821190704205,
-            58.3821190704205
-          ), graph_node_saturation = c(
-            74.9871084321687,
-            74.9871084321687
-          ), fraction_valid_reads = c(
-            89.8207291560625,
-            89.6196592535585
-          ), fraction_graph_reads = c(
-            0.230341456947669,
-            0.438304165096576
-          )), row.names = c(NA, -2L), class = c(
+          structure(list(
+            sample_alias = c("S1", "S2"), Q30 = c(
+              0.957683900982373,
+              0.958092725597593
+            ), total_reads = c(400745924L, 210603520L),
+            deduped_valid_reads = c(
+              232530522L,
+              124914607L
+            ), valid_reads = c(
+              359952911L,
+              188742157L
+            ), graph_edges = c(
+              384168L,
+              384168L
+            ), graph_proteins = c(
+              230890L,
+              230890L
+            ), graph_reads = c(923084L, 923084L), valid_reads_saturation = c(
+              35.3997384396761,
+              33.8173257180694
+            ), graph_edge_saturation = c(
+              58.3821190704205,
+              58.3821190704205
+            ), graph_node_saturation = c(
+              74.9871084321687,
+              74.9871084321687
+            ), fraction_valid_reads = c(
+              89.8207291560625,
+              89.6196592535585
+            ), fraction_graph_reads = c(
+              0.230341456947669,
+              0.438304165096576
+            )
+          ), row.names = c(NA, -2L), class = c(
             "tbl_df",
             "tbl", "data.frame"
           )),
@@ -501,87 +503,91 @@ for (data_type in data_types) {
       tabl$sample,
       switch(data_type,
         default =
-          structure(list(`Sample ID` = c("S1", "S2"), `Number of cells` = c(
-            "24",
-            "24"
-          ), `Number of cells >10k nodes` = c("7", "7"), `Median isotype % counts` = c(
-            "0.19",
-            "0.19"
-          ), `Median intracellular % counts` = c("0", "0"), `Median proteins per cell [k]` = c(
-            "8.99",
-            "8.99"
-          ), `Median reads per cell [k]` = c("34.7", "34.7"), `Q30 [%]` = c(
-            "95.77",
-            "95.81"
-          ), `Total reads [M]` = c("400.75", "210.6"), `Valid reads [M]` = c(
-            "359.95",
-            "188.74"
-          ), `Graph Nodes [M]` = c("0.23", "0.23"), `Graph Edges [M]` = c(
-            "0.38",
-            "0.38"
-          ), `Graph node saturation [%]` = c("74.99", "74.99"), `Graph edge saturation [%]` = c(
-            "58.38",
-            "58.38"
-          ), `Valid reads saturation [%]` = c("35.4", "33.82"),
-          `Valid reads fraction [%]` = c("89.82", "89.62"), `Graph reads fraction [%]` = c(
-            "0.23",
-            "0.44"
-          ), `% Denoised UMIs` = c("2.67", "4.86"), `Total denoised UMIs [M]` = c(
-            "1.62",
-            "2.72"
-          ), `Median mean coreness` = c("1.95", "1.95"), `Median % dangling nodes` = c(
-            "26.12",
-            "26.12"
-          ), `Median % well connected nodes` = c("22.8", "22.8"),
-          `Top 3 % counts` = c("21.66", "21.66"), `Top 5 % counts` = c(
-            "32.07",
-            "32.07"
-          ), `Top 5 markers` = c(
-            "B2M, HLA-DR-DP-DQ, CD45, CD45RA, HLA-ABC",
-            "B2M, HLA-DR-DP-DQ, CD45, CD45RA, HLA-ABC"
-          ), `% Crossing edges (Initial)` = c(
-            "5.06",
-            "4.27"
-          ), `% Crossing edges (Refinement)` = c("0.01", "0.02")), row.names = c(NA, -2L), class = c("tbl_df", "tbl", "data.frame")),
+          structure(list(
+            `Sample ID` = c("S1", "S2"), `Number of cells` = c(
+              "24",
+              "24"
+            ), `Number of cells >10k nodes` = c("7", "7"), `Median isotype % counts` = c(
+              "0.19",
+              "0.19"
+            ), `Median intracellular % counts` = c("0", "0"), `Median proteins per cell [k]` = c(
+              "8.99",
+              "8.99"
+            ), `Median reads per cell [k]` = c("34.7", "34.7"), `Q30 [%]` = c(
+              "95.77",
+              "95.81"
+            ), `Total reads [M]` = c("400.75", "210.6"), `Valid reads [M]` = c(
+              "359.95",
+              "188.74"
+            ), `Graph Nodes [M]` = c("0.23", "0.23"), `Graph Edges [M]` = c(
+              "0.38",
+              "0.38"
+            ), `Graph node saturation [%]` = c("74.99", "74.99"), `Graph edge saturation [%]` = c(
+              "58.38",
+              "58.38"
+            ), `Valid reads saturation [%]` = c("35.4", "33.82"),
+            `Valid reads fraction [%]` = c("89.82", "89.62"), `Graph reads fraction [%]` = c(
+              "0.23",
+              "0.44"
+            ), `% Denoised UMIs` = c("2.67", "4.86"), `Total denoised UMIs [M]` = c(
+              "1.62",
+              "2.72"
+            ), `Median mean coreness` = c("1.95", "1.95"), `Median % dangling nodes` = c(
+              "26.12",
+              "26.12"
+            ), `Median % well connected nodes` = c("22.8", "22.8"),
+            `Top 3 % counts` = c("21.66", "21.66"), `Top 5 % counts` = c(
+              "32.07",
+              "32.07"
+            ), `Top 5 markers` = c(
+              "B2M, HLA-DR-DP-DQ, CD45, CD45RA, HLA-ABC",
+              "B2M, HLA-DR-DP-DQ, CD45, CD45RA, HLA-ABC"
+            ), `% Crossing edges (Initial)` = c(
+              "5.06",
+              "4.27"
+            ), `% Crossing edges (Refinement)` = c("0.01", "0.02")
+          ), row.names = c(NA, -2L), class = c("tbl_df", "tbl", "data.frame")),
         hashing =
-          structure(list(`Sample ID` = c("S1", "S2", "S11", "S12"), `Number of cells` = c(
-            "2",
-            "2", "2", "2"
-          ), `Number of cells >10k nodes` = c(
-            "1", "1", "1",
-            "1"
-          ), `Median isotype % counts` = c("0.2", "0.3", "0.29", "0.2"),
-          `Median intracellular % counts` = c("0", "0", "0", "0"), `Median proteins per cell [k]` = c(
-            "9.54",
-            "10.77", "13.33", "10.7"
-          ), `Median reads per cell [k]` = c(
-            "39.28",
-            "38.15", "56.52", "45.29"
-          ), `% Denoised UMIs` = c(
-            "4.78", "4.61",
-            "4.79", "4.73"
-          ), `Total denoised UMIs [M]` = c(
-            "0", "0.01", "0",
-            "0.01"
-          ), `Median mean coreness` = c("2.11", "1.84", "2.14", "2.04"),
-          `Median % dangling nodes` = c(
-            "25.37", "29.61", "23.59", "25.57"
-          ), `Median % well connected nodes` = c(
-            "36.2", "13.51", "37.25",
-            "29.51"
-          ), `Top 3 % counts` = c("42.05", "38.84", "39.15", "30.2"),
-          `Top 5 % counts` = c("57.02", "49.63", "53.92", "45.02"),
-          `Top 5 markers` = c(
-            "B2M, CD45RA, CD45, HLA-ABC, CD43", "HLA-DR-DP-DQ, B2M, CD45RA, CD40, IgM",
-            "B2M, CD45RA, CD45, HLA-ABC, CD43", "B2M, HLA-DR-DP-DQ, CD59, HLA-ABC, CD29"
-          ), `% B2M hash purity` = c("95.82", "99.61", "97.91", "100"),
-          `% CD298 hash purity` = c("50", "100", "50", "100"), `% CD98 hash purity` = c(
-            "83.33",
-            "100", "83.33", "50"
-          ), `% hash counts` = c(
-            "1.37", "2.94",
-            "1.91", "2.01"
-          )), row.names = c(NA, -4L), class = c(
+          structure(list(
+            `Sample ID` = c("S1", "S2", "S11", "S12"), `Number of cells` = c(
+              "2",
+              "2", "2", "2"
+            ), `Number of cells >10k nodes` = c(
+              "1", "1", "1",
+              "1"
+            ), `Median isotype % counts` = c("0.2", "0.3", "0.29", "0.2"),
+            `Median intracellular % counts` = c("0", "0", "0", "0"), `Median proteins per cell [k]` = c(
+              "9.54",
+              "10.77", "13.33", "10.7"
+            ), `Median reads per cell [k]` = c(
+              "39.28",
+              "38.15", "56.52", "45.29"
+            ), `% Denoised UMIs` = c(
+              "4.78", "4.61",
+              "4.79", "4.73"
+            ), `Total denoised UMIs [M]` = c(
+              "0", "0.01", "0",
+              "0.01"
+            ), `Median mean coreness` = c("2.11", "1.84", "2.14", "2.04"),
+            `Median % dangling nodes` = c(
+              "25.37", "29.61", "23.59", "25.57"
+            ), `Median % well connected nodes` = c(
+              "36.2", "13.51", "37.25",
+              "29.51"
+            ), `Top 3 % counts` = c("42.05", "38.84", "39.15", "30.2"),
+            `Top 5 % counts` = c("57.02", "49.63", "53.92", "45.02"),
+            `Top 5 markers` = c(
+              "B2M, CD45RA, CD45, HLA-ABC, CD43", "HLA-DR-DP-DQ, B2M, CD45RA, CD40, IgM",
+              "B2M, CD45RA, CD45, HLA-ABC, CD43", "B2M, HLA-DR-DP-DQ, CD59, HLA-ABC, CD29"
+            ), `% B2M hash purity` = c("95.82", "99.61", "97.91", "100"),
+            `% CD298 hash purity` = c("50", "100", "50", "100"), `% CD98 hash purity` = c(
+              "83.33",
+              "100", "83.33", "50"
+            ), `% hash counts` = c(
+              "1.37", "2.94",
+              "1.91", "2.01"
+            )
+          ), row.names = c(NA, -4L), class = c(
             "tbl_df",
             "tbl", "data.frame"
           ))
