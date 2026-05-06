@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added 
 
 - Added `get_degree_distribution` to load degree distribution from QC files.
+- `get_hash_stats` now collects sample confidence data.
 
 ### Changed
 

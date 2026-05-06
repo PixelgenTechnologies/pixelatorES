@@ -468,10 +468,10 @@ for (data_type in data_types) {
 
     # Hash stats
     if (data_type == "hashing") {
-      expect_no_error(res <- get_hash_stats(seur))
+      expect_no_error(res <- get_hash_stats(seur, sample_qc_metrics))
 
       expect_equal(
-        res,
+        res[-5],
         list(component_stats = structure(list(component = c(
           "S1_d2146defe08567d3",
           "S1_d2146defe08567d3", "S1_68189b2c75de4098", "S1_68189b2c75de4098",
@@ -658,6 +658,17 @@ for (data_type in data_types) {
           NA,
           -4L
         ), class = c("tbl_df", "tbl", "data.frame")))
+      )
+
+      expect_equal(
+        head(res[[5]]),
+        structure(list(pool = c(
+          "pool1", "pool1", "pool1", "pool1", "pool1",
+          "pool1"
+        ), sample_alias = c("S1", "S1", "S1", "S1", "S1", "S1"), sample_confidence = c(
+          0.988843436221644, 0.987964696442899,
+          0.96164199192463, 0.994916690200508, 0.982078853046595, 0.988266464799394
+        )), row.names = c(NA, -6L), class = c("tbl_df", "tbl", "data.frame"))
       )
     }
 

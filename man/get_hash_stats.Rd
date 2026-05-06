@@ -4,10 +4,12 @@
 \alias{get_hash_stats}
 \title{Get sample hashing statistics for each sample}
 \usage{
-get_hash_stats(object)
+get_hash_stats(object, sample_qc_metrics)
 }
 \arguments{
 \item{object}{A Seurat object containing the data.}
+
+\item{sample_qc_metrics}{A list containing quality control metrics for each sample, which may include hashing information.}
 }
 \value{
 A list of summary tables, or \code{NULL} when no hash count columns exist in metadata.

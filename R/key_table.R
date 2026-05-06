@@ -359,12 +359,13 @@ get_read_stats <-
 #' Get sample hashing statistics for each sample
 #'
 #' @param object A Seurat object containing the data.
+#' @param sample_qc_metrics A list containing quality control metrics for each sample, which may include hashing information.
 #'
 #' @return A list of summary tables, or `NULL` when no hash count columns exist in metadata.
 #'
 #' @export
 #'
-get_hash_stats <- function(object) {
+get_hash_stats <- function(object, sample_qc_metrics) {
   pixelatorR:::assert_class(object, "Seurat")
 
   hash_counts <- object[[]] %>%
@@ -425,6 +426,7 @@ get_hash_stats <- function(object) {
       rename(sample_component = component)
   }
 
+
   component_stats_heatmap_purity <- .create_heatmap_df(
     component_stats,
     "purity",
@@ -449,6 +451,7 @@ get_hash_stats <- function(object) {
     sapply(component_stats_heatmap_fraction, is.numeric)
   ]
 
+  # Heatmap data with fractions of counts per component
   component_stats_heatmap_fraction <- component_stats_heatmap_fraction %>%
     rowwise() %>%
     mutate(
@@ -470,11 +473,22 @@ get_hash_stats <- function(object) {
     pivot_wider(names_from = id, values_from = mean_purity, names_prefix = "mean_purity_") %>%
     left_join(sample_hash_counts %>% select(sample_alias, hash_pct), by = "sample_alias")
 
+  component_sample_confidence <-
+    sample_qc_metrics$pool_qc_files %>%
+    lapply(function(pool) {
+      pool$sample_calling$sample_confidences_per_sample %>%
+        lapply(tibble) %>%
+        bind_rows(.id = "sample_alias") %>%
+        rename(sample_confidence = 2)
+    }) %>%
+    bind_rows(.id = "pool")
+
   list(
     component_stats = component_stats,
     component_stats_heatmap_purity = component_stats_heatmap_purity,
     component_stats_heatmap_fraction = component_stats_heatmap_fraction,
-    sample_stats = sample_stats
+    sample_stats = sample_stats,
+    component_sample_confidence = component_sample_confidence
   )
 }
 
@@ -521,7 +535,7 @@ get_qc_metrics <-
 
     list(
       read_stats = get_read_stats(object),
-      sample_hash_stats = get_hash_stats(object),
+      sample_hash_stats = get_hash_stats(object, sample_qc_metrics),
       seq_saturation = get_seq_saturation(object, sample_qc_metrics),
       crossing_edges = get_crossing_edges(sample_qc_metrics),
       degree_distribution = get_degree_distribution(sample_qc_metrics),
