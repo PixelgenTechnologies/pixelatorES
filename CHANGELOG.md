@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Added new slots to example data jsons with degree distribution. 
+- ".pxl" files are now tracked with Git LFS.
 
 ## [0.9.1] 2026-04-30
 
