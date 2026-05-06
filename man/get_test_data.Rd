@@ -4,11 +4,9 @@
 \alias{get_test_data}
 \title{Get test data}
 \usage{
-get_test_data(concatenate = TRUE, type = c("default", "hashing"))
+get_test_data(type = c("default", "hashing"))
 }
 \arguments{
-\item{concatenate}{A logical indicating whether to concatenate the data 6 times (default is TRUE).}
-
 \item{type}{A character string specifying the type of test data to generate. Options are "default"
 (the standard test data) and "hashing" (test data for hashing experiments).}
 }
