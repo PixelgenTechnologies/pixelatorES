@@ -468,19 +468,197 @@ for (data_type in data_types) {
 
     # Hash stats
     if (data_type == "hashing") {
-      # Do NOT REMOVE - WILL BE ADDED LATER WHEN HASHING DATA IS AVAILABLE:
+      expect_no_error(res <- get_hash_stats(seur))
 
-      # seur2 <- ReadPNA_Seurat("inst/extdata/qc_jsons_hashing/S1.layout.pxl")
-      #
-      # expect_no_error(res <- get_hash_stats(seur2))
-      # expect_equal(
-      #   res,
-      #   structure(list(
-      #     pool = "pool1", n_cells = 30L, n_cells_over10k = 30L,
-      #     median_reads_per_cell = 289856, median_abs_per_cell = 48636,
-      #     median_isotype_count_pct = 0.0395665936206477, median_intracellular_count_pct = 0
-      #   ), row.names = c(NA, -1L), class = c("tbl_df", "tbl", "data.frame"))
-      # )
+      expect_equal(
+        res,
+        list(component_stats = structure(list(component = c(
+          "S1_d2146defe08567d3",
+          "S1_d2146defe08567d3", "S1_68189b2c75de4098", "S1_68189b2c75de4098",
+          "S11_19b04397ed7f04ba", "S11_19b04397ed7f04ba", "S11_fe556695f452a4bb",
+          "S11_fe556695f452a4bb", "S12_3d23c6539cbead8d", "S12_3d23c6539cbead8d",
+          "S12_63fab986007319b4", "S12_63fab986007319b4", "S2_85f5bcdc05a7b286",
+          "S2_85f5bcdc05a7b286", "S2_5bfdf506169806f2", "S2_5bfdf506169806f2",
+          "S1_d2146defe08567d3", "S1_d2146defe08567d3", "S1_68189b2c75de4098",
+          "S1_68189b2c75de4098", "S11_19b04397ed7f04ba", "S11_19b04397ed7f04ba",
+          "S11_fe556695f452a4bb", "S11_fe556695f452a4bb", "S12_3d23c6539cbead8d",
+          "S12_3d23c6539cbead8d", "S12_63fab986007319b4", "S12_63fab986007319b4",
+          "S2_85f5bcdc05a7b286", "S2_85f5bcdc05a7b286", "S2_5bfdf506169806f2",
+          "S2_5bfdf506169806f2", "S1_d2146defe08567d3", "S1_d2146defe08567d3",
+          "S1_68189b2c75de4098", "S1_68189b2c75de4098", "S11_19b04397ed7f04ba",
+          "S11_19b04397ed7f04ba", "S11_fe556695f452a4bb", "S11_fe556695f452a4bb",
+          "S12_3d23c6539cbead8d", "S12_3d23c6539cbead8d", "S12_63fab986007319b4",
+          "S12_63fab986007319b4", "S2_85f5bcdc05a7b286", "S2_85f5bcdc05a7b286",
+          "S2_5bfdf506169806f2", "S2_5bfdf506169806f2"
+        ), sample_alias = structure(c(
+          1L,
+          1L, 1L, 1L, 3L, 3L, 3L, 3L, 4L, 4L, 4L, 4L, 2L, 2L, 2L, 2L, 1L,
+          1L, 1L, 1L, 3L, 3L, 3L, 3L, 4L, 4L, 4L, 4L, 2L, 2L, 2L, 2L, 1L,
+          1L, 1L, 1L, 3L, 3L, 3L, 3L, 4L, 4L, 4L, 4L, 2L, 2L, 2L, 2L
+        ), levels = c(
+          "S1",
+          "S2", "S11", "S12"
+        ), class = "factor"), id = c(
+          "CD298", "CD298",
+          "CD298", "CD298", "CD298", "CD298", "CD298", "CD298", "CD298",
+          "CD298", "CD298", "CD298", "CD298", "CD298", "CD298", "CD298",
+          "B2M", "B2M", "B2M", "B2M", "B2M", "B2M", "B2M", "B2M", "B2M",
+          "B2M", "B2M", "B2M", "B2M", "B2M", "B2M", "B2M", "CD98", "CD98",
+          "CD98", "CD98", "CD98", "CD98", "CD98", "CD98", "CD98", "CD98",
+          "CD98", "CD98", "CD98", "CD98", "CD98", "CD98"
+        ), version = c(
+          "1",
+          "2", "1", "2", "1", "2", "1", "2", "1", "2", "1", "2", "1", "2",
+          "1", "2", "1", "2", "1", "2", "1", "2", "1", "2", "1", "2", "1",
+          "2", "1", "2", "1", "2", "1", "2", "1", "2", "1", "2", "1", "2",
+          "1", "2", "1", "2", "1", "2", "1", "2"
+        ), count = c(
+          0, 0, 1, 0,
+          0, 0, 3, 0, 0, 2, 0, 26, 0, 35, 0, 15, 161, 6, 80, 4, 265, 9,
+          219, 2, 0, 3, 0, 289, 0, 311, 1, 128, 4, 2, 4, 0, 4, 2, 4, 0,
+          0, 0, 0, 110, 0, 122, 0, 21
+        ), purity = c(
+          0, 0, 1, 0, 0, 0, 1,
+          0, 0, 1, 0, 1, 0, 1, 0, 1, 0.964071856287425, 0.0359281437125748,
+          0.952380952380952, 0.0476190476190476, 0.967153284671533, 0.0328467153284672,
+          0.990950226244344, 0.00904977375565611, 0, 1, 0, 1, 0, 1, 0.00775193798449612,
+          0.992248062015504, 0.666666666666667, 0.333333333333333, 1, 0,
+          0.666666666666667, 0.333333333333333, 1, 0, 0, 0, 0, 1, 0, 1,
+          0, 1
+        )), row.names = c(NA, -48L), groups = structure(list(component = c(
+          "S11_19b04397ed7f04ba",
+          "S11_19b04397ed7f04ba", "S11_19b04397ed7f04ba", "S11_fe556695f452a4bb",
+          "S11_fe556695f452a4bb", "S11_fe556695f452a4bb", "S12_3d23c6539cbead8d",
+          "S12_3d23c6539cbead8d", "S12_3d23c6539cbead8d", "S12_63fab986007319b4",
+          "S12_63fab986007319b4", "S12_63fab986007319b4", "S1_68189b2c75de4098",
+          "S1_68189b2c75de4098", "S1_68189b2c75de4098", "S1_d2146defe08567d3",
+          "S1_d2146defe08567d3", "S1_d2146defe08567d3", "S2_5bfdf506169806f2",
+          "S2_5bfdf506169806f2", "S2_5bfdf506169806f2", "S2_85f5bcdc05a7b286",
+          "S2_85f5bcdc05a7b286", "S2_85f5bcdc05a7b286"
+        ), sample_alias = structure(c(
+          3L,
+          3L, 3L, 3L, 3L, 3L, 4L, 4L, 4L, 4L, 4L, 4L, 1L, 1L, 1L, 1L, 1L,
+          1L, 2L, 2L, 2L, 2L, 2L, 2L
+        ), levels = c("S1", "S2", "S11", "S12"), class = "factor"), id = c(
+          "B2M", "CD298", "CD98", "B2M", "CD298",
+          "CD98", "B2M", "CD298", "CD98", "B2M", "CD298", "CD98", "B2M",
+          "CD298", "CD98", "B2M", "CD298", "CD98", "B2M", "CD298", "CD98",
+          "B2M", "CD298", "CD98"
+        ), .rows = structure(list(
+          21:22, 5:6, 37:38,
+          23:24, 7:8, 39:40, 25:26, 9:10, 41:42, 27:28, 11:12, 43:44,
+          19:20, 3:4, 35:36, 17:18, 1:2, 33:34, 31:32, 15:16, 47:48,
+          29:30, 13:14, 45:46
+        ), ptype = integer(0), class = c(
+          "vctrs_list_of",
+          "vctrs_vctr", "list"
+        ))), row.names = c(NA, -24L), class = c(
+          "tbl_df",
+          "tbl", "data.frame"
+        ), .drop = TRUE), class = c(
+          "grouped_df",
+          "tbl_df", "tbl", "data.frame"
+        )), component_stats_heatmap_purity = structure(list(
+          sample_component = c(
+            "S1_d2146defe08567d3", "S1_68189b2c75de4098",
+            "S11_19b04397ed7f04ba", "S11_fe556695f452a4bb", "S12_3d23c6539cbead8d",
+            "S12_63fab986007319b4", "S2_85f5bcdc05a7b286", "S2_5bfdf506169806f2"
+          ), sample_alias = structure(c(
+            1L, 1L, 3L, 3L, 4L, 4L, 2L,
+            2L
+          ), levels = c("S1", "S2", "S11", "S12"), class = "factor"),
+          `CD298-1` = c(0, 1, 0, 1, 0, 0, 0, 0), `CD298-2` = c(
+            0, 0,
+            0, 0, 1, 1, 1, 1
+          ), `B2M-1` = c(
+            0.964071856287425, 0.952380952380952,
+            0.967153284671533, 0.990950226244344, 0, 0, 0, 0.00775193798449612
+          ), `B2M-2` = c(
+            0.0359281437125748, 0.0476190476190476, 0.0328467153284672,
+            0.00904977375565611, 1, 1, 1, 0.992248062015504
+          ), `CD98-1` = c(
+            0.666666666666667,
+            1, 0.666666666666667, 1, 0, 0, 0, 0
+          ), `CD98-2` = c(
+            0.333333333333333,
+            0, 0.333333333333333, 0, 0, 1, 1, 1
+          ), molecules = c(
+            10562L,
+            8517L, 18243L, 8410L, 9652L, 11747L, 13039L, 8509L
+          )
+        ), row.names = c(
+          NA,
+          -8L
+        ), class = c("tbl_df", "tbl", "data.frame"), id_hash_order = c(
+          "CD298-1",
+          "B2M-1", "CD98-1", "CD298-2", "B2M-2", "CD98-2"
+        )), component_stats_heatmap_fraction = structure(list(
+          sample_component = c(
+            "S1_d2146defe08567d3", "S1_68189b2c75de4098",
+            "S11_19b04397ed7f04ba", "S11_fe556695f452a4bb", "S12_3d23c6539cbead8d",
+            "S12_63fab986007319b4", "S2_85f5bcdc05a7b286", "S2_5bfdf506169806f2"
+          ), sample_alias = structure(c(
+            1L, 1L, 3L, 3L, 4L, 4L, 2L,
+            2L
+          ), levels = c("S1", "S2", "S11", "S12"), class = "factor"),
+          `CD298-1` = c(
+            0, 0.0112359550561798, 0, 0.0131578947368421,
+            0, 0, 0, 0
+          ), `CD298-2` = c(
+            0, 0, 0, 0, 0.4, 0.0611764705882353,
+            0.0747863247863248, 0.0909090909090909
+          ), `B2M-1` = c(
+            0.930635838150289,
+            0.898876404494382, 0.946428571428571, 0.960526315789474,
+            0, 0, 0, 0.00606060606060606
+          ), `B2M-2` = c(
+            0.0346820809248555,
+            0.0449438202247191, 0.0321428571428571, 0.0087719298245614,
+            0.6, 0.68, 0.664529914529915, 0.775757575757576
+          ), `CD98-1` = c(
+            0.023121387283237,
+            0.0449438202247191, 0.0142857142857143, 0.0175438596491228,
+            0, 0, 0, 0
+          ), `CD98-2` = c(
+            0.0115606936416185, 0, 0.00714285714285714,
+            0, 0, 0.258823529411765, 0.260683760683761, 0.127272727272727
+          )
+        ), row.names = c(NA, -8L), groups = structure(list(.rows = structure(list(
+          1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L
+        ), ptype = integer(0), class = c(
+          "vctrs_list_of",
+          "vctrs_vctr", "list"
+        ))), row.names = c(NA, -8L), class = c(
+          "tbl_df",
+          "tbl", "data.frame"
+        )), class = c(
+          "rowwise_df", "tbl_df", "tbl",
+          "data.frame"
+        ), id_hash_order = c(
+          "CD298-1", "B2M-1", "CD98-1",
+          "CD298-2", "B2M-2", "CD98-2"
+        )), sample_stats = structure(list(
+          sample_alias = structure(c(1L, 4L, 2L, 3L), levels = c(
+            "S1",
+            "S11", "S12", "S2"
+          ), class = "factor"), mean_purity_B2M = c(
+            0.958226404334189,
+            0.996124031007752, 0.979051755457938, 1
+          ), mean_purity_CD298 = c(
+            0.5,
+            1, 0.5, 1
+          ), mean_purity_CD98 = c(
+            0.833333333333333, 1, 0.833333333333333,
+            0.5
+          ), hash_pct = c(
+            0.0137323759106871, 0.0293762762205309,
+            0.0190597681311672, 0.0200943969344362
+          )
+        ), row.names = c(
+          NA,
+          -4L
+        ), class = c("tbl_df", "tbl", "data.frame")))
+      )
     }
 
 
