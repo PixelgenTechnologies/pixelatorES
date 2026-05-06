@@ -271,6 +271,54 @@ get_coreness_data <-
     return(return_list)
   }
 
+#' Get degree distribution data
+#'
+#' This function retrieves degree distribution data from the sample quality control metrics.
+#'
+#' @param sample_qc_metrics A list containing quality control metrics for each sample.
+#'
+#' @return A tibble containing the degree distribution data for each sample.
+#'
+#' @export
+#'
+get_degree_distribution <-
+  function(sample_qc_metrics) {
+    pixelatorR:::assert_class(sample_qc_metrics, "list")
+
+    if (!is.null(sample_qc_metrics$pool_qc_files)) {
+      group_col <- "pool"
+
+      qc_data <-
+        sample_qc_metrics$pool_qc_files
+    } else {
+      group_col <- "sample_alias"
+
+      qc_data <-
+        sample_qc_metrics$qc_files
+    }
+
+    qc_data %>%
+      lapply(function(sample_qc_data) {
+        list(
+          umi1 = sample_qc_data$collapse$umi1_degree_distribution,
+          umi2 = sample_qc_data$collapse$umi2_degree_distribution
+        ) %>%
+          map(
+            . %>%
+              unlist() %>%
+              enframe("degree", "n")
+          ) %>%
+          bind_rows(.id = "umi_type")
+      }) %>%
+      bind_rows(.id = group_col) %>%
+      group_by(!!sym(group_col)) %>%
+      mutate(
+        degree = as.integer(degree),
+        percent_nodes = 100 * n / sum(n)
+      ) %>%
+      ungroup()
+  }
+
 #' Get read statistics for each sample
 #'
 #' This function retrieves read statistics for each sample from a Seurat object.
@@ -476,6 +524,7 @@ get_qc_metrics <-
       sample_hash_stats = get_hash_stats(object),
       seq_saturation = get_seq_saturation(object, sample_qc_metrics),
       crossing_edges = get_crossing_edges(sample_qc_metrics),
+      degree_distribution = get_degree_distribution(sample_qc_metrics),
       denoising = get_denoising_data(sample_qc_metrics),
       coreness = get_coreness_data(object),
       top_markers = get_top_markers(object, "sample_alias",
