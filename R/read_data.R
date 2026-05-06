@@ -651,7 +651,6 @@ get_test_data <-
   function(
     type = c("default", "hashing")
   ) {
-    pixelatorR:::assert_single_value(concatenate, type = "bool")
     pixelatorR:::assert_vector(type, type = "character", n = 1)
     type <- match.arg(type, c("default", "hashing"))
 

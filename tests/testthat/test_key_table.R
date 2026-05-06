@@ -22,15 +22,36 @@ for (data_type in data_types) {
     expect_no_error(res <- get_top_markers(seur, group = "sample_alias"))
     expect_equal(
       res,
-      structure(
-        list(
-          sample_alias = "S1",
-          top3_fraction = 0.352019337952774,
-          top5_fraction = 0.45234721751522,
-          top_markers = "CD44, B2M, CD59, CD45, CD43"
-        ),
-        row.names = c(NA, -1L),
-        class = c("tbl_df", "tbl", "data.frame")
+      switch(data_type,
+        default =
+          structure(list(sample_alias = c("S1", "S2"), top3_fraction = c(
+            0.216648620555243,
+            0.216648620555243
+          ), top5_fraction = c(
+            0.320659188358093,
+            0.320659188358093
+          ), top_markers = c(
+            "B2M, HLA-DR-DP-DQ, CD45, CD45RA, HLA-ABC",
+            "B2M, HLA-DR-DP-DQ, CD45, CD45RA, HLA-ABC"
+          )), row.names = c(
+            NA,
+            -2L
+          ), class = c("tbl_df", "tbl", "data.frame")),
+        hashing =
+          structure(list(sample_alias = c("S1", "S2", "S11", "S12"), top3_fraction = c(
+            0.420525431861804,
+            0.388412618367233, 0.39153322126869, 0.30195929854947
+          ), top5_fraction = c(
+            0.57017754318618,
+            0.496273883565865, 0.539237370609573, 0.450205672223425
+          ), top_markers = c(
+            "B2M, CD45RA, CD45, HLA-ABC, CD43",
+            "HLA-DR-DP-DQ, B2M, CD45RA, CD40, IgM", "B2M, CD45RA, CD45, HLA-ABC, CD43",
+            "B2M, HLA-DR-DP-DQ, CD59, HLA-ABC, CD29"
+          )), row.names = c(
+            NA,
+            -4L
+          ), class = c("tbl_df", "tbl", "data.frame"))
       )
     )
 
@@ -40,28 +61,70 @@ for (data_type in data_types) {
       res,
       switch(data_type,
         default =
-          structure(list(
-            sample_alias = "S1", Q30 = 0.957683900982373,
-            total_reads = 400745924L, deduped_valid_reads = 232530522L,
-            valid_reads = 359952911L, graph_edges = 3171564L, graph_proteins = 1469442L,
-            graph_reads = 8746572L, valid_reads_saturation = 35.3997384396761,
-            graph_edge_saturation = 63.7393483984354, graph_node_saturation = 83.1997953026626,
-            fraction_valid_reads = 89.8207291560625, fraction_graph_reads = 2.18257291620014
-          ), row.names = c(
-            NA,
-            -1L
-          ), class = c("tbl_df", "tbl", "data.frame")),
+          structure(list(sample_alias = c("S1", "S2"), Q30 = c(
+            0.957683900982373,
+            0.958092725597593
+          ), total_reads = c(400745924L, 210603520L),
+          deduped_valid_reads = c(
+            232530522L,
+            124914607L
+          ), valid_reads = c(
+            359952911L,
+            188742157L
+          ), graph_edges = c(
+            384168L,
+            384168L
+          ), graph_proteins = c(
+            230890L,
+            230890L
+          ), graph_reads = c(923084L, 923084L), valid_reads_saturation = c(
+            35.3997384396761,
+            33.8173257180694
+          ), graph_edge_saturation = c(
+            58.3821190704205,
+            58.3821190704205
+          ), graph_node_saturation = c(
+            74.9871084321687,
+            74.9871084321687
+          ), fraction_valid_reads = c(
+            89.8207291560625,
+            89.6196592535585
+          ), fraction_graph_reads = c(
+            0.230341456947669,
+            0.438304165096576
+          )), row.names = c(NA, -2L), class = c(
+            "tbl_df",
+            "tbl", "data.frame"
+          )),
         hashing =
-          structure(list(
-            pool = "pool1", total_reads = 2240712L, deduped_valid_reads = 1159113L,
-            valid_reads = 1953716L, graph_edges = 3171564L, graph_proteins = 1469442L,
-            graph_reads = 8746572L, valid_reads_saturation = 40.6713667697864,
-            graph_edge_saturation = 63.7393483984354, graph_node_saturation = 83.1997953026626,
-            fraction_valid_reads = 87.1917497652532, fraction_graph_reads = 390.347889420863
-          ), row.names = c(
-            NA,
-            -1L
-          ), class = c("tbl_df", "tbl", "data.frame"))
+          structure(list(pool = c("pool1", "pool2"), total_reads = c(
+            2240712L,
+            2240712L
+          ), deduped_valid_reads = 1159113:1159114, valid_reads = c(
+            1953716L,
+            1953716L
+          ), graph_edges = c(66575L, 84144L), graph_proteins = c(
+            40627L,
+            48052L
+          ), graph_reads = c(154863L, 203615L), valid_reads_saturation = c(
+            40.6713667697864,
+            40.6713155852744
+          ), graph_edge_saturation = c(
+            57.010389828429,
+            58.6749502738011
+          ), graph_node_saturation = c(
+            73.7658446497872,
+            76.400559880166
+          ), fraction_valid_reads = c(
+            87.1917497652532,
+            87.1917497652532
+          ), fraction_graph_reads = c(
+            6.91132997011664,
+            9.08706696799946
+          )), row.names = c(NA, -2L), class = c(
+            "tbl_df",
+            "tbl", "data.frame"
+          ))
       )
     )
 
@@ -69,18 +132,47 @@ for (data_type in data_types) {
     expect_no_error(res <- get_read_stats(seur))
     expect_equal(
       res,
-      structure(
-        list(
-          sample_alias = "S1",
-          n_cells = 30L,
-          n_cells_over10k = 30L,
-          median_reads_per_cell = 289856,
-          median_abs_per_cell = 48636,
-          median_isotype_count_pct = 0.0395665936206477,
-          median_intracellular_count_pct = 0
-        ),
-        class = c("tbl_df", "tbl", "data.frame"),
-        row.names = c(NA, -1L)
+      switch(data_type,
+        default =
+          structure(list(sample_alias = structure(1:2, levels = c(
+            "S1",
+            "S2"
+          ), class = "factor"), n_cells = c(24L, 24L), n_cells_over10k = c(
+            7L,
+            7L
+          ), median_reads_per_cell = c(34696, 34696), median_abs_per_cell = c(
+            8992.5,
+            8992.5
+          ), median_isotype_count_pct = c(
+            0.190114870060899,
+            0.190114870060899
+          ), median_intracellular_count_pct = c(0, 0)), row.names = c(
+            NA,
+            -2L
+          ), class = c("tbl_df", "tbl", "data.frame")),
+        hashing =
+          structure(list(sample_alias = structure(1:4, levels = c(
+            "S1",
+            "S2", "S11", "S12"
+          ), class = "factor"), n_cells = c(
+            2L, 2L, 2L,
+            2L
+          ), n_cells_over10k = c(1L, 1L, 1L, 1L), median_reads_per_cell = c(
+            39277.5,
+            38154, 56518.5, 45289
+          ), median_abs_per_cell = c(
+            9539.5, 10774,
+            13326.5, 10699.5
+          ), median_isotype_count_pct = c(
+            0.1997935831379,
+            0.299137580565269, 0.288901593366738, 0.197655770206966
+          ), median_intracellular_count_pct = c(
+            0,
+            0, 0, 0
+          )), row.names = c(NA, -4L), class = c(
+            "tbl_df", "tbl",
+            "data.frame"
+          ))
       )
     )
 
@@ -195,109 +287,202 @@ for (data_type in data_types) {
     expect_no_error(res <- get_coreness_data(seur))
     expect_equal(
       head(res$data),
-      structure(
-        list(
-          sample_component = c(
-            "0a45497c6bfbfb22_1", "0a45497c6bfbfb22_1",
-            "0a45497c6bfbfb22_1", "0a45497c6bfbfb22_1",
-            "0a45497c6bfbfb22_1", "2708240b908e2eba_1"
-          ),
-          sample_alias = c(
-            "S1", "S1", "S1", "S1",
-            "S1", "S1"
-          ),
-          molecules = c(
-            43543L, 43543L, 43543L, 43543L, 43543L,
-            37665L
-          ),
-          k_core = c(
-            "k_core_1", "k_core_2", "k_core_3", "k_core_4",
-            "k_core_5", "k_core_1"
-          ),
-          nodes = c(
-            10260, 6046, 19434, 7803,
-            0, 9596
-          ),
-          percent_nodes = c(
-            23.5629148198333, 13.8851250488023,
-            44.6317433341754, 17.920216797189,
-            0, 25.4772335059073
-          ),
-          coreness = c(
-            1,
-            2, 3, 4, 5, 1
-          )
-        ),
-        row.names = c(NA, -6L),
-        class = c("tbl_df", "tbl", "data.frame")
+      switch(data_type,
+        default =
+          structure(list(sample_component = c(
+            "S1_128b348aca07cb57", "S1_128b348aca07cb57",
+            "S1_128b348aca07cb57", "S1_128b348aca07cb57", "S1_2ee5115016f6d3bf",
+            "S1_2ee5115016f6d3bf"
+          ), sample_alias = structure(c(
+            1L, 1L, 1L,
+            1L, 1L, 1L
+          ), levels = c("S1", "S2"), class = "factor"), molecules = c(
+            8372L,
+            8372L, 8372L, 8372L, 8457L, 8457L
+          ), k_core = c(
+            "k_core_1", "k_core_2",
+            "k_core_3", "k_core_4", "k_core_1", "k_core_2"
+          ), nodes = c(
+            2033,
+            3326, 3013, 0, 2312, 4187
+          ), percent_nodes = c(
+            24.2833253702819,
+            39.7276636407071, 35.989010989011, 0, 27.3382996334398, 49.5092822513894
+          ), coreness = c(1, 2, 3, 4, 1, 2)), row.names = c(NA, -6L), class = c(
+            "tbl_df",
+            "tbl", "data.frame"
+          )),
+        hashing =
+          structure(list(
+            sample_component = c(
+              "S1_d2146defe08567d3", "S1_d2146defe08567d3",
+              "S1_d2146defe08567d3", "S1_68189b2c75de4098", "S1_68189b2c75de4098",
+              "S1_68189b2c75de4098"
+            ), sample_alias = structure(c(
+              1L, 1L, 1L,
+              1L, 1L, 1L
+            ), levels = c("S1", "S2", "S11", "S12"), class = "factor"),
+            molecules = c(
+              10562L, 10562L, 10562L, 8517L, 8517L, 8517L
+            ), k_core = c(
+              "k_core_1", "k_core_2", "k_core_3", "k_core_1",
+              "k_core_2", "k_core_3"
+            ), nodes = c(
+              2693, 3849, 4020, 2150,
+              3442, 2925
+            ), percent_nodes = c(
+              25.4970649498201, 36.4419617496686,
+              38.0609733005113, 25.2436303862863, 40.413291064929, 34.3430785487848
+            ), coreness = c(1, 2, 3, 1, 2, 3)
+          ), row.names = c(NA, -6L), class = c("tbl_df", "tbl", "data.frame"))
       )
     )
 
     expect_equal(
       head(res$component_summary),
-      structure(
-        list(
-          sample_component = c(
-            "0a45497c6bfbfb22_1", "0a45497c6bfbfb22_2",
-            "0a45497c6bfbfb22_3", "0a45497c6bfbfb22_4",
-            "0a45497c6bfbfb22_5", "0a45497c6bfbfb22_6"
-          ),
-          sample_alias = c(
-            "S1", "S1", "S1", "S1",
-            "S1", "S1"
-          ),
-          mean_coreness = c(
-            2.5690926210872, 2.5690926210872,
-            2.5690926210872, 2.5690926210872,
-            2.5690926210872, 2.5690926210872
-          ),
-          percent_dangling_nodes = c(
-            23.5629148198333, 23.5629148198333,
-            23.5629148198333, 23.5629148198333,
-            23.5629148198333, 23.5629148198333
-          ),
-          percent_well_connected_nodes = c(
-            62.5519601313644, 62.5519601313644,
-            62.5519601313644, 62.5519601313644,
-            62.5519601313644, 62.5519601313644
-          )
-        ),
-        class = c("grouped_df", "tbl_df", "tbl", "data.frame"),
-        row.names = c(NA, -6L),
-        groups = structure(
-          list(
+      switch(data_type,
+        default =
+          structure(list(sample_component = c(
+            "S1_128b348aca07cb57", "S1_218e57362e5c1a3d",
+            "S1_2ee5115016f6d3bf", "S1_39576a361fdfa5ca", "S1_500dadc305f7fd2d",
+            "S1_6d7587035b64afd5"
+          ), sample_alias = structure(c(
+            1L, 1L, 1L,
+            1L, 1L, 1L
+          ), levels = c("S1", "S2"), class = "factor"), mean_coreness = c(
+            2.11705685618729,
+            1.98440613358746, 1.95814118481731, 2.08445612882024, 1.6720041322314,
+            1.69893867924528
+          ), percent_dangling_nodes = c(
+            24.2833253702819,
+            27.9130208784545, 27.3382996334398, 24.663161353927, 34.0650826446281,
+            33.3254716981132
+          ), percent_well_connected_nodes = c(
+            35.989010989011,
+            26.3536342372, 23.1524181151709, 33.1087742359514, 1.2654958677686,
+            3.21933962264151
+          )), row.names = c(NA, -6L), groups = structure(list(
             sample_component = c(
-              "0a45497c6bfbfb22_1", "0a45497c6bfbfb22_2",
-              "0a45497c6bfbfb22_3", "0a45497c6bfbfb22_4",
-              "0a45497c6bfbfb22_5", "0a45497c6bfbfb22_6"
-            ),
-            .rows = structure(list(1L, 2L, 3L, 4L, 5L, 6L),
-              ptype = integer(0),
-              class = c("vctrs_list_of", "vctrs_vctr", "list")
+              "S1_128b348aca07cb57", "S1_218e57362e5c1a3d",
+              "S1_2ee5115016f6d3bf", "S1_39576a361fdfa5ca", "S1_500dadc305f7fd2d",
+              "S1_6d7587035b64afd5"
+            ), .rows = structure(list(
+              1L, 2L, 3L,
+              4L, 5L, 6L
+            ), ptype = integer(0), class = c(
+              "vctrs_list_of",
+              "vctrs_vctr", "list"
+            ))
+          ), row.names = c(NA, -6L), class = c(
+            "tbl_df",
+            "tbl", "data.frame"
+          ), .drop = TRUE), class = c(
+            "grouped_df",
+            "tbl_df", "tbl", "data.frame"
+          )),
+        hashing =
+          structure(list(
+            sample_component = c(
+              "S11_19b04397ed7f04ba", "S11_fe556695f452a4bb",
+              "S12_3d23c6539cbead8d", "S12_63fab986007319b4", "S1_68189b2c75de4098",
+              "S1_d2146defe08567d3"
+            ), sample_alias = structure(c(
+              3L, 3L, 4L,
+              4L, 1L, 1L
+            ), levels = c("S1", "S2", "S11", "S12"), class = "factor"),
+            mean_coreness = c(
+              2.19097736117963, 2.08216409036861, 2.30304600082884,
+              1.77577253766919, 2.09099448162499, 2.12563908350691
+            ), percent_dangling_nodes = c(
+              23.0170476347092,
+              24.1617122473246, 20.6589307915458, 30.4843789903805, 25.2436303862863,
+              25.4970649498201
+            ), percent_well_connected_nodes = c(
+              42.1147837526723,
+              32.3781212841855, 50.9635308744302, 8.06163275729974, 34.3430785487848,
+              38.0609733005113
             )
-          ),
-          class = c("tbl_df", "tbl", "data.frame"),
-          row.names = c(NA, -6L),
-          .drop = TRUE
-        )
+          ), row.names = c(NA, -6L), groups = structure(list(
+            sample_component = c(
+              "S11_19b04397ed7f04ba", "S11_fe556695f452a4bb",
+              "S12_3d23c6539cbead8d", "S12_63fab986007319b4", "S1_68189b2c75de4098",
+              "S1_d2146defe08567d3"
+            ), .rows = structure(list(
+              1L, 2L, 3L,
+              4L, 5L, 6L
+            ), ptype = integer(0), class = c(
+              "vctrs_list_of",
+              "vctrs_vctr", "list"
+            ))
+          ), row.names = c(NA, -6L), class = c(
+            "tbl_df",
+            "tbl", "data.frame"
+          ), .drop = TRUE), class = c(
+            "grouped_df",
+            "tbl_df", "tbl", "data.frame"
+          ))
       )
     )
 
     expect_equal(
       res$sample_summary,
-      structure(
-        list(
-          sample_alias = "S1",
-          median_mean_coreness = 2.47440345751157,
-          median_percent_dangling_nodes = 24.993831729583,
-          median_percent_well_connected_nodes = 57.1067689310933
-        ),
-        class = c("tbl_df", "tbl", "data.frame"),
-        row.names = c(NA, -1L)
+      switch(data_type,
+        default =
+          structure(list(sample_alias = structure(1:2, levels = c(
+            "S1",
+            "S2"
+          ), class = "factor"), median_mean_coreness = c(
+            1.95019805561644,
+            1.95019805561644
+          ), median_percent_dangling_nodes = c(
+            26.1241628830854,
+            26.1241628830854
+          ), median_percent_well_connected_nodes = c(
+            22.804941443752,
+            22.804941443752
+          )), row.names = c(NA, -2L), class = c(
+            "tbl_df",
+            "tbl", "data.frame"
+          )),
+        hashing =
+          structure(list(sample_alias = structure(1:4, levels = c(
+            "S1",
+            "S2", "S11", "S12"
+          ), class = "factor"), median_mean_coreness = c(
+            2.10831678256595,
+            1.83892332963412, 2.13657072577412, 2.03940926924902
+          ), median_percent_dangling_nodes = c(
+            25.3703476680532,
+            29.6128537644793, 23.5893799410169, 25.5716548909632
+          ), median_percent_well_connected_nodes = c(
+            36.202025924648,
+            13.5051867278914, 37.2464525184289, 29.512581815865
+          )), row.names = c(
+            NA,
+            -4L
+          ), class = c("tbl_df", "tbl", "data.frame"))
       )
     )
 
+    # Hash stats
+    if (data_type == "hashing") {
+      # Do NOT REMOVE - WILL BE ADDED LATER WHEN HASHING DATA IS AVAILABLE:
 
+      # seur2 <- ReadPNA_Seurat("inst/extdata/qc_jsons_hashing/S1.layout.pxl")
+      #
+      # expect_no_error(res <- get_hash_stats(seur2))
+      # expect_equal(
+      #   res,
+      #   structure(list(
+      #     pool = "pool1", n_cells = 30L, n_cells_over10k = 30L,
+      #     median_reads_per_cell = 289856, median_abs_per_cell = 48636,
+      #     median_isotype_count_pct = 0.0395665936206477, median_intracellular_count_pct = 0
+      #   ), row.names = c(NA, -1L), class = c("tbl_df", "tbl", "data.frame"))
+      # )
+    }
+
+
+    # Key table
     expect_no_error(
       sample_qc_tables <-
         get_qc_metrics(seur, sample_qc_metrics, sample_sheet)
@@ -316,52 +501,90 @@ for (data_type in data_types) {
       tabl$sample,
       switch(data_type,
         default =
-          structure(
-            list(
-              `Sample ID` = "S1",
-              `Number of cells` = "30",
-              `Number of cells >10k nodes` = "30",
-              `Median isotype % counts` = "0.04",
-              `Median intracellular % counts` = "0",
-              `Median proteins per cell [k]` = "48.64",
-              `Median reads per cell [k]` = "289.86",
-              `Q30 [%]` = "95.77",
-              `Total reads [M]` = "400.75",
-              `Valid reads [M]` = "359.95",
-              `Graph Nodes [M]` = "1.47",
-              `Graph Edges [M]` = "3.17",
-              `Graph node saturation [%]` = "83.2",
-              `Graph edge saturation [%]` = "63.74",
-              `Valid reads saturation [%]` = "35.4",
-              `Valid reads fraction [%]` = "89.82",
-              `Graph reads fraction [%]` = "2.18",
-              `% Denoised UMIs` = "2.67",
-              `Total denoised UMIs [M]` = "1.62",
-              `Median mean coreness` = "2.47",
-              `Median % dangling nodes` = "24.99",
-              `Median % well connected nodes` = "57.11",
-              `Top 3 % counts` = "35.2",
-              `Top 5 % counts` = "45.23",
-              `Top 5 markers` = "CD44, B2M, CD59, CD45, CD43",
-              `% Crossing edges (Initial)` = "5.06",
-              `% Crossing edges (Refinement)` = "0.01"
-            ),
-            row.names = c(NA, -1L),
-            class = c("tbl_df", "tbl", "data.frame")
-          ),
+          structure(list(`Sample ID` = c("S1", "S2"), `Number of cells` = c(
+            "24",
+            "24"
+          ), `Number of cells >10k nodes` = c("7", "7"), `Median isotype % counts` = c(
+            "0.19",
+            "0.19"
+          ), `Median intracellular % counts` = c("0", "0"), `Median proteins per cell [k]` = c(
+            "8.99",
+            "8.99"
+          ), `Median reads per cell [k]` = c("34.7", "34.7"), `Q30 [%]` = c(
+            "95.77",
+            "95.81"
+          ), `Total reads [M]` = c("400.75", "210.6"), `Valid reads [M]` = c(
+            "359.95",
+            "188.74"
+          ), `Graph Nodes [M]` = c("0.23", "0.23"), `Graph Edges [M]` = c(
+            "0.38",
+            "0.38"
+          ), `Graph node saturation [%]` = c("74.99", "74.99"), `Graph edge saturation [%]` = c(
+            "58.38",
+            "58.38"
+          ), `Valid reads saturation [%]` = c("35.4", "33.82"),
+          `Valid reads fraction [%]` = c("89.82", "89.62"), `Graph reads fraction [%]` = c(
+            "0.23",
+            "0.44"
+          ), `% Denoised UMIs` = c("2.67", "4.86"), `Total denoised UMIs [M]` = c(
+            "1.62",
+            "2.72"
+          ), `Median mean coreness` = c("1.95", "1.95"), `Median % dangling nodes` = c(
+            "26.12",
+            "26.12"
+          ), `Median % well connected nodes` = c("22.8", "22.8"),
+          `Top 3 % counts` = c("21.66", "21.66"), `Top 5 % counts` = c(
+            "32.07",
+            "32.07"
+          ), `Top 5 markers` = c(
+            "B2M, HLA-DR-DP-DQ, CD45, CD45RA, HLA-ABC",
+            "B2M, HLA-DR-DP-DQ, CD45, CD45RA, HLA-ABC"
+          ), `% Crossing edges (Initial)` = c(
+            "5.06",
+            "4.27"
+          ), `% Crossing edges (Refinement)` = c("0.01", "0.02")), row.names = c(NA, -2L), class = c("tbl_df", "tbl", "data.frame")),
         hashing =
-          structure(list(
-            `Sample ID` = "S1", `Number of cells` = "30",
-            `Number of cells >10k nodes` = "30", `Median isotype % counts` = "0.04",
-            `Median intracellular % counts` = "0", `Median proteins per cell [k]` = "48.64",
-            `Median reads per cell [k]` = "289.86", `% Denoised UMIs` = "4.78",
-            `Total denoised UMIs [M]` = "0", `Median mean coreness` = "2.47",
-            `Median % dangling nodes` = "24.99", `Median % well connected nodes` = "57.11",
-            `Top 3 % counts` = "35.2", `Top 5 % counts` = "45.23", `Top 5 markers` = "CD44, B2M, CD59, CD45, CD43"
-          ), row.names = c(
-            NA,
-            -1L
-          ), class = c("tbl_df", "tbl", "data.frame"))
+          structure(list(`Sample ID` = c("S1", "S2", "S11", "S12"), `Number of cells` = c(
+            "2",
+            "2", "2", "2"
+          ), `Number of cells >10k nodes` = c(
+            "1", "1", "1",
+            "1"
+          ), `Median isotype % counts` = c("0.2", "0.3", "0.29", "0.2"),
+          `Median intracellular % counts` = c("0", "0", "0", "0"), `Median proteins per cell [k]` = c(
+            "9.54",
+            "10.77", "13.33", "10.7"
+          ), `Median reads per cell [k]` = c(
+            "39.28",
+            "38.15", "56.52", "45.29"
+          ), `% Denoised UMIs` = c(
+            "4.78", "4.61",
+            "4.79", "4.73"
+          ), `Total denoised UMIs [M]` = c(
+            "0", "0.01", "0",
+            "0.01"
+          ), `Median mean coreness` = c("2.11", "1.84", "2.14", "2.04"),
+          `Median % dangling nodes` = c(
+            "25.37", "29.61", "23.59", "25.57"
+          ), `Median % well connected nodes` = c(
+            "36.2", "13.51", "37.25",
+            "29.51"
+          ), `Top 3 % counts` = c("42.05", "38.84", "39.15", "30.2"),
+          `Top 5 % counts` = c("57.02", "49.63", "53.92", "45.02"),
+          `Top 5 markers` = c(
+            "B2M, CD45RA, CD45, HLA-ABC, CD43", "HLA-DR-DP-DQ, B2M, CD45RA, CD40, IgM",
+            "B2M, CD45RA, CD45, HLA-ABC, CD43", "B2M, HLA-DR-DP-DQ, CD59, HLA-ABC, CD29"
+          ), `% B2M hash purity` = c("95.82", "99.61", "97.91", "100"),
+          `% CD298 hash purity` = c("50", "100", "50", "100"), `% CD98 hash purity` = c(
+            "83.33",
+            "100", "83.33", "50"
+          ), `% hash counts` = c(
+            "1.37", "2.94",
+            "1.91", "2.01"
+          )), row.names = c(NA, -4L), class = c(
+            "tbl_df",
+            "tbl", "data.frame"
+          ))
       )
     )
   })
