@@ -359,7 +359,8 @@ get_read_stats <-
 #' Get sample hashing statistics for each sample
 #'
 #' @param object A Seurat object containing the data.
-#' @param sample_qc_metrics A list containing quality control metrics for each sample, which may include hashing information.
+#' @param sample_qc_metrics A list containing quality control metrics for each sample, which may include hashing
+#' information.
 #'
 #' @return A list of summary tables, or `NULL` when no hash count columns exist in metadata.
 #'
