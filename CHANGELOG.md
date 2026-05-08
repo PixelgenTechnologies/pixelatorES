@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `get_degree_distribution` to load degree distribution from QC files.
 - `get_hash_stats` now collects sample confidence data.
+- Metrics `Number of cells` and `% Sample called cells` have been added to the Key Metrics Table.
+- Component "Component sample confidence" added to the Quality Metrics tab.
 
 ### Changed
 
@@ -18,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - .pxl files are now tracked with Git LFS.
 - `get_test_data` now loads data from `extdata` to allow easier update of test data and more representative test data.
 - `get_test_data` now creates a temporary folder where it puts the .pxl files to be read. This avoids `Duckdb` file accession collisions in CI.
+- The Hash Purity plot's y-axis now ranges 90-100% by default.
 
 ## [0.9.1] 2026-04-30
 

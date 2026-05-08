@@ -58,6 +58,8 @@ tabset_figure_table(
   level = 4
 )
 close_tabset()
+
+tabset_plotlist(component$sample_confidence_plots)
 ```
 
 ### Sequencing

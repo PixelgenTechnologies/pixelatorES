@@ -492,7 +492,20 @@ get_hash_stats <- function(object, sample_qc_metrics) {
         )
     )
 
+  # Pool Stats
+  pool_stats <-
+    sample_qc_metrics$pool_qc_files %>%
+    lapply(function(pool) {
+      tibble(
+        cells_in_pool = pool$sample_calling$number_of_components,
+        percent_called_cells = 100 * pool$sample_calling$percentage_of_components_successfully_called
+      )
+    }) %>%
+    bind_rows(.id = "pool")
+
+
   list(
+    pool_stats = pool_stats,
     component_stats = component_stats,
     component_stats_heatmap_purity = component_stats_heatmap_purity,
     component_stats_heatmap_fraction = component_stats_heatmap_fraction,
@@ -588,7 +601,9 @@ get_qc_metrics <-
           "total_reads",
           "graph_node_saturation",
           "graph_edge_saturation",
-          "median_mean_coreness"
+          "median_mean_coreness",
+          "cells_in_pool",
+          "percent_called_cells"
         )))
     }
 
@@ -630,6 +645,7 @@ key_metric_table <-
         qc_metrics_tables$read_stats,
         qc_metrics_tables$seq_saturation,
         qc_metrics_tables$denoising,
+        qc_metrics_tables$sample_hash_stats$pool_stats,
         qc_metrics_tables$coreness$sample_summary,
         qc_metrics_tables$top_markers,
         qc_metrics_tables$crossing_edges %>%
@@ -825,5 +841,9 @@ key_metric_definitions <-
     "mean_purity_CD98", "% CD98 hash purity", 1e-2,
     "Mean purity of the CD98 hash across components in the sample.",
     "hash_pct", "% hash counts", 1e-2,
-    "Percentage of total UMI counts that are attributed to hashing antibodies."
+    "Percentage of total UMI counts that are attributed to hashing antibodies.",
+    "cells_in_pool", "Number of cells", 1,
+    "Number of cells in the pool.",
+    "percent_called_cells", "% Sample called cells", 1,
+    "Percentage of cells in the pool that were successfully called in sample calling."
   )
