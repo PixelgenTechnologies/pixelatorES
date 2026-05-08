@@ -471,8 +471,17 @@ for (data_type in data_types) {
       expect_no_error(res <- get_hash_stats(seur, sample_qc_metrics))
 
       expect_equal(
-        res[-5],
-        list(component_stats = structure(list(component = c(
+        res[-6],
+        list(pool_stats = structure(list(
+          pool = c("pool1", "pool2"),
+          cells_in_pool = c(216L, 290L), percent_called_cells = c(
+            0.814814814814815,
+            0.827586206896552
+          )
+        ), row.names = c(NA, -2L), class = c(
+          "tbl_df",
+          "tbl", "data.frame"
+        )), component_stats = structure(list(component = c(
           "S1_d2146defe08567d3",
           "S1_d2146defe08567d3", "S1_68189b2c75de4098", "S1_68189b2c75de4098",
           "S11_19b04397ed7f04ba", "S11_19b04397ed7f04ba", "S11_fe556695f452a4bb",
