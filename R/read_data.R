@@ -671,7 +671,16 @@ get_test_data <-
       mutate(
         filename = vapply(filename, function(f) {
           dest <- file.path(tmp_dir, basename(f))
-          file.copy(f, dest, overwrite = TRUE)
+          copied <- file.copy(f, dest, overwrite = TRUE)
+          if (!isTRUE(copied)) {
+            stop(
+              sprintf(
+                "Failed to copy PXL file from '%s' to temporary location '%s'.",
+                f, dest
+              ),
+              call. = FALSE
+            )
+          }
           dest
         }, character(1))
       )
