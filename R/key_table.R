@@ -368,6 +368,7 @@ get_read_stats <-
 #'
 get_hash_stats <- function(object, sample_qc_metrics) {
   pixelatorR:::assert_class(object, "Seurat")
+  pixelatorR:::assert_class(sample_qc_metrics, "list")
 
   hash_counts <- object[[]] %>%
     select(matches("hash_counts"))
