@@ -775,7 +775,7 @@ key_metric_definitions <-
   tibble::tribble(
     ~var, ~display_name, ~scale,
     ~description,
-    "n_cells", "Number of cells", 1,
+    "n_cells", "Number of cells in sample", 1,
     "Total number of cells in the sample.",
     "n_cells_over10k", "Number of cells >10k nodes", 1,
     "Number of cells with more than 10,000 nodes (proteins).",
@@ -842,7 +842,7 @@ key_metric_definitions <-
     "Mean purity of the CD98 hash across components in the sample.",
     "hash_pct", "% hash counts", 1e-2,
     "Percentage of total UMI counts that are attributed to hashing antibodies.",
-    "cells_in_pool", "Number of cells", 1,
+    "cells_in_pool", "Number of cells in pool", 1,
     "Number of cells in the pool.",
     "percent_called_cells", "% Sample called cells", 1,
     "Percentage of cells in the pool that were successfully called in sample calling."
