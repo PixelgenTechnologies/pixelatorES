@@ -595,15 +595,15 @@ get_qc_metrics <-
         table_content %>%
         select(1, any_of(c(
           "n_cells",
+          "cells_in_pool",
+          "percent_called_cells",
           "median_isotype_count_pct",
           "median_abs_per_cell",
           "median_reads_per_cell",
           "total_reads",
           "graph_node_saturation",
           "graph_edge_saturation",
-          "median_mean_coreness",
-          "cells_in_pool",
-          "percent_called_cells"
+          "median_mean_coreness"
         )))
     }
 
