@@ -44,7 +44,8 @@ globalVariables(
     "sumsq", "term", "top_markers", "top3_fraction", "top5_fraction",
     "total_counts", "total_edges_in", "total_hash_counts", "total_reads",
     "type", "V1", "V2", "valid_reads", "valid_reads_saturation",
-    "value", "violinwidth", "x", "xmax", "xmin", "y", "z"
+    "value", "violinwidth", "x", "xmax", "xmin", "y", "z",
+    "hjust", "sample_confidence", "cumsum_n", "text_pos"
   ),
   package = "pixelatorES",
   add = TRUE

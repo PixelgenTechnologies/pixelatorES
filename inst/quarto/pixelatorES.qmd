@@ -1,12 +1,12 @@
 ---
 title: "PROXIOME EXPERIMENT SUMMARY"
-subtitle: "v0.9.1"
+subtitle: "v0.9.2"
 date: "`r Sys.Date()`"
 editor_options: 
   chunk_output_type: console
 params: 
-  sample_sheet: "../../../ES_test_data/test_samplesheet.csv"
-  data_folder: "../../../ES_test_data/"
+  sample_sheet: "../extdata/test_samplesheet_hashing.csv"
+  data_folder: "../extdata/"
   control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
   do_harmonize: FALSE
   harmonization_vars: ["condition"]

@@ -2407,6 +2407,7 @@ component_hashing <-
 
     id_hash_order <- attributes(component_stats_heatmap_purity)$id_hash_order
 
+    # Sample determined component purity
     component_hash_purity <- component_stats %>%
       group_by(component, sample_alias, version) %>%
       summarize(count = sum(count), .groups = "keep") %>%
@@ -2421,21 +2422,86 @@ component_hashing <-
       select(sample_alias, version) %>%
       distinct()
 
-    p1 <- suppressMessages(
+    plot_data <-
       component_hash_purity %>%
-        dplyr::slice_max(hash_fraction, n = 1, with_ties = FALSE) %>%
-        plot_violin(
-          x = "sample_alias",
-          y = "hash_fraction",
-          use_pct = TRUE,
-          expand = c(0, 0.1),
-          palette = pixelatorR::PixelgenPalette(n_unique_hashes, "Cells1"),
-          title = "Hash purity",
-          subtitle = "Fraction of UMIs from the most abundant hash",
-          y_label = "Hash purity"
-        ) +
-        scale_y_continuous(limits = c(0, 1), labels = scales::percent)
+      dplyr::slice_max(hash_fraction, n = 1, with_ties = FALSE)
+
+    # Use 90% as lower limit unless there are smaller values
+    plot_limits <- c(floor(10 * min(c(min(plot_data$hash_fraction), 0.9))) / 10, 1)
+    p1 <- suppressMessages(
+      plot_violin(
+        plot_data,
+        x = "sample_alias",
+        y = "hash_fraction",
+        use_pct = TRUE,
+        expand = c(0, 0.1),
+        title = "Hash purity",
+        subtitle = "Fraction of UMIs from the most abundant hash",
+        y_label = "Hash purity"
+      ) +
+        scale_y_continuous(limits = plot_limits, labels = scales::percent)
     )
+
+    plot_data <-
+      qc_metrics_tables$sample_hash_stats$component_sample_confidence %>%
+      arrange(pool) %>%
+      group_by(pool)
+
+    p2 <-
+      plot_data %>%
+      group_split() %>%
+      set_names(group_keys(plot_data)$pool) %>%
+      lapply(function(g_data) {
+        g_data <-
+          g_data %>%
+          arrange(-sample_confidence) %>%
+          mutate(
+            rank = row_number(),
+            type = ifelse(sample_alias == "undetermined",
+              "Undetermined", "Sample assigned"
+            )
+          )
+        g_data_sum <-
+          g_data %>%
+          group_by(type) %>%
+          count() %>%
+          ungroup() %>%
+          mutate(
+            cumsum_n = cumsum(n),
+            x = cumsum_n - n,
+            hjust = c(0, 1),
+            text_pos = range(c(x, cumsum_n))
+          )
+
+        g_data %>%
+          ggplot(aes(rank, sample_confidence, color = type)) +
+          geom_point(size = 0.5) +
+          geom_rect(
+            data = g_data_sum,
+            aes(xmin = x, xmax = cumsum_n, ymin = -Inf, ymax = 0, fill = type),
+            inherit.aes = FALSE,
+            color = NA
+          ) +
+          geom_text(
+            data = g_data_sum,
+            aes(
+              x = text_pos, y = 0, label = paste0(type, "\n", n, " cells"),
+              hjust = hjust
+            ),
+            vjust = -0.5,
+            inherit.aes = FALSE,
+            size = 3
+          ) +
+          theme_bw() +
+          scale_color_manual(values = yes_no_palette, name = "") +
+          scale_fill_manual(values = yes_no_palette, name = "") +
+          scale_y_continuous(limits = c(0, 1), labels = scales::percent) +
+          labs(x = "Component rank", y = "Hash purity", title = "Component sample confidence") +
+          theme(
+            legend.position = "none",
+            panel.grid = element_blank()
+          )
+      })
 
     tabl <-
       sample_stats %>%
@@ -2528,6 +2594,7 @@ component_hashing <-
 
     list(
       plot = p1,
+      sample_confidence_plots = p2,
       table = tabl,
       heatmap_plots_hash_purity = heatmap_plots_hash_purity,
       heatmap_plots_hash_fraction = heatmap_plots_hash_fraction

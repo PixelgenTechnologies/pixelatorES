@@ -359,13 +359,16 @@ get_read_stats <-
 #' Get sample hashing statistics for each sample
 #'
 #' @param object A Seurat object containing the data.
+#' @param sample_qc_metrics A list containing quality control metrics for each sample, which may include hashing
+#' information.
 #'
 #' @return A list of summary tables, or `NULL` when no hash count columns exist in metadata.
 #'
 #' @export
 #'
-get_hash_stats <- function(object) {
+get_hash_stats <- function(object, sample_qc_metrics) {
   pixelatorR:::assert_class(object, "Seurat")
+  pixelatorR:::assert_class(sample_qc_metrics, "list")
 
   hash_counts <- object[[]] %>%
     select(matches("hash_counts"))
@@ -425,6 +428,7 @@ get_hash_stats <- function(object) {
       rename(sample_component = component)
   }
 
+
   component_stats_heatmap_purity <- .create_heatmap_df(
     component_stats,
     "purity",
@@ -449,6 +453,7 @@ get_hash_stats <- function(object) {
     sapply(component_stats_heatmap_fraction, is.numeric)
   ]
 
+  # Heatmap data with fractions of counts per component
   component_stats_heatmap_fraction <- component_stats_heatmap_fraction %>%
     rowwise() %>%
     mutate(
@@ -470,11 +475,43 @@ get_hash_stats <- function(object) {
     pivot_wider(names_from = id, values_from = mean_purity, names_prefix = "mean_purity_") %>%
     left_join(sample_hash_counts %>% select(sample_alias, hash_pct), by = "sample_alias")
 
+  # Sample confidence per component and sample
+  component_sample_confidence <-
+    sample_qc_metrics$pool_qc_files %>%
+    lapply(function(pool) {
+      pool$sample_calling$sample_confidences_per_sample %>%
+        lapply(tibble) %>%
+        bind_rows(.id = "sample_alias") %>%
+        rename(sample_confidence = 2)
+    }) %>%
+    bind_rows(.id = "pool") %>%
+    mutate(
+      sample_alias =
+        ifelse(str_detect(sample_alias, "undetermined$"),
+          str_remove(sample_alias, paste0(pool, "_")),
+          sample_alias
+        )
+    )
+
+  # Pool Stats
+  pool_stats <-
+    sample_qc_metrics$pool_qc_files %>%
+    lapply(function(pool) {
+      tibble(
+        cells_in_pool = pool$sample_calling$number_of_components,
+        percent_called_cells = 100 * pool$sample_calling$percentage_of_components_successfully_called
+      )
+    }) %>%
+    bind_rows(.id = "pool")
+
+
   list(
+    pool_stats = pool_stats,
     component_stats = component_stats,
     component_stats_heatmap_purity = component_stats_heatmap_purity,
     component_stats_heatmap_fraction = component_stats_heatmap_fraction,
-    sample_stats = sample_stats
+    sample_stats = sample_stats,
+    component_sample_confidence = component_sample_confidence
   )
 }
 
@@ -501,6 +538,7 @@ get_qc_metrics <-
         if ("sample_alias" %in% names(tb)) {
           sample_levels <-
             sample_sheet$sample_alias[sample_sheet$sample_alias %in% unique(tb$sample_alias)]
+          if ("undetermined" %in% tb$sample_alias) sample_levels <- c(sample_levels, "undetermined")
           tb <- order_sample_alias_factors(tb, levels = sample_levels)
         }
         if ("pool" %in% names(tb)) {
@@ -521,7 +559,7 @@ get_qc_metrics <-
 
     list(
       read_stats = get_read_stats(object),
-      sample_hash_stats = get_hash_stats(object),
+      sample_hash_stats = get_hash_stats(object, sample_qc_metrics),
       seq_saturation = get_seq_saturation(object, sample_qc_metrics),
       crossing_edges = get_crossing_edges(sample_qc_metrics),
       degree_distribution = get_degree_distribution(sample_qc_metrics),
@@ -558,6 +596,8 @@ get_qc_metrics <-
         table_content %>%
         select(1, any_of(c(
           "n_cells",
+          "cells_in_pool",
+          "percent_called_cells",
           "median_isotype_count_pct",
           "median_abs_per_cell",
           "median_reads_per_cell",
@@ -606,6 +646,7 @@ key_metric_table <-
         qc_metrics_tables$read_stats,
         qc_metrics_tables$seq_saturation,
         qc_metrics_tables$denoising,
+        qc_metrics_tables$sample_hash_stats$pool_stats,
         qc_metrics_tables$coreness$sample_summary,
         qc_metrics_tables$top_markers,
         qc_metrics_tables$crossing_edges %>%
@@ -735,7 +776,7 @@ key_metric_definitions <-
   tibble::tribble(
     ~var, ~display_name, ~scale,
     ~description,
-    "n_cells", "Number of cells", 1,
+    "n_cells", "Number of cells in sample", 1,
     "Total number of cells in the sample.",
     "n_cells_over10k", "Number of cells >10k nodes", 1,
     "Number of cells with more than 10,000 nodes (proteins).",
@@ -801,5 +842,9 @@ key_metric_definitions <-
     "mean_purity_CD98", "% CD98 hash purity", 1e-2,
     "Mean purity of the CD98 hash across components in the sample.",
     "hash_pct", "% hash counts", 1e-2,
-    "Percentage of total UMI counts that are attributed to hashing antibodies."
+    "Percentage of total UMI counts that are attributed to hashing antibodies.",
+    "cells_in_pool", "Number of cells in pool", 1,
+    "Number of cells in the pool.",
+    "percent_called_cells", "% Sample called cells", 1,
+    "Percentage of cells in the pool that were successfully called in sample calling."
   )

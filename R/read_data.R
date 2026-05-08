@@ -640,7 +640,6 @@ get_test_qc_metrics <-
 #'
 #' Generates a minimal Seurat object for testing purposes.
 #'
-#' @param concatenate A logical indicating whether to concatenate the data 6 times (default is TRUE).
 #' @param type A character string specifying the type of test data to generate. Options are "default"
 #' (the standard test data) and "hashing" (test data for hashing experiments).
 #'
@@ -650,45 +649,49 @@ get_test_qc_metrics <-
 #'
 get_test_data <-
   function(
-    concatenate = TRUE,
     type = c("default", "hashing")
   ) {
-    pixelatorR:::assert_single_value(concatenate, type = "bool")
     pixelatorR:::assert_vector(type, type = "character", n = 1)
     type <- match.arg(type, c("default", "hashing"))
 
+    samplesheet <-
+      read_samplesheet(test_samplesheet(type = type))
+
+    data_folder <- test_data_folder(type = type)
+
+    data_files <- get_file_paths(data_folder, sample_sheet = samplesheet)$data_files
+
+    # Copy PXL files to a unique tempdir to avoid duckdb
+    # "blocked by another connection" errors when get_test_data() is called
+    # multiple times (each call gets fresh paths so connections never collide)
+    # and to ensure duckdb can write its sidecar files in a writable location.
+    tmp_dir <- tempfile("pixelatorES_test_data_")
+    dir.create(tmp_dir)
+    data_files <- data_files %>%
+      mutate(
+        filename = vapply(filename, function(f) {
+          dest <- file.path(tmp_dir, basename(f))
+          copied <- file.copy(f, dest, overwrite = TRUE)
+          if (!isTRUE(copied)) {
+            stop(
+              sprintf(
+                "Failed to copy PXL file from '%s' to temporary location '%s'.",
+                f, dest
+              ),
+              call. = FALSE
+            )
+          }
+          dest
+        }, character(1))
+      )
+
     seur <-
-      minimal_pna_pxl_file() %>%
-      ReadPNA_Seurat(load_proximity_scores = FALSE)
-
-    if (concatenate) {
-      seur_merged <- seur
-
-      colnames(seur_merged) <-
-        paste0(colnames(seur), "_1")
-
-      for (i in 1:5) {
-        seur2 <-
-          seur
-
-        colnames(seur2) <-
-          paste0(colnames(seur2), "_", i + 1)
-
-        seur_merged <- merge(seur_merged, y = seur2)
-      }
-
-      seur <-
-        seur_merged %>%
-        JoinLayers(verbose = FALSE)
-    }
-
-    seur[[]]$sample_alias <-
-      "S1"
-
-    if (type == "hashing") {
-      seur[[]]$pool <-
-        "pool1"
-    }
+      load_pxl_data_list(
+        data_folder = tmp_dir,
+        data_files = data_files,
+        sample_sheet = samplesheet
+      ) %>%
+      merge_data(sample_sheet = samplesheet)
 
     seur <-
       seur %>%
