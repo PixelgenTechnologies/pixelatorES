@@ -64,29 +64,6 @@ tabset_plotlist(component$sample_confidence_plots)
 
 ### Sequencing
 
-#### Reads and molecules
-
-Here we review the number of reads per stage of the `pixelator` pipeline, and the number of molecules that they are
-mapped to.
-
-```{r}
-#| label: qc_metrics_reads
-#| fig-height: 4
-#| results: 'asis'
-component <-
-  component_sequencing_reads_and_molecules(
-    sample_qc_metrics,
-    sample_levels = sample_aliases
-  )
-
-tabset_figure_table(
-  component$plots,
-  component$tabl,
-  level = 5
-)
-close_tabset()
-```
-
 #### Sequencing saturation
 
 Sequencing saturation is the fraction of a library's complexity that has been
@@ -113,6 +90,29 @@ plots <-
 tabset_plotlist(plots,
   level = 5
 )
+```
+
+#### Reads and molecules
+
+Here we review the number of reads per stage of the `pixelator` pipeline, and the number of molecules that they are
+mapped to.
+
+```{r}
+#| label: qc_metrics_reads
+#| fig-height: 4
+#| results: 'asis'
+component <-
+  component_sequencing_reads_and_molecules(
+    sample_qc_metrics,
+    sample_levels = sample_aliases
+  )
+
+tabset_figure_table(
+  component$plots,
+  component$tabl,
+  level = 5
+)
+close_tabset()
 ```
 
 #### Reads per cell
@@ -190,7 +190,7 @@ close_tabset()
 component <- component_control_markers(pg_data)
 
 tabset_figure_table(
-  list(component$p1, component$p2),
+  component$p1,
   component$tabl,
   level = 5,
   mode = "title"
