@@ -40,4 +40,3 @@ WORKDIR /workspace
 
 # Copy test data and package
 COPY . /workspace
-COPY tests/testdata /workspace/testdata
