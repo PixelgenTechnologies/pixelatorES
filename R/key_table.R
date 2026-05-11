@@ -694,31 +694,28 @@ key_metric_table <-
       return(table_content)
     }
 
-    table_content <-
-      table_content %>%
-      purrr::map(. %>%
-        pivot_longer(
-          cols = -1,
-          names_to = "Metric",
-          values_to = "Value"
-        ) %>%
-        pivot_wider(
-          names_from = 1,
-          values_from = "Value"
-        ) %>%
-        left_join(
-          key_metric_definitions %>%
-            select(display_name, description),
-          by = c("Metric" = "display_name")
-        ) %>%
-        mutate(
-          Metric = format_with_info_bootstrap(Metric, description)
-        ) %>%
-        select(-description))
+    .add_tooltips_to_colnames <- function(tb) {
+      colnames(tb) <- vapply(
+        colnames(tb),
+        function(col) {
+          desc <- key_metric_definitions$description[
+            key_metric_definitions$display_name == col
+          ]
+          if (length(desc) == 1) {
+            format_with_info_bootstrap(col, desc)
+          } else {
+            col
+          }
+        },
+        character(1)
+      )
+      tb
+    }
 
     if (!is.null(table_content$pool)) {
       pool_table <-
         table_content$pool %>%
+        .add_tooltips_to_colnames() %>%
         style_table(
           escape = FALSE,
           tooltips = TRUE
@@ -729,6 +726,7 @@ key_metric_table <-
 
     sample_table <-
       table_content$sample %>%
+      .add_tooltips_to_colnames() %>%
       style_table(
         escape = FALSE,
         tooltips = TRUE

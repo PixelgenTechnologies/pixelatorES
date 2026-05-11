@@ -8,7 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+<<<<<<< refactor-test-data
 - Removed `tests/testdata/es_test_data/` in favor of using `inst/extdata/` for test data.
+=======
+
+- Removed some superfluous sequencing saturation barplot content from Quality Metrics.
+- The Key Metrics Table is now horizontal again.
+>>>>>>> main
 
 ## [0.9.2] 2026-05-08
 
