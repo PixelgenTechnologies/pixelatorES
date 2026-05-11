@@ -334,8 +334,6 @@ component_sequencing_reads_per_cell <-
 #' @param data_files A data frame containing the sample aliases and corresponding file names.
 #' @param seqsat_comps The number of components to consider for sequencing saturation.
 #' @param sample_levels Optional vector of sample levels to order the samples in the plots.
-#' @param mc_cores The number of cores to use for parallel processing. Default is 1, meaning
-#' sequential processing.
 #'
 #' @return A list containing plots showing the sequencing saturation curve for
 #' each sample.

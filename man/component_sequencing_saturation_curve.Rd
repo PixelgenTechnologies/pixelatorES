@@ -7,9 +7,8 @@
 component_sequencing_saturation_curve(
   object,
   data_files,
-  seqsat_comps = 5L,
-  sample_levels = NULL,
-  mc_cores = 1
+  seqsat_comps = 100L,
+  sample_levels = NULL
 )
 }
 \arguments{
@@ -20,9 +19,6 @@ component_sequencing_saturation_curve(
 \item{seqsat_comps}{The number of components to consider for sequencing saturation.}
 
 \item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
-
-\item{mc_cores}{The number of cores to use for parallel processing. Default is 1, meaning
-sequential processing.}
 }
 \value{
 A list containing plots showing the sequencing saturation curve for
