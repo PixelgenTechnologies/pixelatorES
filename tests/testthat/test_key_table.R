@@ -3,7 +3,7 @@ library(Seurat)
 data_types <- c("default", "hashing")
 
 for (data_type in data_types) {
-  test_that(paste("get_top_markers works as expected for", data_type, "data"), {
+  test_that(paste("Key Table functions work as expected for", data_type, "data"), {
     sample_sheet <- read_samplesheet(test_samplesheet(type = data_type))
 
     seur <-
@@ -265,14 +265,14 @@ for (data_type in data_types) {
           structure(
             list(
               sample_alias = c("S1", "S2"),
-              ratio = c(2.67032153250738, 4.85786823694461),
+              percent_umis_denoised = c(2.67032153250738, 4.85786823694461),
               number_of_umis_removed = c(1621394L, 2724990L)
             ),
             class = c("tbl_df", "tbl", "data.frame"),
             row.names = c(NA, -2L)
           ),
         hashing =
-          structure(list(sample_alias = c("S1", "S11", "S12", "S2"), ratio = c(
+          structure(list(sample_alias = c("S1", "S11", "S12", "S2"), percent_umis_denoised = c(
             4.78266613819527,
             4.78980422103143, 4.73014521545811, 4.6124845823863
           ), number_of_umis_removed = c(
