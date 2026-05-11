@@ -205,7 +205,7 @@ get_denoising_data <-
     lapply(names(sample_qc_metrics), function(nm) {
       tibble(
         sample_alias = nm,
-        ratio =
+        percent_umis_denoised =
           sample_qc_metrics[[nm]]$denoise$ratio_of_umis_removed * 100,
         number_of_umis_removed =
           sample_qc_metrics[[nm]]$denoise$number_of_umis_removed
@@ -602,6 +602,8 @@ get_qc_metrics <-
           "median_abs_per_cell",
           "median_reads_per_cell",
           "total_reads",
+          "fraction_graph_reads",
+          "percent_umis_denoised",
           "graph_node_saturation",
           "graph_edge_saturation",
           "median_mean_coreness"
@@ -804,12 +806,11 @@ key_metric_definitions <-
     "Percentage of graph edges that are saturated, indicating the proportion of edges that have been fully sampled.",
     "valid_reads_saturation", "Valid reads saturation [%]", 1,
     "Percentage of valid reads that are saturated, indicating the proportion of reads that have been fully sampled.",
-    "fraction_valid_reads", "Valid reads fraction [%]", 1,
+    "fraction_valid_reads", "% Valid reads", 1,
     "Percentage of total reads that are valid reads.",
-    "fraction_graph_reads", "Graph reads fraction [%]", 1,
-    "Percentage of total reads that are graph reads,
-    indicating the proportion of reads that contribute to cell graphs.",
-    "ratio", "% Denoised UMIs", 1,
+    "fraction_graph_reads", "% Graph reads", 1,
+    "Percentage of total reads that contribute to a final cell graph.",
+    "percent_umis_denoised", "% Denoised UMIs", 1,
     "Percentage of unique molecular identifiers (UMIs) that have been removed in denoising.",
     "number_of_umis_removed", "Total denoised UMIs [M]", 1e6,
     "Total number of unique molecular identifiers (UMIs) that have been removed during the denoising process,
