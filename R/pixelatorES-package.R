@@ -54,6 +54,7 @@
 #' @importFrom ggplot2 facet_wrap
 #' @importFrom ggplot2 geom_blank
 #' @importFrom ggplot2 geom_col
+#' @importFrom ggplot2 geom_errorbar
 #' @importFrom ggplot2 geom_hline
 #' @importFrom ggplot2 geom_jitter
 #' @importFrom ggplot2 geom_line
