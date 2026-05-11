@@ -125,7 +125,7 @@ tabset_nested_plotlist <-
 #' @param figure A ggplot object representing the figure to be tabsetted.
 #' @param table A table to be tabsetted alongside the figure.
 #' @param level Integer indicating the header level for the tabset title (default is 2).
-#' @param mode Character indicating the mode of the tabset ("tabset" or "title").
+#' @param mode Character indicating the mode of the tabset ("tabset", "tabset_nested", or "title").
 #'
 #' @return A formatted tabset containing the figure and table.
 #'
@@ -133,11 +133,12 @@ tabset_nested_plotlist <-
 tabset_figure_table <- function(figure, table, level = 2,
                                 mode = "tabset") {
   pixelatorR:::assert_class(table, "datatables")
-  mode <- match.arg(mode, c("tabset", "title"))
+  mode <- match.arg(mode, c("tabset", "tabset_nested", "title"))
 
   set_func <-
     switch(mode,
       tabset = tabset_plotlist,
+      tabset_nested = tabset_nested_plotlist,
       title = title_plotlist
     )
 
@@ -147,8 +148,6 @@ tabset_figure_table <- function(figure, table, level = 2,
   cat(paste0(strrep("#", level), " Figure\n\n"))
 
   if (inherits(figure, "list")) {
-    for (plot in figure) pixelatorR:::assert_class(plot, "ggplot")
-
     set_func(figure, level + 1)
   } else {
     pixelatorR:::assert_class(figure, "ggplot")

@@ -13,7 +13,7 @@ tabset_figure_table(figure, table, level = 2, mode = "tabset")
 
 \item{level}{Integer indicating the header level for the tabset title (default is 2).}
 
-\item{mode}{Character indicating the mode of the tabset ("tabset" or "title").}
+\item{mode}{Character indicating the mode of the tabset ("tabset", "tabset_nested", or "title").}
 }
 \value{
 A formatted tabset containing the figure and table.

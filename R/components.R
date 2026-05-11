@@ -101,124 +101,6 @@ component_control_markers <- function(
   return(list(p1 = p1, p2 = p2, tabl = tabl))
 }
 
-#' Create the component for molecule rank plots from qc metrics list
-#'
-#' This function generates a list of ggplot objects, each representing the
-#' molecule rank plot for a specific sample in the provided Seurat object.
-#'
-#' @param sample_qc_metrics A list of sample QC metrics.
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
-#'
-#' @return A list of ggplot objects, each corresponding to a sample's molecule
-#' rank plot.
-#'
-#' @export
-#'
-component_qc_molecule_rank_plot <- function(
-  sample_qc_metrics,
-  sample_levels = NULL
-) {
-  if ("qc_files" %in% names(sample_qc_metrics)) {
-    qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
-      sample_qc_metrics$qc_files
-    } else {
-      sample_qc_metrics$pool_qc_files
-    }
-  } else {
-    qc_data <- sample_qc_metrics
-  }
-
-  plot_data_thresholds <-
-    extract_sample_qc_metrics(
-      qc_data,
-      c(
-        min_size_theshold =
-          "component_size_min_filtering_threshold",
-        max_size_theshold =
-          "component_size_max_filtering_threshold"
-      ),
-      "graph"
-    )
-
-  plot_data <-
-    qc_data %>%
-    map(. %>%
-      {
-        .$graph$pre_filtering_component_sizes
-      } %>%
-      unlist() %>%
-      enframe("nodes", "n") %>%
-      mutate(nodes = as.integer(nodes))) %>%
-    bind_rows(.id = "sample_alias") %>%
-    filter(nodes >= 20) %>%
-    group_by_all() %>%
-    reframe(rep = seq_len(n)) %>%
-    arrange(sample_alias, -nodes) %>%
-    group_by(sample_alias) %>%
-    mutate(rank = row_number()) %>%
-    ungroup()
-
-  plot_data <- set_sample_levels(plot_data, sample_levels)
-
-  plots <-
-    plot_data %>%
-    pull(sample_alias) %>%
-    levels() %>%
-    set_names() %>%
-    lapply(function(x) {
-      x_thresh <-
-        plot_data_thresholds %>%
-        filter(sample_alias == x)
-
-      plot_data %>%
-        arrange(sample_alias == x) %>%
-        ggplot(aes(rank, nodes, color = sample_alias == x)) +
-        geom_point(size = 0.1, show.legend = FALSE) +
-        geom_hline(
-          data = x_thresh,
-          aes(yintercept = min_size_theshold),
-          linetype = "dashed"
-        ) +
-        geom_text(
-          data = x_thresh,
-          aes(
-            x = 1,
-            y = min_size_theshold,
-            label = min_size_theshold
-          ),
-          vjust = -0.5,
-          hjust = 0
-        ) +
-        geom_hline(
-          data = x_thresh,
-          aes(yintercept = max_size_theshold),
-          linetype = "dashed"
-        ) +
-        geom_text(
-          data = x_thresh,
-          aes(
-            x = 1,
-            y = max_size_theshold,
-            label = max_size_theshold
-          ),
-          vjust = -0.5,
-          hjust = 0
-        ) +
-        scale_x_log10() +
-        scale_y_log10() +
-        scale_color_manual(values = c("TRUE" = "black", "FALSE" = "gray80")) +
-        theme_bw() +
-        theme(legend.position = "none") +
-        labs(
-          x = "Component rank (by number of molecules)",
-          y = "Number of molecules",
-          title = "Molecule rank plot"
-        )
-    })
-
-  return(plots)
-}
-
 #' Create the component for molecule plot
 #'
 #' This function generates a violin plot showing the distribution of the number
@@ -563,6 +445,7 @@ component_sequencing_saturation_curve <-
 #' This function creates a component that visualizes the cell recovery
 #' after filtering components based on size.
 #'
+#' @param object A Seurat object containing the sample data.
 #' @param sample_qc_metrics A list of sample QC metrics.
 #' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #'
@@ -571,16 +454,16 @@ component_sequencing_saturation_curve <-
 #' @export
 #'
 component_cell_recovery <-
-  function(sample_qc_metrics, sample_levels = NULL) {
-    if ("qc_files" %in% names(sample_qc_metrics)) {
-      qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
-        sample_qc_metrics$qc_files
-      } else {
-        sample_qc_metrics$pool_qc_files
-      }
+  function(object, sample_qc_metrics, sample_levels = NULL) {
+    if (is.null(sample_qc_metrics$pool_qc_files)) {
+      qc_data <- sample_qc_metrics$qc_files
+      hashed_experiment <- FALSE
     } else {
-      qc_data <- sample_qc_metrics
+      qc_data <- sample_qc_metrics$pool_qc_files
+      hashed_experiment <- TRUE
     }
+
+    # Number of components before and after filtering, and size thresholds
 
     plot_data1 <-
       extract_sample_qc_metrics(
@@ -597,7 +480,6 @@ component_cell_recovery <-
         ),
         "graph"
       )
-
 
     plot_data1 <- set_sample_levels(plot_data1, sample_levels)
 
@@ -638,11 +520,130 @@ component_cell_recovery <-
       labs(x = NULL, y = "Number of components")
 
 
-    p2 <-
-      component_qc_molecule_rank_plot(
+    # Molecule Rank Plots
+
+    plot_data_thresholds <-
+      extract_sample_qc_metrics(
         qc_data,
-        sample_levels
+        c(
+          min_size_theshold =
+            "component_size_min_filtering_threshold",
+          max_size_theshold =
+            "component_size_max_filtering_threshold"
+        ),
+        "graph"
       )
+
+    plot_data <-
+      qc_data %>%
+      map(. %>%
+        {
+          .$graph$pre_filtering_component_sizes
+        } %>%
+        unlist() %>%
+        enframe("nodes", "n") %>%
+        mutate(nodes = as.integer(nodes))) %>%
+      bind_rows(.id = "sample_alias") %>%
+      filter(nodes >= 20) %>%
+      group_by_all() %>%
+      reframe(rep = seq_len(n)) %>%
+      arrange(sample_alias, -nodes) %>%
+      group_by(sample_alias) %>%
+      mutate(rank = row_number()) %>%
+      ungroup()
+
+    plot_data <- set_sample_levels(plot_data, sample_levels)
+
+    .plot_MRP <-
+      function(plot_data, plot_data_thresholds, selected_sample) {
+        thresh <- plot_data_thresholds %>%
+          filter(sample_alias == selected_sample)
+
+        ggplot(plot_data, aes(rank, nodes, color = sample_alias == selected_sample)) +
+          geom_point(size = 0.1, show.legend = FALSE) +
+          geom_hline(
+            data = thresh,
+            aes(yintercept = min_size_theshold),
+            linetype = "dashed"
+          ) +
+          geom_text(
+            data = thresh,
+            aes(
+              x = 1,
+              y = min_size_theshold,
+              label = min_size_theshold
+            ),
+            vjust = -0.5,
+            hjust = 0
+          ) +
+          geom_hline(
+            data = thresh,
+            aes(yintercept = max_size_theshold),
+            linetype = "dashed"
+          ) +
+          geom_text(
+            data = thresh,
+            aes(
+              x = 1,
+              y = max_size_theshold,
+              label = max_size_theshold
+            ),
+            vjust = -0.5,
+            hjust = 0
+          ) +
+          scale_x_log10() +
+          scale_y_log10() +
+          scale_color_manual(values = c("TRUE" = "black", "FALSE" = "gray80")) +
+          theme_bw() +
+          theme(legend.position = "none") +
+          labs(
+            x = "Component rank (by number of molecules)",
+            y = "Number of molecules",
+            title = "Molecule rank plot"
+          )
+      }
+
+    MRP_plots <-
+      plot_data %>%
+      pull(sample_alias) %>%
+      levels() %>%
+      set_names() %>%
+      lapply(function(x) {
+        plot_data %>%
+          arrange(sample_alias == x) %>%
+          .plot_MRP(plot_data_thresholds, x)
+      })
+
+    if (hashed_experiment) {
+      plot_data_sample <-
+        object[[]] %>%
+        select(sample_alias, nodes = n_umi) %>%
+        arrange(sample_alias, -nodes) %>%
+        group_by(sample_alias) %>%
+        mutate(rank = row_number()) %>%
+        ungroup()
+
+      plot_data_sample <- set_sample_levels(plot_data_sample, sample_levels)
+
+      plots_sample <-
+        plot_data_sample %>%
+        pull(sample_alias) %>%
+        levels() %>%
+        set_names() %>%
+        lapply(function(x) {
+          plot_data_sample %>%
+            arrange(sample_alias == x) %>%
+            .plot_MRP(plot_data_thresholds, x)
+        })
+
+      MRP_plots <-
+        list(
+          "Pools" = MRP_plots,
+          "Samples" = plots_sample
+        )
+    }
+
+    # Table
 
     tabl1 <-
       plot_data1 %>%
@@ -665,7 +666,7 @@ component_cell_recovery <-
       style_table(caption = "Number of components", interactive = FALSE)
 
     return(list(
-      plot = list(p1, p2),
+      plots = list(p1, MRP_plots),
       table = list(tabl1, tabl2)
     ))
   }

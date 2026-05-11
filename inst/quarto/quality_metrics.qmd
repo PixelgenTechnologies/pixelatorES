@@ -141,6 +141,7 @@ close_tabset()
 
 component <-
   component_cell_recovery(
+    pg_data,
     sample_qc_metrics,
     sample_levels = sample_aliases
   )
@@ -148,7 +149,7 @@ component <-
 tabset_figure_table(
   component$plot[[2]],
   component$table[[2]],
-  level = 5
+  level = 5, mode = "tabset_nested"
 )
 close_tabset()
 ```

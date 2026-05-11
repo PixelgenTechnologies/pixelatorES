@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Molecule Rank Plots for individual samples for hashed experiments.
+- `tabset_nested` mode to `tabset_figure_table` to enable nested plot lists to be displayed together with a table.
+
 ### Changed
 
 - Removed some superfluous sequencing saturation barplot content from Quality Metrics.
 - The Key Metrics Table is now horizontal again.
 - Removed unused function `component_molecule_rank_plot`.
+- Moved function `component_qc_molecule_rank_plot` to inside of `component_cell_recovery`.
 
 ## [0.9.2] 2026-05-08
 

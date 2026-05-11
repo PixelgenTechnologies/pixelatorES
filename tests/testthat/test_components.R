@@ -36,10 +36,37 @@ for (data_type in data_types) {
     )
 
     # component_cell_recovery
-    expect_no_error(component <- component_cell_recovery(sample_qc_metrics, sample_levels = NULL))
+    expect_no_error(component <- component_cell_recovery(pg_data, sample_qc_metrics, sample_levels = NULL))
     expect_no_error(
       ggplot2::ggplot_build(component$plot[[1]])
     )
+
+    for (plot in component$plot[[2]]) {
+      if (data_type == "hashing") {
+        for (subplot in plot$Pools) {
+          expect_s3_class(subplot, "ggplot")
+          expect_no_error(
+            ggplot2::ggplot_build(subplot)
+          )
+        }
+
+        for (subplot in plot$Samples) {
+          expect_s3_class(subplot, "ggplot")
+          expect_no_error(
+            ggplot2::ggplot_build(subplot)
+          )
+        }
+      } else {
+        expect_s3_class(plot, "ggplot")
+        expect_no_error(
+          ggplot2::ggplot_build(plot)
+        )
+      }
+    }
+
+    for (table in component$table) {
+      expect_s3_class(table, "datatables")
+    }
 
     # component_node_degree
     expect_no_error(
