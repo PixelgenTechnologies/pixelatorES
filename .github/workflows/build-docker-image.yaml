@@ -110,8 +110,8 @@ jobs:
               cd inst/quarto/ && \
               quarto render pixelatorES.qmd \
                 --profile ci \
-                -P sample_sheet='../../tests/testdata/es_test_data/es_test_data_samplesheet.csv' \
-                -P data_folder='../../tests/testdata/es_test_data/' \
+                -P sample_sheet='../extdata/test_samplesheet.csv' \
+                -P data_folder='../extdata/' \
                 -P debug_mode=true \
                 -P test_mode=true \
                 --output testrun.html"

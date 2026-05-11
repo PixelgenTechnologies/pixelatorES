@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Removed `tests/es_test_data/` in favor of using `inst/extdata/` for test data.
+
 ## [0.9.2] 2026-05-08
 
 ### Added 
