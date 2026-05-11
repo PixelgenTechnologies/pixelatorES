@@ -114,19 +114,6 @@ tabset_plotlist(plots,
   level = 5
 )
 
-component <-
-  component_sequencing_saturation(
-    qc_metrics_tables,
-    sample_levels = sample_aliases
-  )
-
-tabset_figure_table(
-  component$plots,
-  component$tabl,
-  level = 5,
-  mode = "title"
-)
-close_tabset()
 ```
 
 #### Reads per cell
