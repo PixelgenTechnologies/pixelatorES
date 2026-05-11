@@ -101,53 +101,6 @@ component_control_markers <- function(
   return(list(p1 = p1, p2 = p2, tabl = tabl))
 }
 
-#' Create the component for molecule rank plots
-#'
-#' This function generates a list of ggplot objects, each representing the
-#' molecule rank plot for a specific sample in the provided Seurat object.
-#'
-#' @param pg_data A Seurat object containing the data to be plotted.
-#' @param params A list of parameters, including `molecule_rank_cutoff`, which
-#' is used to draw a horizontal line in the plots.
-#'
-#' @return A list of ggplot objects, each corresponding to a sample's molecule
-#' rank plot.
-#'
-#' @export
-#'
-component_molecule_rank_plot <- function(
-  pg_data,
-  params
-) {
-  plots <-
-    FetchData(pg_data, "sample_alias") %>%
-    pull(sample_alias) %>%
-    levels() %>%
-    set_names() %>%
-    lapply(function(x) {
-      pg_data %>%
-        FetchData(c("sample_alias", "n_umi", "rank")) %>%
-        arrange(sample_alias == x) %>%
-        ggplot(aes(rank, n_umi, color = sample_alias == x)) +
-        geom_point(size = 0.5, show.legend = FALSE) +
-        geom_hline(
-          yintercept = params$molecule_rank_cutoff, linetype = "dashed",
-          color = "#E05573"
-        ) +
-        scale_x_log10() +
-        scale_y_log10() +
-        scale_color_manual(values = c("TRUE" = "black", "FALSE" = "gray80")) +
-        theme_bw() +
-        labs(
-          x = "Component rank (by number of molecules)",
-          y = "Number of molecules",
-          title = "Molecule rank plot"
-        )
-    })
-
-  return(plots)
-}
-
 #' Create the component for molecule rank plots from qc metrics list
 #'
 #' This function generates a list of ggplot objects, each representing the
