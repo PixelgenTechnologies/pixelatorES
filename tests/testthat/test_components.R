@@ -8,7 +8,7 @@ for (data_type in data_types) {
   sample_qc_metrics <- get_test_qc_metrics(type = data_type)
   sample_sheet <- read_samplesheet(test_samplesheet(type = data_type))
   data_folder <- test_data_folder(type = data_type)
-  data_files <- get_file_paths(data_folder, sample_sheet = samplesheet)$data_files
+  data_files <- get_file_paths(data_folder, sample_sheet = sample_sheet)$data_files
 
   qc_metrics_tables <-
     get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)
