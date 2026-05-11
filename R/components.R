@@ -440,16 +440,6 @@ component_sequencing_saturation_curve <-
         seqsat_curve_data_mean %>%
           ggplot() +
           # Background curves for other samples
-          geom_errorbar(
-            data = df_bg,
-            aes(
-              x = reads_per_component,
-              ymin = saturation_mean - saturation_se,
-              ymax = saturation_mean + saturation_se,
-              group = sample_alias
-            ),
-            color = "gray80"
-          ) +
           geom_line(
             data = df_bg,
             aes(reads_per_component, saturation_mean, group = sample_alias),

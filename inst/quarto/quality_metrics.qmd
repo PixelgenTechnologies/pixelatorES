@@ -85,8 +85,7 @@ plots <-
     pg_data,
     data_files,
     seqsat_comps = seqsat_comps,
-    sample_levels = sample_aliases,
-    mc_cores = params$mc_cores
+    sample_levels = sample_aliases
   )
 
 tabset_plotlist(plots,
