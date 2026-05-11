@@ -675,7 +675,7 @@ for (data_type in data_types) {
               "58.38",
               "58.38"
             ), `Valid reads saturation [%]` = c("35.4", "33.82"),
-            `Valid reads fraction [%]` = c("89.82", "89.62"), `Graph reads fraction [%]` = c(
+            `% Valid reads` = c("89.82", "89.62"), `% Graph reads` = c(
               "0.23",
               "0.44"
             ), `% Denoised UMIs` = c("2.67", "4.86"), `Total denoised UMIs [M]` = c(

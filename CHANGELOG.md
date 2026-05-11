@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `fraction_graph_reads` is now always displayed in the Key Metrics Table.
+- Changed Key Metrics Table titles of "Valid reads fraction [%]" and "Graph reads fraction [%]" to "% Valid reads" and "% Graph reads", respectively.
+
 ## [0.9.2] 2026-05-08
 
 ### Added 
