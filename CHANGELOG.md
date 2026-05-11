@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed the metric `ratio` to a more descriptive name: `percent_umis_denoised`.
 - `fraction_graph_reads` and `percent_umis_denoised` are now always displayed in the Key Metrics Table.
 - Changed Key Metrics Table titles of "Valid reads fraction [%]" and "Graph reads fraction [%]" to "% Valid reads" and "% Graph reads", respectively.
+- Removed some superfluous sequencing saturation barplot content from Quality Metrics.
+- The Key Metrics Table is now horizontal again.
 
 ## [0.9.2] 2026-05-08
 
