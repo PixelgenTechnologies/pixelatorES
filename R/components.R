@@ -388,7 +388,7 @@ component_sequencing_saturation_curve <-
         by = join_by(sample_alias)
       ) %>%
       mutate(
-        reads_per_component = reads_per_component * sample_frac
+        reads_per_component = reads_per_component * p
       ) %>%
       select(
         sample_alias,
