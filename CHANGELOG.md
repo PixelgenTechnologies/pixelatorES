@@ -7,17 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-<<<<<<< refactor-test-data
-- Removed `tests/testdata/es_test_data/` in favor of using `inst/extdata/` for test data.
-=======
+### Added
 
+- Molecule Rank Plots for individual samples for hashed experiments.
+- `tabset_nested` mode to `tabset_figure_table` to enable nested plot lists to be displayed together with a table.
+
+### Changed
+- Removed `tests/testdata/es_test_data/` in favor of using `inst/extdata/` for test data.
 - Renamed the metric `ratio` to a more descriptive name: `percent_umis_denoised`.
 - `fraction_graph_reads` and `percent_umis_denoised` are now always displayed in the Key Metrics Table.
 - Changed Key Metrics Table titles of "Valid reads fraction [%]" and "Graph reads fraction [%]" to "% Valid reads" and "% Graph reads", respectively.
 - Removed some superfluous sequencing saturation barplot content from Quality Metrics.
 - The Key Metrics Table is now horizontal again.
->>>>>>> main
+- Removed unused function `component_molecule_rank_plot`.
+- Moved function `component_qc_molecule_rank_plot` to inside of `component_cell_recovery`.
 
 ## [0.9.2] 2026-05-08
 

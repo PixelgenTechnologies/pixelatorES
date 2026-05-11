@@ -4,9 +4,11 @@
 \alias{component_cell_recovery}
 \title{Create the component cell recovery}
 \usage{
-component_cell_recovery(sample_qc_metrics, sample_levels = NULL)
+component_cell_recovery(object, sample_qc_metrics, sample_levels = NULL)
 }
 \arguments{
+\item{object}{A Seurat object containing the sample data.}
+
 \item{sample_qc_metrics}{A list of sample QC metrics.}
 
 \item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}

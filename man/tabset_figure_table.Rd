@@ -7,13 +7,14 @@
 tabset_figure_table(figure, table, level = 2, mode = "tabset")
 }
 \arguments{
-\item{figure}{A ggplot object representing the figure to be tabsetted.}
+\item{figure}{A ggplot object representing the figure to be tabsetted or a list of ggplot objects to be tabsetted as
+nested tabs.}
 
 \item{table}{A table to be tabsetted alongside the figure.}
 
 \item{level}{Integer indicating the header level for the tabset title (default is 2).}
 
-\item{mode}{Character indicating the mode of the tabset ("tabset" or "title").}
+\item{mode}{Character indicating the mode of the tabset ("tabset", "tabset_nested", or "title").}
 }
 \value{
 A formatted tabset containing the figure and table.
