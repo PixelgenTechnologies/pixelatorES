@@ -113,7 +113,6 @@ plots <-
 tabset_plotlist(plots,
   level = 5
 )
-
 ```
 
 #### Reads per cell
