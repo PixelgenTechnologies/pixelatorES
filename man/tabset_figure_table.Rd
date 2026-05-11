@@ -7,7 +7,8 @@
 tabset_figure_table(figure, table, level = 2, mode = "tabset")
 }
 \arguments{
-\item{figure}{A ggplot object representing the figure to be tabsetted.}
+\item{figure}{A ggplot object representing the figure to be tabsetted or a list of ggplot objects to be tabsetted as
+nested tabs.}
 
 \item{table}{A table to be tabsetted alongside the figure.}
 

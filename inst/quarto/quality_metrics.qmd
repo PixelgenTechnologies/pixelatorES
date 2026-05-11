@@ -147,7 +147,7 @@ component <-
   )
 
 tabset_figure_table(
-  component$plot[[2]],
+  component$plots[[2]],
   component$table[[2]],
   level = 5, mode = "tabset_nested"
 )

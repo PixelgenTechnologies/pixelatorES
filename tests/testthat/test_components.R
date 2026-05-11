@@ -38,10 +38,10 @@ for (data_type in data_types) {
     # component_cell_recovery
     expect_no_error(component <- component_cell_recovery(pg_data, sample_qc_metrics, sample_levels = NULL))
     expect_no_error(
-      ggplot2::ggplot_build(component$plot[[1]])
+      ggplot2::ggplot_build(component$plots[[1]])
     )
 
-    for (plot in component$plot[[2]]) {
+    for (plot in component$plots[[2]]) {
       if (data_type == "hashing") {
         for (subplot in plot$Pools) {
           expect_s3_class(subplot, "ggplot")
