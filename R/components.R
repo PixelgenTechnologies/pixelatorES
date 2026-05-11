@@ -351,7 +351,7 @@ component_sequencing_saturation_curve <-
         n_comps = n(),
         reads_per_component = mean(reads_in_component)
       )
-    
+
     sample_frac <- rev(seq(0.1, 1, 0.1))
 
     seqsat_curve_data <-
@@ -366,21 +366,21 @@ component_sequencing_saturation_curve <-
             filter(sample_alias == sampl) %>%
             rownames() %>%
             sample(n_comps)
-        ) %>% 
+        ) %>%
           # Strip the sample alias prefix from the component names
           # to match the component names in the pxl file database
           stringr::str_remove(paste0(sampl, "_"))
-        
-        pxl_file <- data_files %>% 
+
+        pxl_file <- data_files %>%
           filter(sample_alias == sampl) %>%
           pull(filename)
         db <- PixelDB$new(pxl_file)
         on.exit(db$close())
         approximate_saturation_curve(
-          db, 
-          fracs = sample_frac, 
-          components = sampled_comps, 
-          node_reads_multiplier = 1, 
+          db,
+          fracs = sample_frac,
+          components = sampled_comps,
+          node_reads_multiplier = 1,
           verbose = FALSE
         )
       }) %>%
@@ -393,8 +393,8 @@ component_sequencing_saturation_curve <-
         reads_per_component = reads_per_component * sample_frac
       ) %>%
       select(
-        sample_alias, 
-        reads_per_component, 
+        sample_alias,
+        reads_per_component,
         graph_node_saturation = node_saturation,
         graph_edge_saturation = edge_saturation
       ) %>%
@@ -413,8 +413,8 @@ component_sequencing_saturation_curve <-
       ) %>%
       mutate(saturation = ifelse(
         saturation < 0, NA_real_, saturation
-      )) %>% 
-      mutate(saturation = saturation * 100) 
+      )) %>%
+      mutate(saturation = saturation * 100)
 
     seqsat_curve_data_mean <-
       seqsat_curve_data %>%
@@ -432,8 +432,12 @@ component_sequencing_saturation_curve <-
       levels() %>%
       set_names() %>%
       lapply(function(x) {
-        df_bg <- seqsat_curve_data_mean %>% filter(sample_alias != x) %>% na.omit()
-        df_fg <- seqsat_curve_data_mean %>% filter(sample_alias == x) %>% na.omit()
+        df_bg <- seqsat_curve_data_mean %>%
+          filter(sample_alias != x) %>%
+          na.omit()
+        df_fg <- seqsat_curve_data_mean %>%
+          filter(sample_alias == x) %>%
+          na.omit()
 
         seqsat_curve_data_mean %>%
           ggplot() +
