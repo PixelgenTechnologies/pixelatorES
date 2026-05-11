@@ -86,6 +86,17 @@ for (data_type in data_types) {
     )
     expect_s3_class(component$table, "datatables")
 
+    # component_sequencing_reads_and_molecules
+    expect_no_error(component <- component_sequencing_reads_and_molecules(sample_qc_metrics, sample_levels = NULL))
+
+    for (plot in component$plots) {
+      expect_s3_class(plot, "ggplot")
+      expect_no_error(
+        ggplot2::ggplot_build(plot)
+      )
+    }
+    expect_s3_class(component$table, "datatables")
+
     # component_abundance_per_celltype
     temp <-
       pg_data %>%
