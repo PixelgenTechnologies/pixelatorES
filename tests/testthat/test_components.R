@@ -7,7 +7,7 @@ for (data_type in data_types) {
   pg_data_small <- get_test_data(type = data_type)
   sample_qc_metrics <- get_test_qc_metrics(type = data_type)
   sample_sheet <- read_samplesheet(test_samplesheet(type = data_type))
-  data_folder <- test_data_folder(type = type)
+  data_folder <- test_data_folder(type = data_type)
   data_files <- get_file_paths(data_folder, sample_sheet = samplesheet)$data_files
 
   qc_metrics_tables <-
