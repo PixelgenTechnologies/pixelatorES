@@ -49,6 +49,7 @@ section_intro(
 #| label: sample_hashing
 #| eval: !expr eval_standard_results_and_sample_hashing
 #| results: 'asis'
+#| fig-asp: 1
 component <-
   component_hashing(qc_metrics_tables)
 
