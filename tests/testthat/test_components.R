@@ -410,16 +410,42 @@ for (data_type in data_types) {
     # component_hashing
     if (data_type == "hashing") {
       expect_no_error(
-        component <- component_hashing(pg_data, sample_qc_metrics, sample_levels = NULL)
+        component <- component_hashing(qc_metrics_tables)
+      )
+      expect_s3_class(component$plot, "ggplot")
+      expect_no_error(
+        ggplot2::ggplot_build(component$plot)
       )
 
-      for (plot in component$plots) {
+      for (plot in component$sample_confidence_plots) {
+        expect_s3_class(plot, "ggplot")
+        expect_no_error(
+          ggplot2::ggplot_build(plot)
+        )
+      }
+      for (plot in component$heatmap_plots_hash_purity) {
+        expect_s3_class(plot, "ggplot")
+        expect_no_error(
+          ggplot2::ggplot_build(plot)
+        )
+      }
+      for (plot in component$heatmap_plots_hash_fraction) {
         expect_s3_class(plot, "ggplot")
         expect_no_error(
           ggplot2::ggplot_build(plot)
         )
       }
       expect_s3_class(component$table, "datatables")
+
+      qc_metrics_tables_missing_undetermined <-
+        qc_metrics_tables
+
+      qc_metrics_tables_missing_undetermined$sample_hash_stats$component_sample_confidence <-
+        qc_metrics_tables_missing_undetermined$sample_hash_stats$component_sample_confidence %>%
+        filter(sample_alias != "undetermined")
+      expect_no_error(
+        component <- component_hashing(qc_metrics_tables_missing_undetermined)
+      )
     }
   })
 }
