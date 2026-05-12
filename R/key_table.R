@@ -210,22 +210,34 @@ get_denoising_data <-
           )[slot]
 
         # Get denoising data for the current slot and format it into a tibble
-        lapply(names(sample_qc_metrics[[slot]]), function(nm) {
-          tibble(
-            id = nm,
-            percent_umis_denoised =
-              sample_qc_metrics[[slot]][[nm]]$denoise$ratio_of_umis_removed * 100,
-            number_of_umis_removed =
-              sample_qc_metrics[[slot]][[nm]]$denoise$number_of_umis_removed
-          )
-        }) %>%
-          bind_rows() %>%
-          # Rename the id column to either sample_alias or pool depending on the slot
+        res <-
+          lapply(names(sample_qc_metrics[[slot]]), function(nm) {
+            tibble(
+              id = nm,
+              percent_umis_denoised =
+                sample_qc_metrics[[slot]][[nm]]$denoise$ratio_of_umis_removed * 100,
+              number_of_umis_removed =
+                sample_qc_metrics[[slot]][[nm]]$denoise$number_of_umis_removed
+            )
+          }) %>%
+          bind_rows()
+
+        if (nrow(res) == 0) {
+          return(NULL)
+        }
+        # Rename the id column to either sample_alias or pool depending on the slot
+        res %>%
           rename(!!sym(id_name) := id)
       })
 
-    # Return the denoising data from the only slot that contains non-empty data
-    return(denoise_res[sapply(denoise_res, nrow) != 0][[1]])
+    null_res <- sapply(denoise_res, is.null)
+    if (sum(!null_res) == 0) {
+      # Return NULL if all slots contain NULL or empty data
+      return(NULL)
+    } else {
+      # Return the denoising data from the first slot that contains non-empty data
+      return(denoise_res[!null_res][[1]])
+    }
   }
 
 #' Get coreness data
