@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed an issue that would throw an error if denoise data belonged to a pool rather than a sample.
 - Bug where the component sample confidence plot would fail to display if there are no undetermined cells.
 - Bug in retrieving sample calling data that would throw an error if samples are different from sample aliases.
 
@@ -31,9 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed unused function `component_molecule_rank_plot`.
 - Moved function `component_qc_molecule_rank_plot` to inside of `component_cell_recovery`.
 
-### Fixed
-
-- Fixed an issue that would throw an error if denoise data belonged to a pool rather than a sample.
 
 ## [0.9.2] 2026-05-08
 
