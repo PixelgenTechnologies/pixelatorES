@@ -406,5 +406,20 @@ for (data_type in data_types) {
         test_mode = TRUE
       )
     )
+
+    # component_hashing
+    if (data_type == "hashing") {
+      expect_no_error(
+        component <- component_hashing(pg_data, sample_qc_metrics, sample_levels = NULL)
+      )
+
+      for (plot in component$plots) {
+        expect_s3_class(plot, "ggplot")
+        expect_no_error(
+          ggplot2::ggplot_build(plot)
+        )
+      }
+      expect_s3_class(component$table, "datatables")
+    }
   })
 }

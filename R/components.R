@@ -2468,8 +2468,8 @@ component_hashing <-
           mutate(
             cumsum_n = cumsum(n),
             x = cumsum_n - n,
-            hjust = c(0, 1),
-            text_pos = range(c(x, cumsum_n))
+            hjust = c(0, 1)[1:n()],
+            text_pos = range(c(x, cumsum_n))[1:n()]
           )
 
         g_data %>%
