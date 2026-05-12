@@ -625,7 +625,7 @@ for (data_type in data_types) {
         structure(list(pool = c(
           "pool1", "pool1", "pool1", "pool1", "pool1",
           "pool1"
-        ), sample_alias = c("S1", "S1", "S1", "S1", "S1", "S1"), sample_confidence = c(
+        ), sample = c("S1", "S1", "S1", "S1", "S1", "S1"), sample_confidence = c(
           0.988843436221644, 0.987964696442899,
           0.96164199192463, 0.994916690200508, 0.982078853046595, 0.988266464799394
         )), row.names = c(NA, -6L), class = c("tbl_df", "tbl", "data.frame"))
