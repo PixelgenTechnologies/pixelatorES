@@ -577,7 +577,7 @@ get_qc_metrics <-
             unique(sample_sheet$pool[!is.na(sample_sheet$pool)])
           pool_levels <- pool_levels[pool_levels %in% unique(tb$pool)]
 
-          if (length(sample_levels) == 0) {
+          if (length(pool_levels) == 0) {
             cli_abort("None of the pool values in the table are present in the sample sheet.")
           }
 
