@@ -96,6 +96,24 @@ if (params$debug_mode) {
 sample_qc_metrics <-
   read_qc_files(file_paths, sample_sheet)
 
+sample_to_alias_map <- setNames(sample_sheet$sample_alias, sample_sheet$sample)
+if (!is.null(sample_qc_metrics$pool_qc_files)) {
+  for (pool_nm in names(sample_qc_metrics$pool_qc_files)) {
+    sample_calling <- sample_qc_metrics$pool_qc_files[[pool_nm]]$sample_calling
+    conf <- sample_calling$sample_confidences_per_sample
+    if (!is.null(conf) && length(conf) > 0) {
+      original_keys <- names(conf)
+      remapped_keys <- ifelse(
+        original_keys %in% names(sample_to_alias_map),
+        unname(sample_to_alias_map[original_keys]),
+        original_keys
+      )
+      names(conf) <- remapped_keys
+      sample_qc_metrics$pool_qc_files[[pool_nm]]$sample_calling$sample_confidences_per_sample <- conf
+    }
+  }
+}
+
 qc_metrics_tables <-
   get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)
 ```
