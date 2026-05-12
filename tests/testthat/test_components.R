@@ -2,6 +2,9 @@ library(dplyr)
 
 data_types <- c("default", "hashing")
 
+cherry_gradient <-
+  PixelgenGradient(100, "Cherry")
+
 for (data_type in data_types) {
   pg_data <- get_test_data(type = data_type)
   pg_data_small <- get_test_data(type = data_type)
