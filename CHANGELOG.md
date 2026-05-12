@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## Unreleased
+
+### Fixed
+
+- Fixed an issue that would throw an error if denoise data belonged to a pool rather than a sample.
+
+## [0.10.0] 2026-05-12
 
 ### Added
 
@@ -14,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Switched from `SequenceSaturationCurve` to `approximate_saturation_curve` for better performance
 - Removed `tests/testdata/es_test_data/` in favor of using `inst/extdata/` for test data.
 - Renamed the metric `ratio` to a more descriptive name: `percent_umis_denoised`.
 - `fraction_graph_reads` and `percent_umis_denoised` are now always displayed in the Key Metrics Table.
@@ -22,10 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Key Metrics Table is now horizontal again.
 - Removed unused function `component_molecule_rank_plot`.
 - Moved function `component_qc_molecule_rank_plot` to inside of `component_cell_recovery`.
-
-### Fixed
-
-- Fixed an issue that would throw an error if denoise data belonged to a pool rather than a sample.
 
 ## [0.9.2] 2026-05-08
 

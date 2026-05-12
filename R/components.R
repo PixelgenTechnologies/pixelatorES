@@ -334,8 +334,6 @@ component_sequencing_reads_per_cell <-
 #' @param data_files A data frame containing the sample aliases and corresponding file names.
 #' @param seqsat_comps The number of components to consider for sequencing saturation.
 #' @param sample_levels Optional vector of sample levels to order the samples in the plots.
-#' @param mc_cores The number of cores to use for parallel processing. Default is 1, meaning
-#' sequential processing.
 #'
 #' @return A list containing plots showing the sequencing saturation curve for
 #' each sample.
@@ -343,7 +341,7 @@ component_sequencing_reads_per_cell <-
 #' @export
 #'
 component_sequencing_saturation_curve <-
-  function(object, data_files, seqsat_comps = 5L, sample_levels = NULL, mc_cores = 1) {
+  function(object, data_files, seqsat_comps = 100L, sample_levels = NULL) {
     object_meta <-
       FetchData(object, c("sample_alias", "reads_in_component")) %>%
       group_by(sample_alias) %>%
@@ -352,10 +350,12 @@ component_sequencing_saturation_curve <-
         reads_per_component = mean(reads_in_component)
       )
 
+    sample_frac <- rev(seq(0.1, 1, 0.1))
+
     seqsat_curve_data <-
       data_files$sample_alias %>%
       set_names() %>%
-      parallel::mclapply(function(sampl) {
+      lapply(function(sampl) {
         n_comps <-
           object_meta$n_comps[which(object_meta$sample_alias == sampl)]
         n_comps <- pmin(n_comps, seqsat_comps)
@@ -364,25 +364,37 @@ component_sequencing_saturation_curve <-
             filter(sample_alias == sampl) %>%
             rownames() %>%
             sample(n_comps)
-        )
-        el <- object %>%
-          subset(cells = sampled_comps) %>%
-          Edgelists(lazy = FALSE)
+        ) %>%
+          # Strip the sample alias prefix from the component names
+          # to match the component names in the pxl file database
+          stringr::str_remove(paste0(sampl, "_"))
 
-        el %>%
-          SequenceSaturationCurve(n_comps = n_comps)
-      }, mc.cores = mc_cores) %>%
+        pxl_file <- data_files %>%
+          filter(sample_alias == sampl) %>%
+          pull(filename)
+        db <- PixelDB$new(pxl_file)
+        on.exit(db$close())
+        approximate_saturation_curve(
+          db,
+          fracs = sample_frac,
+          components = sampled_comps,
+          node_reads_multiplier = 1,
+          verbose = FALSE
+        )
+      }) %>%
       bind_rows(.id = "sample_alias") %>%
       left_join(
         object_meta,
         by = join_by(sample_alias)
       ) %>%
       mutate(
-        reads_per_component = reads_per_component * sample_frac
+        reads_per_component = reads_per_component * p
       ) %>%
       select(
-        sample_alias, reads_per_component, graph_node_saturation,
-        graph_edge_saturation
+        sample_alias,
+        reads_per_component,
+        graph_node_saturation = node_saturation,
+        graph_edge_saturation = edge_saturation
       ) %>%
       pivot_longer(
         cols = c("graph_node_saturation", "graph_edge_saturation"),
@@ -396,33 +408,67 @@ component_sequencing_saturation_curve <-
       set_sample_levels(
         seqsat_curve_data,
         sample_levels
-      )
+      ) %>%
+      mutate(saturation = ifelse(
+        saturation < 0, NA_real_, saturation
+      )) %>%
+      mutate(saturation = saturation * 100)
 
     seqsat_curve_data_mean <-
       seqsat_curve_data %>%
       group_by(sample_alias, type, reads_per_component) %>%
-      summarise(saturation = mean(saturation)) %>%
+      summarise(
+        saturation_mean = mean(saturation, na.rm = TRUE),
+        saturation_se = sd(saturation, na.rm = TRUE) / sqrt(n()),
+        .groups = "drop"
+      ) %>%
       ungroup()
 
     plots <-
-      seqsat_curve_data %>%
+      seqsat_curve_data_mean %>%
       pull(sample_alias) %>%
       levels() %>%
       set_names() %>%
       lapply(function(x) {
-        seqsat_curve_data %>%
-          mutate(selected_sample = sample_alias == x) %>%
-          arrange(selected_sample) %>%
-          ggplot(aes(reads_per_component, saturation, color = selected_sample)) +
+        df_bg <- seqsat_curve_data_mean %>%
+          filter(sample_alias != x) %>%
+          na.omit()
+        df_fg <- seqsat_curve_data_mean %>%
+          filter(sample_alias == x) %>%
+          na.omit()
+
+        seqsat_curve_data_mean %>%
+          ggplot() +
+          # Background curves for other samples
           geom_line(
-            data = seqsat_curve_data_mean %>%
-              mutate(selected_sample = sample_alias == x),
-            aes(group = sample_alias)
+            data = df_bg,
+            aes(reads_per_component, saturation_mean, group = sample_alias),
+            color = "gray80"
           ) +
-          geom_point(size = 0.1) +
+          # Foreground curve for the current sample
+          geom_errorbar(
+            data = df_fg,
+            aes(
+              x = reads_per_component,
+              ymin = saturation_mean - saturation_se,
+              ymax = saturation_mean + saturation_se
+            ),
+            color = "black",
+            width = 0
+          ) +
+          geom_line(
+            data = df_fg,
+            aes(reads_per_component, saturation_mean),
+            color = "black"
+          ) +
+          geom_point(
+            data = df_fg,
+            aes(reads_per_component, saturation_mean),
+            color = "black",
+            size = 0.5
+          ) +
           facet_wrap(~type) +
           scale_y_continuous(limits = c(0, 100)) +
-          scale_color_manual(values = c("TRUE" = "black", "FALSE" = "gray80")) +
           theme_bw() +
           theme(
             axis.text.x = element_text(angle = 60, hjust = 1),
@@ -435,7 +481,6 @@ component_sequencing_saturation_curve <-
             title = "Sequencing saturation curve"
           )
       })
-
 
     return(plots)
   }
