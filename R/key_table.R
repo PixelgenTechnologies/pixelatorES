@@ -198,20 +198,34 @@ get_denoising_data <-
   function(sample_qc_metrics) {
     pixelatorR:::assert_class(sample_qc_metrics, "list")
 
-    if (!is.null(sample_qc_metrics$qc_files)) {
-      sample_qc_metrics <- sample_qc_metrics$qc_files
-    }
+    # Access denoise data from all slots
+    denoise_res <-
+      names(sample_qc_metrics) %>%
+      lapply(function(slot) {
+        # Determine the appropriate id column name based on the slot
+        id_name <-
+          c(
+            qc_files = "sample_alias",
+            pool_qc_files = "pool"
+          )[slot]
 
-    lapply(names(sample_qc_metrics), function(nm) {
-      tibble(
-        sample_alias = nm,
-        percent_umis_denoised =
-          sample_qc_metrics[[nm]]$denoise$ratio_of_umis_removed * 100,
-        number_of_umis_removed =
-          sample_qc_metrics[[nm]]$denoise$number_of_umis_removed
-      )
-    }) %>%
-      bind_rows()
+        # Get denoising data for the current slot and format it into a tibble
+        lapply(names(sample_qc_metrics[[slot]]), function(nm) {
+          tibble(
+            id = nm,
+            percent_umis_denoised =
+              sample_qc_metrics[[slot]][[nm]]$denoise$ratio_of_umis_removed * 100,
+            number_of_umis_removed =
+              sample_qc_metrics[[slot]][[nm]]$denoise$number_of_umis_removed
+          )
+        }) %>%
+          bind_rows() %>%
+          # Rename the id column to either sample_alias or pool depending on the slot
+          rename(!!sym(id_name) := id)
+      })
+
+    # Return the denoising data from the only slot that contains non-empty data
+    return(denoise_res[sapply(denoise_res, nrow) != 0][[1]])
   }
 
 #' Get coreness data
@@ -538,6 +552,11 @@ get_qc_metrics <-
         if ("sample_alias" %in% names(tb)) {
           sample_levels <-
             sample_sheet$sample_alias[sample_sheet$sample_alias %in% unique(tb$sample_alias)]
+
+          if (length(sample_levels) == 0) {
+            cli_abort("None of the sample_alias values in the table are present in the sample sheet.")
+          }
+
           if ("undetermined" %in% tb$sample_alias) sample_levels <- c(sample_levels, "undetermined")
           tb <- order_sample_alias_factors(tb, levels = sample_levels)
         }
@@ -545,6 +564,11 @@ get_qc_metrics <-
           pool_levels <-
             unique(sample_sheet$pool[!is.na(sample_sheet$pool)])
           pool_levels <- pool_levels[pool_levels %in% unique(tb$pool)]
+
+          if (length(sample_levels) == 0) {
+            cli_abort("None of the pool values in the table are present in the sample sheet.")
+          }
+
           tb <- order_sample_alias_factors(tb,
             levels = pool_levels,
             column_name = "pool"
