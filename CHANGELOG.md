@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed an issue that would throw an error if denoise data belonged to a pool rather than a sample.
+- Bug in retrieving sample calling data that would throw an error if samples are different from sample aliases.
 
 ## [0.10.0] 2026-05-12
 

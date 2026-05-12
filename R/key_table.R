@@ -507,15 +507,15 @@ get_hash_stats <- function(object, sample_qc_metrics) {
     lapply(function(pool) {
       pool$sample_calling$sample_confidences_per_sample %>%
         lapply(tibble) %>%
-        bind_rows(.id = "sample_alias") %>%
+        bind_rows(.id = "sample") %>%
         rename(sample_confidence = 2)
     }) %>%
     bind_rows(.id = "pool") %>%
     mutate(
-      sample_alias =
-        ifelse(str_detect(sample_alias, "undetermined$"),
-          str_remove(sample_alias, paste0(pool, "_")),
-          sample_alias
+      sample =
+        ifelse(str_detect(sample, "undetermined$"),
+          str_remove(sample, paste0(pool, "_")),
+          sample
         )
     )
 
@@ -561,6 +561,19 @@ get_qc_metrics <-
         if (is.null(tb)) {
           return(NULL)
         }
+
+        # If the table contains a "sample" column but not a "sample_alias" column, add it from samplesheet
+        if ("sample" %in% names(tb) && !"sample_alias" %in% names(tb)) {
+          tb <- tb %>%
+            left_join(
+              select(sample_sheet, sample_alias, sample),
+              by = c("sample")
+            ) %>%
+            mutate(sample_alias = ifelse(sample == "undetermined", "undetermined", sample_alias)) %>%
+            select(-sample)
+        }
+
+        # If the table contains a "sample_alias" column, order factors based on those
         if ("sample_alias" %in% names(tb)) {
           sample_levels <-
             sample_sheet$sample_alias[sample_sheet$sample_alias %in% unique(tb$sample_alias)]
@@ -572,6 +585,8 @@ get_qc_metrics <-
           if ("undetermined" %in% tb$sample_alias) sample_levels <- c(sample_levels, "undetermined")
           tb <- order_sample_alias_factors(tb, levels = sample_levels)
         }
+
+        # If the table contains a "pool" column, order factors based on those
         if ("pool" %in% names(tb)) {
           pool_levels <-
             unique(sample_sheet$pool[!is.na(sample_sheet$pool)])
@@ -586,6 +601,8 @@ get_qc_metrics <-
             column_name = "pool"
           )
         }
+
+        # If tb is a list of tables, apply formatting to each element in the list instead
         if (inherits(tb, "list")) {
           tb <- lapply(tb, .format)
         }
