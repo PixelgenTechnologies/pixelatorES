@@ -73,18 +73,18 @@ captured through sequencing.
 #| label: qc_metrics_sequencing_saturation
 #| results: 'asis'
 if (params$debug_mode) {
-  seqsat_comps <- 1L
-} else {
   seqsat_comps <- 5L
+} else {
+  seqsat_comps <- 100L
 }
+set.seed(123)
 
 plots <-
   component_sequencing_saturation_curve(
     pg_data,
     data_files,
     seqsat_comps = seqsat_comps,
-    sample_levels = sample_aliases,
-    mc_cores = params$mc_cores
+    sample_levels = sample_aliases
   )
 
 tabset_plotlist(plots,
