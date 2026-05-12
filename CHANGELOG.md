@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `tabset_nested` mode to `tabset_figure_table` to enable nested plot lists to be displayed together with a table.
 
 ### Changed
+
 - Removed `tests/testdata/es_test_data/` in favor of using `inst/extdata/` for test data.
 - Renamed the metric `ratio` to a more descriptive name: `percent_umis_denoised`.
 - `fraction_graph_reads` and `percent_umis_denoised` are now always displayed in the Key Metrics Table.
@@ -21,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Key Metrics Table is now horizontal again.
 - Removed unused function `component_molecule_rank_plot`.
 - Moved function `component_qc_molecule_rank_plot` to inside of `component_cell_recovery`.
+
+### Fixed
+
+- Fixed an issue that would throw an error if denoise data belonged to a pool rather than a sample.
 
 ## [0.9.2] 2026-05-08
 
