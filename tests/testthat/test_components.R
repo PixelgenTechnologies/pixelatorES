@@ -413,7 +413,7 @@ for (data_type in data_types) {
     # component_hashing
     if (data_type == "hashing") {
       expect_no_error(
-        component <- component_hashing(qc_metrics_tables)
+        component <- component_hashing(qc_metrics_tables, colors = cherry_gradient)
       )
       expect_s3_class(component$plot, "ggplot")
       expect_no_error(
@@ -447,7 +447,9 @@ for (data_type in data_types) {
         qc_metrics_tables_missing_undetermined$sample_hash_stats$component_sample_confidence %>%
         filter(sample_alias != "undetermined")
       expect_no_error(
-        component <- component_hashing(qc_metrics_tables_missing_undetermined)
+        component <- component_hashing(qc_metrics_tables_missing_undetermined,
+          colors = cherry_gradient
+        )
       )
     }
   })

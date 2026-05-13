@@ -50,7 +50,7 @@ section_intro(
 #| eval: !expr eval_standard_results_and_sample_hashing
 #| results: 'asis'
 component <-
-  component_hashing(qc_metrics_tables)
+  component_hashing(qc_metrics_tables, colors = cherry_gradient)
 
 tabset_figure_table(
   component$plot,
