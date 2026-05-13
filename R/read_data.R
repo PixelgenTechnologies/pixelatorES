@@ -626,6 +626,8 @@ test_data_folder <-
 #'
 #' @param type A character string specifying the type of test data to generate. Options are "default"
 #' (the standard test data) and "hashing" (test data for hashing experiments).
+#' @param package A character string specifying the name of the package where the test data is located.
+#' Default is "pixelatorES".
 #'
 #' @return A Seurat object containing test data with normalized and scaled data, PCA results, and merged layers.
 #'
@@ -633,15 +635,16 @@ test_data_folder <-
 #'
 get_test_data <-
   function(
-    type = c("default", "hashing")
+    type = c("default", "hashing"),
+    package = "pixelatorES"
   ) {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
     type <- match.arg(type, c("default", "hashing"))
 
     samplesheet <-
-      read_samplesheet(test_samplesheet(type = type))
+      read_samplesheet(test_samplesheet(type = type, package = package))
 
-    data_folder <- test_data_folder(type = type)
+    data_folder <- test_data_folder(type = type, package = package)
 
     data_files <- get_file_paths(data_folder, sample_sheet = samplesheet)$data_files
 
