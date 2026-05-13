@@ -566,13 +566,17 @@ read_samplesheet <-
 #'
 #' @param type A character string specifying the type of test samplesheet to return. Options are "default"
 #' (the standard test samplesheet) and "hashing" (a test samplesheet for hashing experiments). Default is "default".
+#' @param package A character string specifying the name of the package where the test samplesheet is located.
+#' Default is "pixelatorES".
 #' @return A character string with the path to the test samplesheet CSV file.
 #'
 #' @export
 #'
 test_samplesheet <-
-  function(type = c("default", "hashing")) {
+  function(type = c("default", "hashing"),
+           package = "pixelatorES") {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
+    pixelatorR:::assert_single_value(package, type = "string")
     type <- match.arg(type, c("default", "hashing"))
 
     csv_file <- switch(type,
@@ -582,7 +586,7 @@ test_samplesheet <-
 
     system.file(
       "extdata", csv_file,
-      package = "pixelatorES"
+      package = package
     )
   }
 
@@ -592,13 +596,17 @@ test_samplesheet <-
 #'
 #' @param type A character string specifying the type of test data folder to return. Options are "default"
 #' (the standard test data folder) and "hashing" (a test data folder for hashing experiments). Default is "default".
+#' @param package A character string specifying the name of the package where the test data folder is located.
+#' Default is "pixelatorES".
 #' @return A character string with the path to the test data folder.
 #'
 #' @export
 #'
 test_data_folder <-
-  function(type = c("default", "hashing")) {
+  function(type = c("default", "hashing"),
+           package = "pixelatorES") {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
+    pixelatorR:::assert_single_value(package, type = "string")
     type <- match.arg(type, c("default", "hashing"))
 
     foldr <- switch(type,
@@ -608,33 +616,9 @@ test_data_folder <-
 
     system.file(
       "extdata", foldr,
-      package = "pixelatorES"
+      package = package
     )
   }
-
-#' Get test QC metrics
-#'
-#' Reads the test samplesheet and retrieves QC metrics from the test data folder.
-#'
-#' @param type A character string specifying the type of test data to use. Options are "default"
-#' (the standard test data) and "hashing" (test data for hashing experiments).
-#' @return A list of QC metrics for each sample, where each element is a named list of metrics.
-#'
-#' @export
-#'
-get_test_qc_metrics <-
-  function(type = c("default", "hashing")) {
-    sample_sheet <- read_samplesheet(test_samplesheet(type = type))
-
-    data_paths <-
-      get_file_paths(
-        data_folder = test_data_folder(type = type),
-        sample_sheet = sample_sheet
-      )
-
-    read_qc_files(data_paths, sample_sheet)
-  }
-
 
 #' Get test data
 #'
@@ -642,6 +626,8 @@ get_test_qc_metrics <-
 #'
 #' @param type A character string specifying the type of test data to generate. Options are "default"
 #' (the standard test data) and "hashing" (test data for hashing experiments).
+#' @param package A character string specifying the name of the package where the test data is located.
+#' Default is "pixelatorES".
 #'
 #' @return A Seurat object containing test data with normalized and scaled data, PCA results, and merged layers.
 #'
@@ -649,15 +635,16 @@ get_test_qc_metrics <-
 #'
 get_test_data <-
   function(
-    type = c("default", "hashing")
+    type = c("default", "hashing"),
+    package = "pixelatorES"
   ) {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
     type <- match.arg(type, c("default", "hashing"))
 
     samplesheet <-
-      read_samplesheet(test_samplesheet(type = type))
+      read_samplesheet(test_samplesheet(type = type, package = package))
 
-    data_folder <- test_data_folder(type = type)
+    data_folder <- test_data_folder(type = type, package = package)
 
     data_files <- get_file_paths(data_folder, sample_sheet = samplesheet)$data_files
 

@@ -6,12 +6,25 @@ cherry_gradient <-
   PixelgenGradient(100, "Cherry")
 
 for (data_type in data_types) {
+  # Read in Seurat objects
   pg_data <- get_test_data(type = data_type)
   pg_data_small <- get_test_data(type = data_type)
-  sample_qc_metrics <- get_test_qc_metrics(type = data_type)
-  sample_sheet <- read_samplesheet(test_samplesheet(type = data_type))
+
+  # Get data folder and samplesheet
   data_folder <- test_data_folder(type = data_type)
-  data_files <- get_file_paths(data_folder, sample_sheet = sample_sheet)$data_files
+  sample_sheet <- read_samplesheet(test_samplesheet(type = data_type))
+
+  # Get QC metrics
+  file_paths <-
+    get_file_paths(
+      data_folder = data_folder,
+      sample_sheet = sample_sheet
+    )
+
+  sample_qc_metrics <- read_qc_files(file_paths, sample_sheet)
+
+
+  data_files <- file_paths$data_files
 
   qc_metrics_tables <-
     get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)

@@ -4,11 +4,14 @@
 \alias{test_samplesheet}
 \title{Get the path to the test samplesheet}
 \usage{
-test_samplesheet(type = c("default", "hashing"))
+test_samplesheet(type = c("default", "hashing"), package = "pixelatorES")
 }
 \arguments{
 \item{type}{A character string specifying the type of test samplesheet to return. Options are "default"
 (the standard test samplesheet) and "hashing" (a test samplesheet for hashing experiments). Default is "default".}
+
+\item{package}{A character string specifying the name of the package where the test samplesheet is located.
+Default is "pixelatorES".}
 }
 \value{
 A character string with the path to the test samplesheet CSV file.
