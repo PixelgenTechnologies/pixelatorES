@@ -2,6 +2,9 @@ library(dplyr)
 
 data_types <- c("default", "hashing")
 
+cherry_gradient <-
+  PixelgenGradient(100, "Cherry")
+
 for (data_type in data_types) {
   pg_data <- get_test_data(type = data_type)
   pg_data_small <- get_test_data(type = data_type)
@@ -406,5 +409,48 @@ for (data_type in data_types) {
         test_mode = TRUE
       )
     )
+
+    # component_hashing
+    if (data_type == "hashing") {
+      expect_no_error(
+        component <- component_hashing(qc_metrics_tables, colors = cherry_gradient)
+      )
+      expect_s3_class(component$plot, "ggplot")
+      expect_no_error(
+        ggplot2::ggplot_build(component$plot)
+      )
+
+      for (plot in component$sample_confidence_plots) {
+        expect_s3_class(plot, "ggplot")
+        expect_no_error(
+          ggplot2::ggplot_build(plot)
+        )
+      }
+      for (plot in component$heatmap_plots_hash_purity) {
+        expect_s3_class(plot, "ggplot")
+        expect_no_error(
+          ggplot2::ggplot_build(plot)
+        )
+      }
+      for (plot in component$heatmap_plots_hash_fraction) {
+        expect_s3_class(plot, "ggplot")
+        expect_no_error(
+          ggplot2::ggplot_build(plot)
+        )
+      }
+      expect_s3_class(component$table, "datatables")
+
+      qc_metrics_tables_missing_undetermined <-
+        qc_metrics_tables
+
+      qc_metrics_tables_missing_undetermined$sample_hash_stats$component_sample_confidence <-
+        qc_metrics_tables_missing_undetermined$sample_hash_stats$component_sample_confidence %>%
+        filter(sample_alias != "undetermined")
+      expect_no_error(
+        component <- component_hashing(qc_metrics_tables_missing_undetermined,
+          colors = cherry_gradient
+        )
+      )
+    }
   })
 }

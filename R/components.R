@@ -2382,13 +2382,14 @@ component_sequencing_saturation <-
 #' Create the component hashing
 #'
 #' @param qc_metrics_tables QC metrics from [get_qc_metrics()] including `sample_hash_stats`.
+#' @param colors A gradient color palette to use.
 #'
 #' @return List with `plot`, `table`, `heatmap_plots_hash_purity`, and `heatmap_plots_hash_fraction`.
 #'
 #' @export
 #'
 component_hashing <-
-  function(qc_metrics_tables) {
+  function(qc_metrics_tables, colors) {
     component_stats <- qc_metrics_tables$sample_hash_stats$component_stats
     pixelatorR:::assert_class(component_stats, "tbl_df")
     n_unique_hashes <- component_stats$id %>%
@@ -2468,8 +2469,8 @@ component_hashing <-
           mutate(
             cumsum_n = cumsum(n),
             x = cumsum_n - n,
-            hjust = c(0, 1),
-            text_pos = range(c(x, cumsum_n))
+            hjust = c(0, 1)[seq_len(n())],
+            text_pos = range(c(x, cumsum_n))[seq_len(n())]
           )
 
         g_data %>%
@@ -2543,7 +2544,7 @@ component_hashing <-
         rownames(heatmap_matrix) <- stringr::str_remove(rownames(heatmap_matrix), paste0("-", sample_top_hash_id, "$"))
         heatmap_matrix %>%
           ComplexHeatmap::pheatmap(
-            color = cherry_gradient,
+            color = colors,
             breaks = seq(0, 100, 1),
             cellheight = 10,
             show_colnames = FALSE,
@@ -2580,7 +2581,7 @@ component_hashing <-
 
         heatmap_matrix %>%
           ComplexHeatmap::pheatmap(
-            color = cherry_gradient,
+            color = colors,
             breaks = seq(0, 100, 1),
             cellheight = 10,
             show_colnames = FALSE,

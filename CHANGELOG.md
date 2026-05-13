@@ -5,11 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.10.1] 2026-05-13
 
 ### Fixed
 
 - Fixed an issue that would throw an error if denoise data belonged to a pool rather than a sample.
+- Bug where the component sample confidence plot would fail to display if there are no undetermined cells.
 - Bug in retrieving sample calling data that would throw an error if samples are different from sample aliases.
 
 ## [0.10.0] 2026-05-12
@@ -30,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Key Metrics Table is now horizontal again.
 - Removed unused function `component_molecule_rank_plot`.
 - Moved function `component_qc_molecule_rank_plot` to inside of `component_cell_recovery`.
+
 
 ## [0.9.2] 2026-05-08
 
