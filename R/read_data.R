@@ -620,30 +620,6 @@ test_data_folder <-
     )
   }
 
-#' Get test QC metrics
-#'
-#' Reads the test samplesheet and retrieves QC metrics from the test data folder.
-#'
-#' @param type A character string specifying the type of test data to use. Options are "default"
-#' (the standard test data) and "hashing" (test data for hashing experiments).
-#' @return A list of QC metrics for each sample, where each element is a named list of metrics.
-#'
-#' @export
-#'
-get_test_qc_metrics <-
-  function(type = c("default", "hashing")) {
-    sample_sheet <- read_samplesheet(test_samplesheet(type = type))
-
-    data_paths <-
-      get_file_paths(
-        data_folder = test_data_folder(type = type),
-        sample_sheet = sample_sheet
-      )
-
-    read_qc_files(data_paths, sample_sheet)
-  }
-
-
 #' Get test data
 #'
 #' Generates a minimal Seurat object for testing purposes.

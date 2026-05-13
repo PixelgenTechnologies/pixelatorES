@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Added argument `package` to test data pointer functions `test_samplesheet` and `test_data_folder`, to allow loading test data from other packages if needed. 
+- Removed redundant function `get_test_qc_metrics`.
 
 ## [0.10.1] 2026-05-13
 
