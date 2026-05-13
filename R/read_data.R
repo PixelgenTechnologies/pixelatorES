@@ -566,13 +566,17 @@ read_samplesheet <-
 #'
 #' @param type A character string specifying the type of test samplesheet to return. Options are "default"
 #' (the standard test samplesheet) and "hashing" (a test samplesheet for hashing experiments). Default is "default".
+#' @param package A character string specifying the name of the package where the test samplesheet is located.
+#' Default is "pixelatorES".
 #' @return A character string with the path to the test samplesheet CSV file.
 #'
 #' @export
 #'
 test_samplesheet <-
-  function(type = c("default", "hashing")) {
+  function(type = c("default", "hashing"),
+           package = "pixelatorES") {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
+    pixelatorR:::assert_single_value(package, type = "string")
     type <- match.arg(type, c("default", "hashing"))
 
     csv_file <- switch(type,
@@ -582,7 +586,7 @@ test_samplesheet <-
 
     system.file(
       "extdata", csv_file,
-      package = "pixelatorES"
+      package = package
     )
   }
 
@@ -592,13 +596,17 @@ test_samplesheet <-
 #'
 #' @param type A character string specifying the type of test data folder to return. Options are "default"
 #' (the standard test data folder) and "hashing" (a test data folder for hashing experiments). Default is "default".
+#' @param package A character string specifying the name of the package where the test data folder is located.
+#' Default is "pixelatorES".
 #' @return A character string with the path to the test data folder.
 #'
 #' @export
 #'
 test_data_folder <-
-  function(type = c("default", "hashing")) {
+  function(type = c("default", "hashing"),
+           package = "pixelatorES") {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
+    pixelatorR:::assert_single_value(package, type = "string")
     type <- match.arg(type, c("default", "hashing"))
 
     foldr <- switch(type,
@@ -608,7 +616,7 @@ test_data_folder <-
 
     system.file(
       "extdata", foldr,
-      package = "pixelatorES"
+      package = package
     )
   }
 
