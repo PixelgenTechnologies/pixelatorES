@@ -148,6 +148,13 @@ for (data_type in data_types) {
       component <- component_sequencing_saturation_curve(pg_data, data_files)
     )
 
+    # component_bleedover_noise
+    expect_no_error(component <- component_bleedover_noise(qc_metrics_tables))
+    expect_s3_class(component, "ggplot")
+    expect_no_error(
+      ggplot2::ggplot_build(component)
+    )
+
     # component_abundance_per_celltype
     temp <-
       pg_data %>%

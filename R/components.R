@@ -15,9 +15,9 @@ component_bleedover_noise <- function(
   pixelatorR:::assert_class(qc_metrics_tables, "list")
   p <-
     qc_metrics_tables$denoising %>%
-    ggplot(aes(sample_alias, ratio)) +
+    ggplot(aes(sample_alias, percent_umis_denoised)) +
     geom_col(fill = "#DAD6D7") +
-    geom_text(aes(label = paste0(round(ratio, 3), " %")),
+    geom_text(aes(label = paste0(round(percent_umis_denoised, 3), " %")),
       vjust = -.1,
       size = 3
     ) +
