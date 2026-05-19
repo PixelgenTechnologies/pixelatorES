@@ -2434,6 +2434,7 @@ component_hashing <-
         x = "sample_alias",
         y = "hash_fraction",
         use_pct = TRUE,
+        round = 2,
         expand = c(0, 0.1),
         title = "Hash purity",
         subtitle = "Fraction of UMIs from the most abundant hash",
