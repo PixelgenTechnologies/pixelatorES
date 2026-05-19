@@ -13,8 +13,18 @@ component_bleedover_noise <- function(
   qc_metrics_tables
 ) {
   pixelatorR:::assert_class(qc_metrics_tables, "list")
+
+  plot_data <-
+    qc_metrics_tables$denoising
+
+  if ("pool" %in% names(plot_data)) {
+    plot_data <-
+      plot_data %>%
+      rename(sample_alias = pool)
+  }
+
   p <-
-    qc_metrics_tables$denoising %>%
+    plot_data %>%
     ggplot(aes(sample_alias, percent_umis_denoised)) +
     geom_col(fill = "#DAD6D7") +
     geom_text(aes(label = paste0(round(percent_umis_denoised, 3), " %")),
