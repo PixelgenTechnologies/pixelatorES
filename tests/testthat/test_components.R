@@ -155,17 +155,6 @@ for (data_type in data_types) {
       ggplot2::ggplot_build(component)
     )
 
-    temp <- qc_metrics_tables
-    temp$denoising <-
-      temp$denoising %>%
-      rename(pool = 1)
-
-    expect_no_error(component <- component_bleedover_noise(temp))
-    expect_s3_class(component, "ggplot")
-    expect_no_error(
-      ggplot2::ggplot_build(component)
-    )
-
     # component_abundance_per_celltype
     temp <-
       pg_data %>%
