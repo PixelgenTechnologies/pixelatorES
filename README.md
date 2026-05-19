@@ -66,10 +66,12 @@ The data folder should contain the folder hierarchy of the `nf-core/pixelator` o
 - `analysis`
 - `collapse`
 - `demux`
+- `denoise`
 - `graph`
 - `layout`
 - `logs` (optional)
 - `post_analysis` (optional)
+- `sample_calling`
 - `[sample_name].layout.dataset.pxl`
 
 The ES will read `.json` files to collect statistics and metadata for each sample, and will read `.pxl` files to collect the data for each sample. The ES will read one `.pxl` file per sample, prioritizing in the order `layout` > `post_analysis` > `analysis` > `graph`.
