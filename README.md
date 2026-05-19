@@ -44,10 +44,13 @@ Users can modify parameters in the YAML header or pass them as arguments when re
 The sample sheet describes your experiment and the samples in it, and sets the conditions for differential analyses.
 
 The sample sheet should have the following columns, but may have additional columns that will be ignored:
-| sample | sample_alias | condition |
-|--------|--------------|-----------|
-| Exp1_PBMC_unstimulated_sample01_S1 | S1 | Unstim_PBMC | 
-| Exp1_PBMC_stimulated_sample02_S2 | S2 | Stim_PBMC |
+
+| pool | sample | sample_alias | condition |
+|------|--------|--------------|-----------|
+| pool1 | Exp1_PBMC_unstimulated_sample01_S1 | S1 | Unstim_PBMC | 
+| pool1 | Exp1_PBMC_stimulated_sample02_S2 | S2 | Stim_PBMC |
+
+`pool` is the name of the hashing pool (if running hashed sampled), and must match the pool file base name in the data folder.
 
 `sample` is the name of the sample, and must match the sample file base name in the data folder., i.e. the name of the sample file without the .pxl extension.
 
