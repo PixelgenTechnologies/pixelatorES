@@ -550,13 +550,23 @@ read_samplesheet <-
       sample_sheet$condition <- NA
     }
 
-    sample_sheet %>%
+    sample_sheet <-
+      sample_sheet %>%
       select(sample, sample_alias, condition, any_of("pool")) %>%
       mutate(
         sample_alias = ifelse(is.na(sample_alias), sample, sample_alias),
         condition = ifelse(is.na(condition), sample_alias, condition)
       ) %>%
       distinct()
+
+    if ("pool" %in% names(sample_sheet)) {
+      if (any(c(sample_sheet$sample, sample_sheet$sample_alias) %in% sample_sheet$pool)) {
+        cli_abort("The `pool` column in the sample sheet cannot contain values that are also present in the `sample`
+                  or `sample_alias` columns.")
+      }
+    }
+
+    return(sample_sheet)
   }
 
 

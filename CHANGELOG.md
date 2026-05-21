@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- `pool` IDs with duplicates in `sample` or `sample_alias` are no longer tolerated. 
+- The chunk `read_qc_metrics` will now always throw a hard error if there is an error, regardless of which Quarto profile is used. This is to avoid silent failures in this crucial step of the data processing.
+
 ## [0.10.4] 2026-05-19
 
 ### Fixed
