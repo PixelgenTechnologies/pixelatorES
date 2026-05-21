@@ -94,6 +94,8 @@ if (params$debug_mode) {
 #| label: read_qc_metrics
 #| results: 'asis'
 #| error: true
+#| warning: true
+#| message: true
 
 sample_qc_metrics <-
   read_qc_files(file_paths, sample_sheet)
