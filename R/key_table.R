@@ -558,8 +558,19 @@ get_qc_metrics <-
   function(object, sample_qc_metrics, sample_sheet) {
     .format <-
       function(tb) {
+
+        # If NULL return NULL
         if (is.null(tb)) {
           return(NULL)
+        }
+
+        # If tb is a list of tables, apply formatting to each element in the list instead
+        if (inherits(tb, "list")) {
+          tb <- lapply(tb, .format)
+        } else if (nrow(tb) == 0) {
+          # If the table is empty, return NULL
+          return(NULL)
+
         }
 
         # If the table contains a "sample" column but not a "sample_alias" column, add it from samplesheet
@@ -600,11 +611,6 @@ get_qc_metrics <-
             levels = pool_levels,
             column_name = "pool"
           )
-        }
-
-        # If tb is a list of tables, apply formatting to each element in the list instead
-        if (inherits(tb, "list")) {
-          tb <- lapply(tb, .format)
         }
 
         return(tb)

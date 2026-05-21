@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `pool` IDs with duplicates in `sample` or `sample_alias` are no longer tolerated. 
 - The chunk `read_qc_metrics` will now always throw a hard error if there is an error, regardless of which Quarto profile is used. This is to avoid silent failures in this crucial step of the data processing.
+- `get_qc_metrics` is now more lenient and will return `NULL` for extracted tables with zero rows rather than throwing an error. 
 
 ## [0.10.4] 2026-05-19
 
