@@ -558,7 +558,6 @@ get_qc_metrics <-
   function(object, sample_qc_metrics, sample_sheet) {
     .format <-
       function(tb) {
-
         # If NULL return NULL
         if (is.null(tb)) {
           return(NULL)
@@ -570,7 +569,6 @@ get_qc_metrics <-
         } else if (nrow(tb) == 0) {
           # If the table is empty, return NULL
           return(NULL)
-
         }
 
         # If the table contains a "sample" column but not a "sample_alias" column, add it from samplesheet
