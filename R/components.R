@@ -442,10 +442,10 @@ component_sequencing_saturation_curve <-
       lapply(function(x) {
         df_bg <- seqsat_curve_data_mean %>%
           filter(sample_alias != x) %>%
-          na.omit()
+          stats::na.omit()
         df_fg <- seqsat_curve_data_mean %>%
           filter(sample_alias == x) %>%
-          na.omit()
+          stats::na.omit()
 
         seqsat_curve_data_mean %>%
           ggplot() +
