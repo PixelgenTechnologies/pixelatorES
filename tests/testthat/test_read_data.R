@@ -374,6 +374,7 @@ test_that("File reading works as expected", {
 
   # Hashing
   expect_no_error(sample_sheet_hashing <- read_samplesheet(test_samplesheet(type = "hashing")))
+
   expect_equal(
     sample_sheet_hashing,
     structure(
@@ -387,6 +388,17 @@ test_that("File reading works as expected", {
       class = c("tbl_df", "tbl", "data.frame")
     )
   )
+
+  # Error out when duplicates between pool and samples
+  temp_file <- tempfile(fileext = ".csv")
+  sample_sheet_hashing %>%
+    mutate(pool = sample) %>%
+    write.csv(temp_file)
+  expect_error(
+    suppressMessages(read_samplesheet(temp_file)),
+    regexp = "The `pool` column.*cannot contain.*also present"
+  )
+
   expect_no_error(data_paths <-
     get_file_paths(
       data_folder = test_data_folder(type = "hashing"),
