@@ -59,7 +59,7 @@ tabset_figure_table(
 )
 close_tabset()
 
-tabset_plotlist(component$sample_confidence_plots)
+tabset_plotlist(component$sample_confidence_plots, level = 4)
 ```
 
 ### Sequencing
