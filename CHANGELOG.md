@@ -5,12 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Fixed
-
-- Added an explicit title level for the tab set `component$sample_confidence_plots`.
-
 ## [0.10.5] 2026-05-21
 
 ### Changed
@@ -19,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The chunk `read_qc_metrics` will now always throw a hard error if there is an error, regardless of which Quarto profile is used. This is to avoid silent failures in this crucial step of the data processing.
 - The chunk `read_qc_metrics` will now always output messages and warnings.
 - `get_qc_metrics` is now more lenient and will return `NULL` for extracted tables with zero rows rather than throwing an error. 
+
+### Fixed
+
+- Added an explicit title level for the tab set `component$sample_confidence_plots`.
 
 ## [0.10.4] 2026-05-19
 
