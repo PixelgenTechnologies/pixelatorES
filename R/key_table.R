@@ -653,7 +653,7 @@ get_qc_metrics <-
         # If the table contains a "sample" column but not a "sample_alias" column, add it from samplesheet
         if ("sample" %in% names(tb) && !"sample_alias" %in% names(tb)) {
           tb <- tb %>%
-            left_join(
+            inner_join(
               select(sample_sheet, sample_alias, sample),
               by = c("sample")
             ) %>%
@@ -693,20 +693,38 @@ get_qc_metrics <-
         return(tb)
       }
 
-    list(
-      read_stats = get_read_stats(object),
-      sample_hash_stats = get_hash_stats(object, sample_qc_metrics),
-      seq_saturation = get_seq_saturation(object, sample_qc_metrics),
-      crossing_edges = get_crossing_edges(sample_qc_metrics),
-      degree_distribution = get_degree_distribution(sample_qc_metrics),
-      denoising = get_denoising_data(sample_qc_metrics),
-      denoising_detail = get_denoising_detail_data(object),
-      coreness = get_coreness_data(object),
-      top_markers = get_top_markers(object, "sample_alias",
-        n_markers = c(3, 5)
+    outdata <-
+      list(
+        read_stats = get_read_stats(object),
+        sample_hash_stats = get_hash_stats(object, sample_qc_metrics),
+        seq_saturation = get_seq_saturation(object, sample_qc_metrics),
+        crossing_edges = get_crossing_edges(sample_qc_metrics),
+        degree_distribution = get_degree_distribution(sample_qc_metrics),
+        denoising = get_denoising_data(sample_qc_metrics),
+        denoising_detail = get_denoising_detail_data(object),
+        coreness = get_coreness_data(object),
+        top_markers = get_top_markers(object, "sample_alias",
+          n_markers = c(3, 5)
+        )
       )
-    ) %>%
-      lapply(.format)
+
+    outdata %>%
+      names() %>%
+      set_names() %>%
+      lapply(function(nm) {
+        # Attempt to format the data
+        tryCatch(
+          expr = {
+            .format(outdata[[nm]])
+          },
+          error = function(e) {
+            cli_abort(c(
+              "Error encountered in element: '{nm}'",
+              "x" = "Original error: {e$message}"
+            ))
+          }
+        )
+      })
   }
 
 #' Process metrics table content

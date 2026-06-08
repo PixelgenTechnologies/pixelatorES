@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced `component_abundance_per_sample` and `component_abundance_per_celltype` with `component_abundance_per_marker` (mirrors `component_proximity_per_marker`).
 - `plot_violin()` now uses `ggbeeswarm::geom_quasirandom` with dodge alignment and a fixed contrasting point color instead of opaque `geom_jitter`.
 
+### Fixed
+
+- Bug in `get_hash_stats` which would cause an error to be thrown for hashed samples if the samplesheet didn't contain all hash groups that exist in the QC files.
+- `get_qc_metrics` now reports which data causes an error when data fails in formatting.
+
 ## [0.10.5] 2026-05-21
 
 ### Changed
