@@ -240,6 +240,85 @@ get_denoising_data <-
     }
   }
 
+#' Get denoising detail data
+#'
+#' This function retrieves per-component denoising detail from a Seurat object's
+#' metadata, including UMIs removed by denoising method and isotype fraction reduction.
+#'
+#' @param object A Seurat object containing denoising metadata columns.
+#'
+#' @return A list with `by_method` and `isotype_reduction` tibbles, or `NULL` when
+#'   both are empty. Individual slots are `NULL` when required columns are absent.
+#'
+#' @export
+#'
+get_denoising_detail_data <-
+  function(object) {
+    pixelatorR:::assert_class(object, "Seurat")
+
+    meta <-
+      object[[]] %>%
+      as_tibble(rownames = "sample_component")
+
+    marked_cols <-
+      grep("denoised_nodes_marked", names(meta), value = TRUE)
+    marked_cols <- marked_cols[!grepl("stranded", marked_cols)]
+
+    by_method <- NULL
+    if (length(marked_cols) > 0) {
+      by_method <-
+        meta %>%
+        select(sample_component, sample_alias, n_umi, all_of(marked_cols)) %>%
+        pivot_longer(
+          -c(sample_component, sample_alias, n_umi),
+          names_to = "type",
+          values_to = "umis_denoised"
+        ) %>%
+        mutate(
+          type = str_remove(type, ".*_marked_") %>%
+            str_remove("only_by_")
+        ) %>%
+        group_by(sample_alias, type) %>%
+        summarise(
+          umis_denoised = sum(umis_denoised),
+          n_umi = sum(n_umi),
+          .groups = "drop"
+        ) %>%
+        filter(umis_denoised > 0)
+
+      if (nrow(by_method) == 0) {
+        by_method <- NULL
+      }
+    }
+
+    isotype_reduction <- NULL
+    if (all(c("isotype_fraction", "pre_denoise_isotype_fraction") %in% names(meta))) {
+      isotype_reduction <-
+        meta %>%
+        select(
+          sample_component, sample_alias,
+          isotype_fraction, pre_denoise_isotype_fraction
+        ) %>%
+        mutate(
+          isotype_reduction = 1 - (isotype_fraction / pre_denoise_isotype_fraction),
+          isotype_reduction = ifelse(isotype_reduction < -1, -1, isotype_reduction)
+        )
+
+      if (nrow(isotype_reduction) == 0) {
+        isotype_reduction <- NULL
+      }
+    }
+
+    if (is.null(by_method) && is.null(isotype_reduction)) {
+      return(NULL)
+    }
+
+    list(
+      by_method = by_method,
+      isotype_reduction = isotype_reduction
+    )
+  }
+
 #' Get coreness data
 #'
 #' This function retrieves coreness data from a Seurat object and summarizes it by sample and component.
@@ -621,6 +700,7 @@ get_qc_metrics <-
       crossing_edges = get_crossing_edges(sample_qc_metrics),
       degree_distribution = get_degree_distribution(sample_qc_metrics),
       denoising = get_denoising_data(sample_qc_metrics),
+      denoising_detail = get_denoising_detail_data(object),
       coreness = get_coreness_data(object),
       top_markers = get_top_markers(object, "sample_alias",
         n_markers = c(3, 5)

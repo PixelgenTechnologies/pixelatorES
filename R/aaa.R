@@ -47,7 +47,10 @@ globalVariables(
     "value", "violinwidth", "x", "xmax", "xmin", "y", "z",
     "hjust", "sample_confidence", "cumsum_n", "text_pos",
     "percent_umis_denoised", "edge_saturation", "node_saturation",
-    "saturation_mean", "saturation_se"
+    "saturation_mean", "saturation_se",
+    "pre_denoise_isotype_fraction", "umis_denoised", "isotype_reduction",
+    "fraction_denoised", "median_isotype_reduction",
+    "median_pre_denoise_isotype", "median_post_denoise_isotype"
   ),
   package = "pixelatorES",
   add = TRUE

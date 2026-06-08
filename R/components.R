@@ -1,30 +1,40 @@
-#' Create the component for bleedover noise
+#' Create the denoising component
 #'
-#' This function creates a ggplot object that visualizes the fraction of UMIs
-#' removed by denoising.
+#' This function creates plots and tables visualizing denoising metrics,
+#' including the fraction of UMIs removed, UMIs removed by method, and
+#' reduction in isotype fraction.
 #'
-#' @param qc_metrics_tables A list containing a data frame named `denoising`
+#' @param qc_metrics_tables A list from [get_qc_metrics()] containing `denoising`
+#'   and `denoising_detail` slots.
+#' @param sample_levels Optional vector of sample levels to order samples in plots.
 #'
-#' @return A ggplot object visualizing the fraction of UMIs removed by denoising.
+#' @return A list with named `plots` and `tables` for removed UMIs, denoising
+#'   by method, and isotype reduction.
 #'
 #' @export
 #'
-component_bleedover_noise <- function(
-  qc_metrics_tables
+component_denoising <- function(
+  qc_metrics_tables,
+  sample_levels = NULL
 ) {
   pixelatorR:::assert_class(qc_metrics_tables, "list")
 
-  plot_data <-
-    qc_metrics_tables$denoising
+  if (is.null(qc_metrics_tables$denoising)) {
+    cli::cli_abort("Denoising data is required but {.code qc_metrics_tables$denoising} is NULL.")
+  }
 
-  if ("pool" %in% names(plot_data)) {
-    plot_data <-
-      plot_data %>%
+  denoising_data <- qc_metrics_tables$denoising
+
+  if ("pool" %in% names(denoising_data)) {
+    denoising_data <-
+      denoising_data %>%
       rename(sample_alias = pool)
   }
 
-  p <-
-    plot_data %>%
+  denoising_data <- set_sample_levels(denoising_data, sample_levels)
+
+  p_removed_umis <-
+    denoising_data %>%
     ggplot(aes(sample_alias, percent_umis_denoised)) +
     geom_col(fill = "#DAD6D7") +
     geom_text(aes(label = paste0(round(percent_umis_denoised, 3), " %")),
@@ -43,10 +53,143 @@ component_bleedover_noise <- function(
     ) +
     labs(
       x = NULL, y = "Removed UMIs [%]",
-      title = "Fraction of UMIs removed by bleedover denoising",
+      title = "Fraction of UMIs removed by denoising",
       caption = expression(~ italic(frac("# Discarded UMIs", "# Total UMIs")))
     )
-  return(p)
+
+  tabl_removed_umis <-
+    denoising_data %>%
+    arrange(sample_alias) %>%
+    mutate(
+      percent_umis_denoised = round(percent_umis_denoised, 3),
+      number_of_umis_removed = round(number_of_umis_removed / 1e6, 3)
+    ) %>%
+    select(
+      `Sample ID` = sample_alias,
+      `% Denoised UMIs` = percent_umis_denoised,
+      `Total denoised UMIs [M]` = number_of_umis_removed
+    ) %>%
+    style_table(caption = "UMIs removed by denoising", interactive = FALSE)
+
+  by_method_data <-
+    qc_metrics_tables$denoising_detail$by_method %>%
+    set_sample_levels(sample_levels)
+
+  method_palette <-
+    c(
+      "ace" = "#DAD6D7",
+      "pls" = "#B4ADAF",
+      "ace_and_pls" = "#C86584"
+    )
+
+  # Add missing methods to palette
+  if (any(!by_method_data$type %in% names(method_palette))) {
+    missing_methods <- setdiff(unique(by_method_data$type), names(method_palette))
+    add_palette <- c("#496389", "#1F395F", "#4D988D", "#E05573", "#BF9871", "#918F8F")
+    method_palette <- c(method_palette, setNames(add_palette[seq_len(length(missing_methods))], missing_methods))
+  }
+
+  p_by_method <-
+    by_method_data %>%
+    mutate(type = factor(type, levels = names(method_palette))) %>%
+    arrange(sample_alias, desc(type)) %>%
+    group_by(sample_alias) %>%
+    mutate(
+      fraction_denoised = umis_denoised / n_umi,
+      x_pos = unclass(factor(type)) %% 2,
+      y_pos = cumsum(fraction_denoised) - 0.5 * fraction_denoised
+    ) %>%
+    ggplot(aes(sample_alias, fraction_denoised, fill = type)) +
+    geom_col() +
+    geom_text(
+      aes(
+        label = paste0(round(100 * fraction_denoised, 1), " %"),
+        x = unclass(sample_alias) + c(-0.45, 0.45)[x_pos + 1],
+        y = y_pos,
+        hjust = x_pos
+      ),
+      vjust = -.1,
+      size = 3
+    ) +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    scale_fill_manual(values = method_palette, na.value = "#DAD6D7") +
+    theme_bw() +
+    theme(
+      axis.text.x = element_text(angle = 60, hjust = 1),
+      panel.grid = element_blank()
+    ) +
+    labs(
+      x = NULL,
+      y = "Fraction of UMIs denoised",
+      fill = "Method",
+      title = "Fraction of UMIs denoised by method"
+    )
+
+  tabl_by_method <-
+    by_method_data %>%
+    mutate(
+      fraction_denoised = round(100 * umis_denoised / n_umi, 3)
+    ) %>%
+    arrange(sample_alias, type) %>%
+    select(
+      `Sample ID` = sample_alias,
+      `Denoising method` = type,
+      `UMIs denoised` = umis_denoised,
+      `Fraction denoised [%]` = fraction_denoised
+    ) %>%
+    style_table(caption = "UMIs denoised by method", interactive = FALSE)
+
+  isotype_data <-
+    qc_metrics_tables$denoising_detail$isotype_reduction %>%
+    set_sample_levels(sample_levels)
+
+  p_isotype_reduction <-
+    isotype_data %>%
+    plot_violin(
+      x = "sample_alias",
+      y = "isotype_reduction",
+      title = "Reduction in isotype fraction",
+      y_label = "Isotype reduction by denoising",
+      use_pct = TRUE,
+      hline = 0,
+      round = 1
+    ) +
+    scale_y_continuous(
+      labels = scales::percent_format(accuracy = 1),
+      limits = c(-1, 1),
+      expand = expansion(0)
+    )
+
+  tabl_isotype_reduction <-
+    isotype_data %>%
+    group_by(sample_alias) %>%
+    summarise(
+      median_isotype_reduction = median(isotype_reduction) * 100,
+      median_pre_denoise_isotype = median(pre_denoise_isotype_fraction) * 100,
+      median_post_denoise_isotype = median(isotype_fraction) * 100,
+      .groups = "drop"
+    ) %>%
+    mutate(across(where(is.numeric), ~ round(., 3))) %>%
+    select(
+      `Sample ID` = sample_alias,
+      `Median isotype reduction [%]` = median_isotype_reduction,
+      `Median pre-denoise isotype [%]` = median_pre_denoise_isotype,
+      `Median post-denoise isotype [%]` = median_post_denoise_isotype
+    ) %>%
+    style_table(caption = "Isotype reduction by denoising", interactive = FALSE)
+
+  list(
+    plots = list(
+      removed_umis = p_removed_umis,
+      by_method = p_by_method,
+      isotype_reduction = p_isotype_reduction
+    ),
+    tables = list(
+      removed_umis = tabl_removed_umis,
+      by_method = tabl_by_method,
+      isotype_reduction = tabl_isotype_reduction
+    )
+  )
 }
 
 #' Create the component for control markers

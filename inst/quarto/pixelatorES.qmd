@@ -5,8 +5,8 @@ date: "`r Sys.Date()`"
 editor_options: 
   chunk_output_type: console
 params: 
-  sample_sheet: "../extdata/test_samplesheet_hashing.csv"
-  data_folder: "../extdata/"
+  sample_sheet: "C:/Users/max/data/pna155_ms_data_denoised_undetermined/samplesheet.csv"
+  data_folder: "C:/Users/max/data/pna155_ms_data_denoised_undetermined/"
   control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
   do_harmonize: FALSE
   harmonization_vars: ["condition"]

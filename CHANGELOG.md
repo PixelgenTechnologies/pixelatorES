@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `component_denoising` with plots and tables for UMIs removed, denoising by method, and isotype reduction.
+- `get_denoising_detail_data()` for per-component denoising metadata from Seurat objects.
+- `DEVELOPERS.md` with linting, styling, and test data update instructions.
+
+### Changed
+
+- Renamed `component_bleedover_noise` to `component_denoising`.
+- Test layout PXL files updated with denoising metadata columns in `__adata__obs`.
+
 ## [0.10.5] 2026-05-21
 
 ### Changed
