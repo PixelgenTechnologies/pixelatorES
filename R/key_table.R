@@ -301,6 +301,7 @@ get_denoising_detail_data <-
         ) %>%
         mutate(
           isotype_reduction = 1 - (isotype_fraction / pre_denoise_isotype_fraction),
+          isotype_reduction = ifelse(isotype_reduction == 0, 1, isotype_reduction),
           isotype_reduction = ifelse(isotype_reduction < -1, -1, isotype_reduction)
         )
 

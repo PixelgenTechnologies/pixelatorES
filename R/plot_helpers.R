@@ -550,7 +550,7 @@ plot_violin <- function(
   use_grid = FALSE,
   use_jitter = FALSE,
   jitter_size = 0.1,
-  jitter_alpha = 0.5,
+  jitter_alpha = 0.35,
   hline = NULL
 ) {
   pixelatorR:::assert_class(plot_data, "data.frame")

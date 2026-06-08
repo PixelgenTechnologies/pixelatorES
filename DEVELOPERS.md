@@ -23,7 +23,7 @@ This project uses `lintr` for linting and `styler` for code formatting. The conf
 
 ## Linting
 
-To run the linter, you need to install `lintr`. Then you can use one of the the following commands:
+To run the linter, you need to install `lintr`. Then you can use one of the following commands:
 
 ```r
 # Lint entire package
@@ -43,7 +43,7 @@ CI runs `lintr::lint_package()` with `LINTR_ERROR_ON_LINT: true` on pull request
 
 ## Styler
 
-To style the code, you need to install `styler`. Then you can use one of the the following commands:
+To style the code, you need to install `styler`. Then you can use one of the following commands:
 
 ```r
 # Style entire package
