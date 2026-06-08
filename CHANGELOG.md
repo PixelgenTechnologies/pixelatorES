@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bug in `get_hash_stats` which would cause an error to be thrown for hashed samples if the samplesheet didn't contain all hash groups that exist in the QC files.
 - `get_qc_metrics` now reports which data causes an error when data fails in formatting.
+- Changed `run_proximity_anova` to use ":" instead of "/" as a marker pair separator.
 
 ## [0.10.5] 2026-05-21
 
