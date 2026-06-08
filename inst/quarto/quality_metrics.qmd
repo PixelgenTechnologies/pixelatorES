@@ -162,42 +162,6 @@ component_molecule_plot(pg_data, sample_palette)
 
 ### Graph metrics
 
-#### Denoising
-
-Denoising removes UMIs from low-confidence graph nodes to improve data quality.
-
-```{r}
-#| label: qc_metrics_denoising
-#| eval: !expr '!is.null(qc_metrics_tables$denoising)'
-#| results: 'asis'
-component <-
-  component_denoising(qc_metrics_tables, sample_levels = sample_aliases)
-
-tabset_figure_table(
-  component$plots$removed_umis,
-  component$tables$removed_umis,
-  level = 5,
-  mode = "title"
-)
-close_tabset()
-
-tabset_figure_table(
-  component$plots$by_method,
-  component$tables$by_method,
-  level = 5,
-  mode = "title"
-)
-close_tabset()
-
-tabset_figure_table(
-  component$plots$isotype_reduction,
-  component$tables$isotype_reduction,
-  level = 5,
-  mode = "title"
-)
-close_tabset()
-```
-
 #### k-coreness
 
 k-coreness is a measure of the connectivity of a node in a graph. A node with a
@@ -217,6 +181,26 @@ tabset_figure_table(
   mode = "title"
 )
 close_tabset()
+```
+
+#### Denoising
+
+Denoising removes UMIs from low-confidence graph nodes to improve data quality.
+
+```{r}
+#| label: qc_metrics_denoising
+#| results: 'asis'
+component <-
+  component_denoising(qc_metrics_tables, sample_levels = sample_aliases)
+
+tabset_figure_table(
+  component$plots$removed_umis,
+  component$tables$removed_umis,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+
 ```
 
 ### Control markers
