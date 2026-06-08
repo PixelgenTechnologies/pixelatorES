@@ -28,6 +28,7 @@ Imports:
     stringr,
     purrr,
     ggplot2,
+    ggbeeswarm,
     ggplotify,
     RcppSimdJson,
     ComplexHeatmap,

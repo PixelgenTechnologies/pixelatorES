@@ -200,7 +200,6 @@ tabset_figure_table(
   mode = "title"
 )
 close_tabset()
-
 ```
 
 ### Control markers

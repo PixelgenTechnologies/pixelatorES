@@ -10,6 +10,7 @@ This document contains instructions for developers working on the Proxiome Exper
 - [Type assertions and error messages](#type-assertions-and-error-messages)
 - [Package dev tasks](#package-dev-tasks)
 - [Quarto report rendering](#quarto-report-rendering)
+- [Violin plots with points](#violin-plots-with-points)
 - [Updating test data](#updating-test-data)
 
 ---

@@ -1264,63 +1264,74 @@ component_coreness <-
     ))
   }
 
-#' Create the component for abundance per sample
+#' Create the component for abundance per marker
 #'
 #' This function creates plots visualizing the abundance of each marker
-#' across different samples.
+#' across samples and, optionally, across cell types.
 #'
 #' @param object A processed data object containing marker abundance data.
 #' @param params A list of parameters, including control markers.
 #' @param sample_palette A color palette for the samples.
+#' @param per_celltype A boolean indicating whether to add a plot per cell type
+#'   (default is TRUE).
 #' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
-#' @return A list containing plots.
+#' @return A list containing plots for each marker.
 #'
 #' @export
 #'
-component_abundance_per_sample <- function(
+component_abundance_per_marker <- function(
   object,
   params,
   sample_palette,
+  per_celltype = TRUE,
   sample_levels = NULL,
   test_mode = FALSE
 ) {
-  plot_data <-
+  .abundance_plot_data <- function(object, params, test_mode = FALSE) {
     object %>%
-    LayerData("data") %>%
-    as_tibble(rownames = "marker") %>%
-    {
-      if (test_mode) {
-        slice_head(., n = 10)
-      } else {
-        .
-      }
-    } %>%
-    pivot_longer(-marker, names_to = "cell_id", values_to = "normcount") %>%
-    left_join(
-      FetchData(object,
-        vars = c("sample_alias", "condition")
+      LayerData("data") %>%
+      as_tibble(rownames = "marker") %>%
+      {
+        if (test_mode) {
+          slice_head(., n = 10)
+        } else {
+          .
+        }
+      } %>%
+      pivot_longer(-marker, names_to = "cell_id", values_to = "normcount") %>%
+      left_join(
+        FetchData(object,
+          vars = c(
+            "sample_alias",
+            "condition",
+            "seurat_clusters",
+            "celltype"
+          )
+        ) %>%
+          as_tibble(rownames = "cell_id"),
+        by = "cell_id"
       ) %>%
-        as_tibble(rownames = "cell_id"),
-      by = "cell_id"
-    ) %>%
-    mutate(
-      marker = factor(marker, order_cd_markers(
-        unique(marker),
-        params$control_markers
-      ))
-    ) %>%
-    group_by(marker)
+      mutate(
+        marker = factor(marker, order_cd_markers(
+          unique(marker),
+          params$control_markers
+        ))
+      ) %>%
+      group_by(marker)
+  }
 
-  plot_data <- set_sample_levels(plot_data, sample_levels)
+  plot_data <- .abundance_plot_data(object, params, test_mode)
 
   plots <-
     plot_data %>%
     group_split() %>%
     set_names(group_keys(plot_data)$marker) %>%
     lapply(function(g_data) {
-      g_data %>%
+      p1 <-
+        g_data %>%
+        set_sample_levels(sample_levels) %>%
         plot_violin(
           x = "sample_alias",
           y = "normcount",
@@ -1331,89 +1342,33 @@ component_abundance_per_sample <- function(
           summarize = FALSE,
           palette = sample_palette,
           use_jitter = TRUE,
-          use_grid = TRUE,
-          jitter_alpha = 1
-        )
-    })
+          use_grid = TRUE
+        ) +
+        guides(fill = "none")
 
-  return(plots)
-}
-
-
-#' Create the component for abundance per celltype
-#'
-#' This function creates plots visualizing the abundance of each marker
-#' across different celltypes
-#'
-#' @param object A processed data object containing marker abundance data.
-#' @param params A list of parameters containing control markers.
-#' @param sample_palette A color palette for the samples.
-#' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
-#'
-#' @return A list containing plots.
-#'
-#' @export
-#'
-component_abundance_per_celltype <- function(
-  object,
-  params,
-  sample_palette,
-  test_mode = FALSE
-) {
-  plot_data <-
-    object %>%
-    LayerData("data") %>%
-    as_tibble(rownames = "marker") %>%
-    {
-      if (test_mode) {
-        slice_head(., n = 10)
-      } else {
-        .
+      if (!per_celltype) {
+        return(p1)
       }
-    } %>%
-    pivot_longer(-marker, names_to = "cell_id", values_to = "normcount") %>%
-    left_join(
-      FetchData(object,
-        vars = c(
-          "sample_alias",
-          "condition",
-          "seurat_clusters",
-          "celltype"
-        )
-      ) %>%
-        as_tibble(rownames = "cell_id"),
-      by = "cell_id"
-    ) %>%
-    filter(celltype %in% displayed_cell_types) %>%
-    mutate(
-      marker = factor(marker, order_cd_markers(
-        unique(marker),
-        params$control_markers
-      )),
-      celltype = factor(celltype, displayed_cell_types)
-    ) %>%
-    group_by(marker)
 
-  plots <-
-    plot_data %>%
-    group_split() %>%
-    set_names(group_keys(plot_data)$marker) %>%
-    lapply(function(g_data) {
-      g_data %>%
+      p2 <-
+        g_data %>%
+        filter(celltype %in% displayed_cell_types) %>%
+        mutate(celltype = factor(celltype, displayed_cell_types)) %>%
+        set_sample_levels(sample_levels) %>%
         plot_violin(
           x = "sample_alias",
           y = "normcount",
           fill = "condition",
-          title = unique(g_data$marker) %>% as.character(),
           y_label = "Normalized counts",
           summarize = FALSE,
           palette = sample_palette,
           facet_var = "celltype",
           use_jitter = TRUE,
-          use_grid = TRUE,
-          jitter_alpha = 1
+          use_grid = TRUE
         ) +
         guides(fill = "none")
+
+      p1 / p2
     })
 
   return(plots)
@@ -1619,7 +1574,6 @@ component_proximity_per_marker <- function(
           palette = sample_palette,
           use_jitter = TRUE,
           use_grid = TRUE,
-          jitter_alpha = 1,
           hline = 0
         ) +
         guides(fill = "none")
@@ -1646,7 +1600,6 @@ component_proximity_per_marker <- function(
           facet_var = "celltype",
           use_jitter = TRUE,
           use_grid = TRUE,
-          jitter_alpha = 1,
           hline = 0
         ) +
         guides(fill = "none")

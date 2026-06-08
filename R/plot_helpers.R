@@ -517,9 +517,9 @@ plot_embeddings_samplewise <-
 #' @param draw_quantiles Numeric vector of quantiles to draw on the violin plot (default is 0.5 for median).
 #' @param facet_var Optional variable to facet the plot by.
 #' @param use_grid Logical indicating whether to use a grid layout for the plot.
-#' @param use_jitter Logical indicating whether to add jittered data points.
-#' @param jitter_size Size of the jittered points.
-#' @param jitter_alpha Transparency level for the jittered points.
+#' @param use_jitter Logical indicating whether to add quasirandom data points.
+#' @param jitter_size Size of the quasirandom points.
+#' @param jitter_alpha Transparency level for the quasirandom points (default 0.35).
 #' @param hline Optional horizontal line to draw on the plot.
 #'
 #' @return A ggplot object representing the violin plot.
@@ -724,11 +724,20 @@ plot_violin <- function(
     )
 
   if (use_jitter) {
+    point_group_aes <-
+      if (!is.null(fill)) {
+        aes(group = interaction(!!sym(x), !!sym(fill)))
+      } else {
+        aes(group = !!sym(x))
+      }
+
     p <- p +
-      geom_jitter(
+      geom_quasirandom(
+        mapping = point_group_aes,
+        color = "grey20",
+        alpha = jitter_alpha,
         size = jitter_size,
-        position = position_jitter(height = 0),
-        alpha = jitter_alpha
+        position = position_quasirandom(width = "units", dodge.width = 0.9)
       )
   }
 

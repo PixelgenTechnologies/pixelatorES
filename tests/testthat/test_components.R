@@ -174,7 +174,7 @@ for (data_type in data_types) {
       ggplot2::ggplot_build(component$plots$removed_umis)
     )
 
-    # component_abundance_per_celltype
+    # component_abundance_per_marker
     temp <-
       pg_data %>%
       subset(features = rownames(pg_data)[1:3])
@@ -187,7 +187,7 @@ for (data_type in data_types) {
     temp[["seurat_clusters"]] <- 1
 
     expect_no_error(
-      component <- component_abundance_per_celltype(
+      component <- component_abundance_per_marker(
         temp,
         params = list(
           control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
