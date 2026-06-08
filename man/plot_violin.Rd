@@ -28,7 +28,7 @@ plot_violin(
   use_grid = FALSE,
   use_jitter = FALSE,
   jitter_size = 0.1,
-  jitter_alpha = 0.5,
+  jitter_alpha = 0.35,
   hline = NULL
 )
 }
