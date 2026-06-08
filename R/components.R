@@ -1352,9 +1352,13 @@ component_abundance_per_marker <- function(
 
       p2 <-
         g_data %>%
-        filter(celltype %in% displayed_cell_types) %>%
-        mutate(celltype = factor(celltype, displayed_cell_types)) %>%
         set_sample_levels(sample_levels) %>%
+        filter(celltype %in% displayed_cell_types) %>%
+        complete(
+          sample_alias = levels(sample_alias),
+          celltype = displayed_cell_types
+        ) %>%
+        mutate(celltype = factor(celltype, displayed_cell_types)) %>%
         plot_violin(
           x = "sample_alias",
           y = "normcount",
