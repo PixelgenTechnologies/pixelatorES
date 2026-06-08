@@ -73,13 +73,14 @@ component_denoising <- function(
 
   by_method_data <-
     qc_metrics_tables$denoising_detail$by_method %>%
-    set_sample_levels(sample_levels)
+    set_sample_levels(sample_levels) %>%
+    mutate(type = str_replace(type, "_and_", "&"))
 
   method_palette <-
     c(
       "ace" = "#DAD6D7",
-      "pls" = "#B4ADAF",
-      "ace_and_pls" = "#C86584"
+      "ace&pls" = "#C86584",
+      "pls" = "#B4ADAF"
     )
 
   # Add missing methods to palette
