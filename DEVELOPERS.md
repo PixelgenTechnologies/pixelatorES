@@ -231,37 +231,6 @@ close_tabset()
 
 The function **returns** the `table` object; in an `results: 'asis'` chunk the return value is printed automatically, which renders the table in the "Table" tab.
 
-**Use when:** a component produces one primary plot (or a small plot list) with a summary table — the most common pattern for QC components.
-
-See `inst/quarto/quality_metrics.qmd` (control markers, k-coreness, reads per cell).
-
-### `close_tabset()`
-
-Emits the closing `:::` for a tabset opened by `tabset_figure_table()`. Pair it one-to-one with each `tabset_figure_table()` call.
-
-```r
-tabset_figure_table(component$plot, component$table, level = 5)
-close_tabset()
-```
-
-For multiple independent figure-table pairs in one section, repeat the pair:
-
-```r
-#| results: 'asis'
-component <- component_denoising(qc_metrics_tables, sample_levels = sample_aliases)
-
-tabset_figure_table(component$plots$removed_umis, component$tables$removed_umis, level = 5, mode = "title")
-close_tabset()
-
-tabset_figure_table(component$plots$by_method, component$tables$by_method, level = 5, mode = "title")
-close_tabset()
-
-tabset_figure_table(component$plots$isotype_reduction, component$tables$isotype_reduction, level = 5, mode = "title")
-close_tabset()
-```
-
-Separate markdown `####` headings above each chunk can label the metric groups when using this pattern.
-
 ### `title_plotlist()`
 
 Prints a named list of plots under markdown headings **without** creating a tabset. Used internally by `tabset_plotlist()` and as the figure renderer when `tabset_figure_table(..., mode = "title")` receives a plot list.
@@ -284,8 +253,6 @@ section_table(key_tables$pool, "Hash pool metrics", 3)
 section_table(key_tables$sample, "Sample metrics", 3)
 cat(":::\n")
 ```
-
-See `inst/quarto/quality_metrics.qmd` (key metrics).
 
 ### `style_table()`
 
