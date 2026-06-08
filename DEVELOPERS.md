@@ -9,6 +9,7 @@ This document contains instructions for developers working on the Proxiome Exper
 - [Styler](#styler)
 - [Type assertions and error messages](#type-assertions-and-error-messages)
 - [Package dev tasks](#package-dev-tasks)
+- [Quarto report rendering](#quarto-report-rendering)
 - [Updating test data](#updating-test-data)
 
 ---
@@ -143,6 +144,163 @@ Run a subset of tests:
 ```r
 devtools::test(filter = "component|key_table")
 ```
+
+---
+
+## Quarto report rendering
+
+The ES report is built with Quarto (see `inst/quarto/`). Components return `ggplot` objects and/or `DT::datatables` objects from [`style_table()`](R/tables.R). To place them in the HTML report, `.qmd` chunks call helper functions that emit Quarto markdown via `cat()`.
+
+**Requirement:** any chunk that uses these helpers must set `#| results: 'asis'` so printed output is passed through as raw markdown/HTML rather than wrapped in a code block.
+
+### How tabsets work
+
+Tab UI is created with Quarto fenced divs:
+
+```markdown
+::: {.panel-tabset .nav-pills}
+### Tab one
+(content)
+### Tab two
+(content)
+:::
+```
+
+The `tabset_*` helpers write these divs for you. Tab titles come from markdown headings (`#` level set by the `level` argument). Use `level` consistently within a section so tab nesting matches the surrounding heading hierarchy (e.g. `level = 5` under a `####` markdown heading).
+
+### `tabset_plotlist()`
+
+Renders a **named list of plots** as a tabset — one tab per plot.
+
+```r
+#| results: 'asis'
+plots <- component_sequencing_saturation_curve(pg_data, data_files, sample_levels = sample_aliases)
+tabset_plotlist(plots, level = 5)
+```
+
+- **Input:** named `list` of `ggplot` or `datatables` objects.
+- **`close`:** defaults to `TRUE`; the function opens and closes the tabset div.
+- **Use when:** a component returns multiple plots with no paired summary table, or tables are rendered separately.
+
+See `inst/quarto/quality_metrics.qmd` (sequencing saturation curves) and `inst/quarto/abundance.qmd`.
+
+### `tabset_nested_plotlist()`
+
+Like `tabset_plotlist()`, but each list element may itself be a `list` of plots, producing nested tabsets.
+
+```r
+#| results: 'asis'
+tabset_figure_table(
+  component$plots,   # named list of ggplot objects
+  component$table,
+  level = 5,
+  mode = "tabset_nested"
+)
+close_tabset()
+```
+
+- **Use when:** one table accompanies several plots that should be grouped in sub-tabs (e.g. cell recovery molecule-rank plots).
+
+See `inst/quarto/quality_metrics.qmd` (`qc_metrics_molrank_plot`) and `inst/quarto/spatial.qmd`.
+
+### `tabset_figure_table()`
+
+Renders a **figure + table** pair as a two-tab set ("Figure" and "Table").
+
+```r
+#| results: 'asis'
+component <- component_control_markers(pg_data)
+
+tabset_figure_table(
+  component$p1,
+  component$tabl,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```
+
+| Argument | Description |
+|---|---|
+| `figure` | A single `ggplot`, or a `list` of ggplots when `mode` is `"tabset"` or `"tabset_nested"`. |
+| `table` | A `datatables` object from `style_table()`. |
+| `level` | Markdown heading level for the "Figure" / "Table" tab labels. |
+| `mode` | `"tabset"` — sub-tab per plot in a list; `"tabset_nested"` — nested sub-tabs; `"title"` — print a single figure directly (no sub-tabset). |
+
+**Important:** `tabset_figure_table()` opens a `::: {.panel-tabset}` div but does **not** close it. Always call `close_tabset()` immediately after to emit the closing `:::`.
+
+The function **returns** the `table` object; in an `results: 'asis'` chunk the return value is printed automatically, which renders the table in the "Table" tab.
+
+**Use when:** a component produces one primary plot (or a small plot list) with a summary table — the most common pattern for QC components.
+
+See `inst/quarto/quality_metrics.qmd` (control markers, k-coreness, reads per cell).
+
+### `close_tabset()`
+
+Emits the closing `:::` for a tabset opened by `tabset_figure_table()`. Pair it one-to-one with each `tabset_figure_table()` call.
+
+```r
+tabset_figure_table(component$plot, component$table, level = 5)
+close_tabset()
+```
+
+For multiple independent figure-table pairs in one section, repeat the pair:
+
+```r
+#| results: 'asis'
+component <- component_denoising(qc_metrics_tables, sample_levels = sample_aliases)
+
+tabset_figure_table(component$plots$removed_umis, component$tables$removed_umis, level = 5, mode = "title")
+close_tabset()
+
+tabset_figure_table(component$plots$by_method, component$tables$by_method, level = 5, mode = "title")
+close_tabset()
+
+tabset_figure_table(component$plots$isotype_reduction, component$tables$isotype_reduction, level = 5, mode = "title")
+close_tabset()
+```
+
+Separate markdown `####` headings above each chunk can label the metric groups when using this pattern.
+
+### `title_plotlist()`
+
+Prints a named list of plots under markdown headings **without** creating a tabset. Used internally by `tabset_plotlist()` and as the figure renderer when `tabset_figure_table(..., mode = "title")` receives a plot list.
+
+Rarely called directly from `.qmd` files; prefer `tabset_plotlist()` unless you are building custom tabset markup.
+
+### `section_table()` and `section_intro()`
+
+Lower-level helpers for non-tabbed sections ([`R/render_utils.R`](R/render_utils.R)).
+
+- **`section_intro(title, text, level)`** — prints a heading and body text.
+- **`section_table(table, title, level)`** — prints a heading and a `datatables` object.
+
+Often used inside a manually opened tabset:
+
+```r
+#| results: 'asis'
+cat("::: {.panel-tabset .nav-pills}\n")
+section_table(key_tables$pool, "Hash pool metrics", 3)
+section_table(key_tables$sample, "Sample metrics", 3)
+cat(":::\n")
+```
+
+See `inst/quarto/quality_metrics.qmd` (key metrics).
+
+### `style_table()`
+
+Formats a data frame as a non-interactive (or interactive) DT table for report embedding. Components should return tables created with `style_table(caption = "...", interactive = FALSE)` so they render consistently in `tabset_figure_table()` and `section_table()`.
+
+### Adding a new component to the report
+
+1. Implement `component_*()` in [`R/components.R`](R/components.R) returning `ggplot` objects and/or `style_table()` output.
+2. In the appropriate `inst/quarto/*.qmd` file, add a chunk with `results: 'asis'`.
+3. Choose a layout helper:
+   - **One plot + one table** → `tabset_figure_table()` + `close_tabset()`
+   - **Several plots, no table** → `tabset_plotlist()`
+   - **Several plots + one table** → `tabset_figure_table(..., mode = "tabset_nested")` + `close_tabset()`
+   - **Table or intro only** → `section_table()` / `section_intro()`
+4. Guard the chunk with `#| eval: !expr ...` when data may be absent (e.g. `!is.null(qc_metrics_tables$denoising)`).
 
 ---
 
