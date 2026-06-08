@@ -86,7 +86,7 @@ component_denoising <- function(
   if (any(!by_method_data$type %in% names(method_palette))) {
     missing_methods <- setdiff(unique(by_method_data$type), names(method_palette))
     add_palette <- c("#496389", "#1F395F", "#4D988D", "#E05573", "#BF9871", "#918F8F")
-    method_palette <- c(method_palette, setNames(add_palette[seq_len(length(missing_methods))], missing_methods))
+    method_palette <- c(method_palette, setNames(add_palette[seq_along(missing_methods)], missing_methods))
   }
 
   p_by_method <-
