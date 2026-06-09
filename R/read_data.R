@@ -530,7 +530,7 @@ extract_sample_qc_metrics <-
 #' @export
 #'
 read_samplesheet <-
-  function(filepath) {
+  function(filepath, additional_columns = NULL) {
     pixelatorR:::assert_single_value(filepath, type = "string")
     pixelatorR:::assert_file_exists(filepath)
 
@@ -552,7 +552,7 @@ read_samplesheet <-
 
     sample_sheet <-
       sample_sheet %>%
-      select(sample, sample_alias, condition, any_of("pool")) %>%
+      select(sample, sample_alias, condition, any_of(c("pool", "lot_role", "kit_lot_id"))) %>%
       mutate(
         sample_alias = ifelse(is.na(sample_alias), sample, sample_alias),
         condition = ifelse(is.na(condition), sample_alias, condition)
