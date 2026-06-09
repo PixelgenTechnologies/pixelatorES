@@ -185,7 +185,7 @@ close_tabset()
 
 #### Denoising
 
-Denoising removes UMIs from low-confidence graph nodes to improve data quality.
+Denoising removes low-connectivity graph nodes to improve data quality.
 
 ```{r}
 #| label: qc_metrics_denoising
