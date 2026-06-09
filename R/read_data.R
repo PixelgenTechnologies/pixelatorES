@@ -530,7 +530,7 @@ extract_sample_qc_metrics <-
 #' @export
 #'
 read_samplesheet <-
-  function(filepath, additional_columns = NULL) {
+  function(filepath) {
     pixelatorR:::assert_single_value(filepath, type = "string")
     pixelatorR:::assert_file_exists(filepath)
 

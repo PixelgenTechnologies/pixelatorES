@@ -4,7 +4,7 @@
 \alias{read_samplesheet}
 \title{Read a sample sheet from a CSV file}
 \usage{
-read_samplesheet(filepath, additional_columns = NULL)
+read_samplesheet(filepath)
 }
 \arguments{
 \item{filepath}{A character string specifying the path to the sample sheet CSV file.}
