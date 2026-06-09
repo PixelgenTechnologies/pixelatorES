@@ -10,8 +10,8 @@ read_samplesheet(filepath)
 \item{filepath}{A character string specifying the path to the sample sheet CSV file.}
 }
 \value{
-A tibble with columns \code{sample}, \code{sample_alias}, \code{condition}, and \code{pool} (the latter all
-\code{NA} when the file has no pool column).
+A tibble with columns \code{sample}, \code{sample_alias}, \code{condition}. Columns \code{pool}, \code{lot_role}, and \code{kit_lot_id} are
+included if present in the CSV file.
 }
 \description{
 Reads a sample sheet from a CSV file and returns it as a tibble.

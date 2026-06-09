@@ -524,8 +524,8 @@ extract_sample_qc_metrics <-
 #'
 #' @param filepath A character string specifying the path to the sample sheet CSV file.
 #'
-#' @return A tibble with columns `sample`, `sample_alias`, `condition`, and `pool` (the latter all
-#'   `NA` when the file has no pool column).
+#' @return A tibble with columns `sample`, `sample_alias`, `condition`. Columns `pool`, `lot_role`, and `kit_lot_id` are
+#' included if present in the CSV file.
 #'
 #' @export
 #'
@@ -552,7 +552,7 @@ read_samplesheet <-
 
     sample_sheet <-
       sample_sheet %>%
-      select(sample, sample_alias, condition, any_of("pool")) %>%
+      select(sample, sample_alias, condition, any_of(c("pool", "lot_role", "kit_lot_id"))) %>%
       mutate(
         sample_alias = ifelse(is.na(sample_alias), sample, sample_alias),
         condition = ifelse(is.na(condition), sample_alias, condition)
