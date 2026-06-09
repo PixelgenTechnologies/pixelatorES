@@ -2,6 +2,8 @@
 
 The **Proxiome Experiment Summary** (ES) generates a self-contained `.html` report summarizing a multi-sample experiment, including QC metrics, statistics, and visualizations.
 
+For developer setup, linting, styling, and test data maintenance, see [DEVELOPERS.md](DEVELOPERS.md).
+
 ## Usage
 
 The `pixelatorES.qmd` file can be moved, renamed, and run from different locations on your computer without modifications. Given a sample sheet specifying the samples in an experiment, it processes that data and generates a Proxiome Experiment Summary. The report is always generated from the directory that the `.qmd` file is in, and will by default generate the report in the same directory.

@@ -63,3 +63,4 @@ rsconnect/
 .DS_Store
 .Rproj.user
 .positai
+.cursor

@@ -556,7 +556,7 @@ run_proximity_anova <-
       bind_rows()
 
     aov_res <- aov_res %>%
-      separate(contrast, into = c("marker_1", "marker_2"), sep = "/") %>%
+      separate(contrast, into = c("marker_1", "marker_2"), sep = ":") %>%
       mutate(p_adj = p.adjust(p, method = p_adj_method))
 
     return(aov_res)

@@ -28,7 +28,7 @@ plot_violin(
   use_grid = FALSE,
   use_jitter = FALSE,
   jitter_size = 0.1,
-  jitter_alpha = 0.5,
+  jitter_alpha = 0.35,
   hline = NULL
 )
 }
@@ -76,11 +76,11 @@ above the 0.5 quantile.}
 
 \item{use_grid}{Logical indicating whether to use a grid layout for the plot.}
 
-\item{use_jitter}{Logical indicating whether to add jittered data points.}
+\item{use_jitter}{Logical indicating whether to add quasirandom data points.}
 
-\item{jitter_size}{Size of the jittered points.}
+\item{jitter_size}{Size of the quasirandom points.}
 
-\item{jitter_alpha}{Transparency level for the jittered points.}
+\item{jitter_alpha}{Transparency level for the quasirandom points (default 0.35).}
 
 \item{hline}{Optional horizontal line to draw on the plot.}
 }

@@ -149,7 +149,6 @@ test_that("`plot_violin` works as expected", {
         palette = c("red", "blue", "green", "orange"),
         use_jitter = TRUE,
         use_grid = TRUE,
-        jitter_alpha = 1,
         hline = 0
       )
   )

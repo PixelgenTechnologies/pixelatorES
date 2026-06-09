@@ -148,25 +148,33 @@ for (data_type in data_types) {
       component <- component_sequencing_saturation_curve(pg_data, data_files)
     )
 
-    # component_bleedover_noise
-    expect_no_error(component <- component_bleedover_noise(qc_metrics_tables))
-    expect_s3_class(component, "ggplot")
-    expect_no_error(
-      ggplot2::ggplot_build(component)
-    )
+    # component_denoising
+    expect_no_error(component <- component_denoising(qc_metrics_tables))
+    expect_type(component, "list")
+    expect_named(component, c("plots", "tables"))
+    expect_named(component$plots, c("removed_umis", "by_method", "isotype_reduction"))
+    expect_named(component$tables, c("removed_umis", "by_method", "isotype_reduction"))
+
+    for (plot in component$plots) {
+      expect_s3_class(plot, "ggplot")
+      expect_no_error(ggplot2::ggplot_build(plot))
+    }
+    for (table in component$tables) {
+      expect_s3_class(table, "datatables")
+    }
 
     temp <- qc_metrics_tables
     temp$denoising <-
       temp$denoising %>%
       rename(pool = 1)
 
-    expect_no_error(component <- component_bleedover_noise(temp))
-    expect_s3_class(component, "ggplot")
+    expect_no_error(component <- component_denoising(temp))
+    expect_s3_class(component$plots$removed_umis, "ggplot")
     expect_no_error(
-      ggplot2::ggplot_build(component)
+      ggplot2::ggplot_build(component$plots$removed_umis)
     )
 
-    # component_abundance_per_celltype
+    # component_abundance_per_marker
     temp <-
       pg_data %>%
       subset(features = rownames(pg_data)[1:3])
@@ -179,7 +187,7 @@ for (data_type in data_types) {
     temp[["seurat_clusters"]] <- 1
 
     expect_no_error(
-      component <- component_abundance_per_celltype(
+      component <- component_abundance_per_marker(
         temp,
         params = list(
           control_markers = c("mIgG1", "mIgG2a", "mIgG2b")

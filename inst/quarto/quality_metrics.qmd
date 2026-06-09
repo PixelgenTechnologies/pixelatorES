@@ -183,6 +183,25 @@ tabset_figure_table(
 close_tabset()
 ```
 
+#### Denoising
+
+Denoising removes low-connectivity graph nodes to improve data quality.
+
+```{r}
+#| label: qc_metrics_denoising
+#| results: 'asis'
+component <-
+  component_denoising(qc_metrics_tables, sample_levels = sample_aliases)
+
+tabset_figure_table(
+  component$plots$removed_umis,
+  component$tables$removed_umis,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```
+
 ### Control markers
 
 ```{r}

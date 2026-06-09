@@ -285,6 +285,23 @@ for (data_type in data_types) {
       )
     )
 
+    # Denoising detail
+    expect_no_error(res <- get_denoising_detail_data(seur))
+    expect_type(res, "list")
+    expect_named(res, c("by_method", "isotype_reduction"))
+    expect_s3_class(res$by_method, "tbl_df")
+    expect_s3_class(res$isotype_reduction, "tbl_df")
+    expect_gt(nrow(res$by_method), 0)
+    expect_gt(nrow(res$isotype_reduction), 0)
+    expect_true(all(res$by_method$umis_denoised > 0))
+    expect_true(all(c(
+      "sample_alias", "type", "umis_denoised", "n_umi"
+    ) %in% names(res$by_method)))
+    expect_true(all(c(
+      "sample_component", "sample_alias", "isotype_fraction",
+      "pre_denoise_isotype_fraction", "isotype_reduction"
+    ) %in% names(res$isotype_reduction)))
+
     # Coreness
     expect_no_error(res <- get_coreness_data(seur))
     expect_equal(

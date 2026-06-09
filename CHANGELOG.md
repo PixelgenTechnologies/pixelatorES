@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] 2026-06-08
+
+### Added
+
+- `component_denoising` with plots and tables for UMIs removed, denoising by method, and isotype reduction.
+- `get_denoising_detail_data()` for per-component denoising metadata from Seurat objects.
+- `component_abundance_per_marker` combining sample-wise and per-celltype abundance plots.
+- `DEVELOPERS.md` with linting, styling, and test data update instructions.
+
+### Removed
+
+- `component_abundance_per_sample` and `component_abundance_per_celltype` (replaced by `component_abundance_per_marker`).
+
+### Changed
+
+- Renamed `component_bleedover_noise` to `component_denoising`.
+- Test layout PXL files updated with denoising metadata columns in `__adata__obs`.
+- Replaced `component_abundance_per_sample` and `component_abundance_per_celltype` with `component_abundance_per_marker` (mirrors `component_proximity_per_marker`).
+- `plot_violin()` now uses `ggbeeswarm::geom_quasirandom` with dodge alignment and a fixed contrasting point color instead of opaque `geom_jitter`.
+
+### Fixed
+
+- Bug in `get_hash_stats` which would cause an error to be thrown for hashed samples if the samplesheet didn't contain all hash groups that exist in the QC files.
+- `get_qc_metrics` now reports which data causes an error when data fails in formatting.
+- Changed `run_proximity_anova` to use ":" instead of "/" as a marker pair separator.
+
 ## [0.10.5] 2026-05-21
 
 ### Changed

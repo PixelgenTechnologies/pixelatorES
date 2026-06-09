@@ -1,30 +1,40 @@
-#' Create the component for bleedover noise
+#' Create the denoising component
 #'
-#' This function creates a ggplot object that visualizes the fraction of UMIs
-#' removed by denoising.
+#' This function creates plots and tables visualizing denoising metrics,
+#' including the fraction of UMIs removed, UMIs removed by method, and
+#' reduction in isotype fraction.
 #'
-#' @param qc_metrics_tables A list containing a data frame named `denoising`
+#' @param qc_metrics_tables A list from [get_qc_metrics()] containing `denoising`
+#'   and `denoising_detail` slots.
+#' @param sample_levels Optional vector of sample levels to order samples in plots.
 #'
-#' @return A ggplot object visualizing the fraction of UMIs removed by denoising.
+#' @return A list with named `plots` and `tables` for removed UMIs, denoising
+#'   by method, and isotype reduction.
 #'
 #' @export
 #'
-component_bleedover_noise <- function(
-  qc_metrics_tables
+component_denoising <- function(
+  qc_metrics_tables,
+  sample_levels = NULL
 ) {
   pixelatorR:::assert_class(qc_metrics_tables, "list")
 
-  plot_data <-
-    qc_metrics_tables$denoising
+  if (is.null(qc_metrics_tables$denoising)) {
+    cli::cli_abort("Denoising data is required but {.code qc_metrics_tables$denoising} is NULL.")
+  }
 
-  if ("pool" %in% names(plot_data)) {
-    plot_data <-
-      plot_data %>%
+  denoising_data <- qc_metrics_tables$denoising
+
+  if ("pool" %in% names(denoising_data)) {
+    denoising_data <-
+      denoising_data %>%
       rename(sample_alias = pool)
   }
 
-  p <-
-    plot_data %>%
+  denoising_data <- set_sample_levels(denoising_data, sample_levels)
+
+  p_removed_umis <-
+    denoising_data %>%
     ggplot(aes(sample_alias, percent_umis_denoised)) +
     geom_col(fill = "#DAD6D7") +
     geom_text(aes(label = paste0(round(percent_umis_denoised, 3), " %")),
@@ -43,10 +53,144 @@ component_bleedover_noise <- function(
     ) +
     labs(
       x = NULL, y = "Removed UMIs [%]",
-      title = "Fraction of UMIs removed by bleedover denoising",
+      title = "Fraction of UMIs removed by denoising",
       caption = expression(~ italic(frac("# Discarded UMIs", "# Total UMIs")))
     )
-  return(p)
+
+  tabl_removed_umis <-
+    denoising_data %>%
+    arrange(sample_alias) %>%
+    mutate(
+      percent_umis_denoised = round(percent_umis_denoised, 3),
+      number_of_umis_removed = round(number_of_umis_removed / 1e6, 3)
+    ) %>%
+    select(
+      `Sample ID` = sample_alias,
+      `% Denoised UMIs` = percent_umis_denoised,
+      `Total denoised UMIs [M]` = number_of_umis_removed
+    ) %>%
+    style_table(caption = "UMIs removed by denoising", interactive = FALSE)
+
+  by_method_data <-
+    qc_metrics_tables$denoising_detail$by_method %>%
+    set_sample_levels(sample_levels) %>%
+    mutate(type = str_replace(type, "_and_", "&"))
+
+  method_palette <-
+    c(
+      "ace" = "#DAD6D7",
+      "ace&pls" = "#C86584",
+      "pls" = "#B4ADAF"
+    )
+
+  # Add missing methods to palette
+  if (any(!by_method_data$type %in% names(method_palette))) {
+    missing_methods <- setdiff(unique(by_method_data$type), names(method_palette))
+    add_palette <- c("#496389", "#1F395F", "#4D988D", "#E05573", "#BF9871", "#918F8F")
+    method_palette <- c(method_palette, setNames(add_palette[seq_along(missing_methods)], missing_methods))
+  }
+
+  p_by_method <-
+    by_method_data %>%
+    mutate(type = factor(type, levels = names(method_palette))) %>%
+    arrange(sample_alias, desc(type)) %>%
+    group_by(sample_alias) %>%
+    mutate(
+      fraction_denoised = umis_denoised / n_umi,
+      x_pos = unclass(factor(type)) %% 2,
+      y_pos = cumsum(fraction_denoised) - 0.5 * fraction_denoised
+    ) %>%
+    ggplot(aes(sample_alias, fraction_denoised, fill = type)) +
+    geom_col() +
+    geom_text(
+      aes(
+        label = paste0(round(100 * fraction_denoised, 1), " %"),
+        x = unclass(sample_alias) + c(-0.45, 0.45)[x_pos + 1],
+        y = y_pos,
+        hjust = x_pos
+      ),
+      vjust = -.1,
+      size = 3
+    ) +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    scale_fill_manual(values = method_palette, na.value = "#DAD6D7") +
+    theme_bw() +
+    theme(
+      axis.text.x = element_text(angle = 60, hjust = 1),
+      panel.grid = element_blank()
+    ) +
+    labs(
+      x = NULL,
+      y = "Fraction of UMIs denoised",
+      fill = "Method",
+      title = "Fraction of UMIs denoised by method"
+    )
+
+  tabl_by_method <-
+    by_method_data %>%
+    mutate(
+      fraction_denoised = round(100 * umis_denoised / n_umi, 3)
+    ) %>%
+    arrange(sample_alias, type) %>%
+    select(
+      `Sample ID` = sample_alias,
+      `Denoising method` = type,
+      `UMIs denoised` = umis_denoised,
+      `Fraction denoised [%]` = fraction_denoised
+    ) %>%
+    style_table(caption = "UMIs denoised by method", interactive = FALSE)
+
+  isotype_data <-
+    qc_metrics_tables$denoising_detail$isotype_reduction %>%
+    set_sample_levels(sample_levels)
+
+  p_isotype_reduction <-
+    isotype_data %>%
+    plot_violin(
+      x = "sample_alias",
+      y = "isotype_reduction",
+      title = "Reduction in isotype fraction",
+      y_label = "Isotype reduction by denoising",
+      use_pct = TRUE,
+      hline = 0,
+      round = 1
+    ) +
+    scale_y_continuous(
+      labels = scales::percent_format(accuracy = 1),
+      limits = c(-1, 1),
+      expand = expansion(0)
+    )
+
+  tabl_isotype_reduction <-
+    isotype_data %>%
+    group_by(sample_alias) %>%
+    summarise(
+      median_isotype_reduction = median(isotype_reduction) * 100,
+      median_pre_denoise_isotype = median(pre_denoise_isotype_fraction) * 100,
+      median_post_denoise_isotype = median(isotype_fraction) * 100,
+      .groups = "drop"
+    ) %>%
+    mutate(across(where(is.numeric), ~ round(., 3))) %>%
+    select(
+      `Sample ID` = sample_alias,
+      `Median isotype reduction [%]` = median_isotype_reduction,
+      `Median pre-denoise isotype [%]` = median_pre_denoise_isotype,
+      `Median post-denoise isotype [%]` = median_post_denoise_isotype
+    ) %>%
+    style_table(caption = "Isotype reduction by denoising", interactive = FALSE)
+
+  list(
+    plots = list(
+      removed_umis = p_removed_umis,
+      by_method = p_by_method,
+      isotype_reduction = p_isotype_reduction
+    ),
+    tables = list(
+      removed_umis = tabl_removed_umis,
+      by_method = tabl_by_method,
+      isotype_reduction = tabl_isotype_reduction
+    )
+  )
 }
 
 #' Create the component for control markers
@@ -1121,63 +1265,74 @@ component_coreness <-
     ))
   }
 
-#' Create the component for abundance per sample
+#' Create the component for abundance per marker
 #'
 #' This function creates plots visualizing the abundance of each marker
-#' across different samples.
+#' across samples and, optionally, across cell types.
 #'
 #' @param object A processed data object containing marker abundance data.
 #' @param params A list of parameters, including control markers.
 #' @param sample_palette A color palette for the samples.
+#' @param per_celltype A boolean indicating whether to add a plot per cell type
+#'   (default is TRUE).
 #' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
-#' @return A list containing plots.
+#' @return A list containing plots for each marker.
 #'
 #' @export
 #'
-component_abundance_per_sample <- function(
+component_abundance_per_marker <- function(
   object,
   params,
   sample_palette,
+  per_celltype = TRUE,
   sample_levels = NULL,
   test_mode = FALSE
 ) {
-  plot_data <-
+  .abundance_plot_data <- function(object, params, test_mode = FALSE) {
     object %>%
-    LayerData("data") %>%
-    as_tibble(rownames = "marker") %>%
-    {
-      if (test_mode) {
-        slice_head(., n = 10)
-      } else {
-        .
-      }
-    } %>%
-    pivot_longer(-marker, names_to = "cell_id", values_to = "normcount") %>%
-    left_join(
-      FetchData(object,
-        vars = c("sample_alias", "condition")
+      LayerData("data") %>%
+      as_tibble(rownames = "marker") %>%
+      {
+        if (test_mode) {
+          slice_head(., n = 10)
+        } else {
+          .
+        }
+      } %>%
+      pivot_longer(-marker, names_to = "cell_id", values_to = "normcount") %>%
+      left_join(
+        FetchData(object,
+          vars = c(
+            "sample_alias",
+            "condition",
+            "seurat_clusters",
+            "celltype"
+          )
+        ) %>%
+          as_tibble(rownames = "cell_id"),
+        by = "cell_id"
       ) %>%
-        as_tibble(rownames = "cell_id"),
-      by = "cell_id"
-    ) %>%
-    mutate(
-      marker = factor(marker, order_cd_markers(
-        unique(marker),
-        params$control_markers
-      ))
-    ) %>%
-    group_by(marker)
+      mutate(
+        marker = factor(marker, order_cd_markers(
+          unique(marker),
+          params$control_markers
+        ))
+      ) %>%
+      group_by(marker)
+  }
 
-  plot_data <- set_sample_levels(plot_data, sample_levels)
+  plot_data <- .abundance_plot_data(object, params, test_mode)
 
   plots <-
     plot_data %>%
     group_split() %>%
     set_names(group_keys(plot_data)$marker) %>%
     lapply(function(g_data) {
-      g_data %>%
+      p1 <-
+        g_data %>%
+        set_sample_levels(sample_levels) %>%
         plot_violin(
           x = "sample_alias",
           y = "normcount",
@@ -1188,89 +1343,37 @@ component_abundance_per_sample <- function(
           summarize = FALSE,
           palette = sample_palette,
           use_jitter = TRUE,
-          use_grid = TRUE,
-          jitter_alpha = 1
-        )
-    })
+          use_grid = TRUE
+        ) +
+        guides(fill = "none")
 
-  return(plots)
-}
-
-
-#' Create the component for abundance per celltype
-#'
-#' This function creates plots visualizing the abundance of each marker
-#' across different celltypes
-#'
-#' @param object A processed data object containing marker abundance data.
-#' @param params A list of parameters containing control markers.
-#' @param sample_palette A color palette for the samples.
-#' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
-#'
-#' @return A list containing plots.
-#'
-#' @export
-#'
-component_abundance_per_celltype <- function(
-  object,
-  params,
-  sample_palette,
-  test_mode = FALSE
-) {
-  plot_data <-
-    object %>%
-    LayerData("data") %>%
-    as_tibble(rownames = "marker") %>%
-    {
-      if (test_mode) {
-        slice_head(., n = 10)
-      } else {
-        .
+      if (!per_celltype) {
+        return(p1)
       }
-    } %>%
-    pivot_longer(-marker, names_to = "cell_id", values_to = "normcount") %>%
-    left_join(
-      FetchData(object,
-        vars = c(
-          "sample_alias",
-          "condition",
-          "seurat_clusters",
-          "celltype"
-        )
-      ) %>%
-        as_tibble(rownames = "cell_id"),
-      by = "cell_id"
-    ) %>%
-    filter(celltype %in% displayed_cell_types) %>%
-    mutate(
-      marker = factor(marker, order_cd_markers(
-        unique(marker),
-        params$control_markers
-      )),
-      celltype = factor(celltype, displayed_cell_types)
-    ) %>%
-    group_by(marker)
 
-  plots <-
-    plot_data %>%
-    group_split() %>%
-    set_names(group_keys(plot_data)$marker) %>%
-    lapply(function(g_data) {
-      g_data %>%
+      p2 <-
+        g_data %>%
+        set_sample_levels(sample_levels) %>%
+        filter(celltype %in% displayed_cell_types) %>%
+        complete(
+          sample_alias = levels(sample_alias),
+          celltype = displayed_cell_types
+        ) %>%
+        mutate(celltype = factor(celltype, displayed_cell_types)) %>%
         plot_violin(
           x = "sample_alias",
           y = "normcount",
           fill = "condition",
-          title = unique(g_data$marker) %>% as.character(),
           y_label = "Normalized counts",
           summarize = FALSE,
           palette = sample_palette,
           facet_var = "celltype",
           use_jitter = TRUE,
-          use_grid = TRUE,
-          jitter_alpha = 1
+          use_grid = TRUE
         ) +
         guides(fill = "none")
+
+      p1 / p2
     })
 
   return(plots)
@@ -1476,7 +1579,6 @@ component_proximity_per_marker <- function(
           palette = sample_palette,
           use_jitter = TRUE,
           use_grid = TRUE,
-          jitter_alpha = 1,
           hline = 0
         ) +
         guides(fill = "none")
@@ -1503,7 +1605,6 @@ component_proximity_per_marker <- function(
           facet_var = "celltype",
           use_jitter = TRUE,
           use_grid = TRUE,
-          jitter_alpha = 1,
           hline = 0
         ) +
         guides(fill = "none")

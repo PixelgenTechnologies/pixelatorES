@@ -56,6 +56,7 @@
 #' @importFrom ggplot2 geom_col
 #' @importFrom ggplot2 geom_errorbar
 #' @importFrom ggplot2 geom_hline
+#' @importFrom ggbeeswarm geom_quasirandom position_quasirandom
 #' @importFrom ggplot2 geom_jitter
 #' @importFrom ggplot2 geom_line
 #' @importFrom ggplot2 geom_point
