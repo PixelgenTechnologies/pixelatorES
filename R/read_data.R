@@ -524,8 +524,8 @@ extract_sample_qc_metrics <-
 #'
 #' @param filepath A character string specifying the path to the sample sheet CSV file.
 #'
-#' @return A tibble with columns `sample`, `sample_alias`, `condition`, and `pool` (the latter all
-#'   `NA` when the file has no pool column).
+#' @return A tibble with columns `sample`, `sample_alias`, `condition`. Columns `pool`, `lot_role`, and `kit_lot_id` are
+#' included if present in the CSV file.
 #'
 #' @export
 #'
