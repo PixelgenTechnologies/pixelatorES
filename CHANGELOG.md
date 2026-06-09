@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test layout PXL files updated with denoising metadata columns in `__adata__obs`.
 - Replaced `component_abundance_per_sample` and `component_abundance_per_celltype` with `component_abundance_per_marker` (mirrors `component_proximity_per_marker`).
 - `plot_violin()` now uses `ggbeeswarm::geom_quasirandom` with dodge alignment and a fixed contrasting point color instead of opaque `geom_jitter`.
+- The package now depends on `pixelatorR` >= v0.18.0.
 
 ### Fixed
 
