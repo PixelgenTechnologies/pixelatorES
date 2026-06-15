@@ -585,27 +585,10 @@ get_hash_stats <- function(object, sample_qc_metrics) {
   component_sample_confidence <-
     sample_qc_metrics$pool_qc_files %>%
     lapply(function(pool) {
-      sample_confidence <-
-        pool$sample_calling$sample_confidences_per_sample
-
-      hash_enrichment_factor <-
-        pool$sample_calling$hash_enrichment_factors_per_sample
-
-      if (!is.null(sample_confidence)) {
-        sample_confidence %>%
-          lapply(tibble) %>%
-          bind_rows(.id = "sample") %>%
-          rename(sample_confidence = 2) %>%
-          return()
-      } else {
-        hash_enrichment_factor %>%
-          lapply(tibble) %>%
-          bind_rows(.id = "sample") %>%
-          rename(hash_enrichment_factor = 2) %>%
-          return()
-      }
-
-
+      pool$sample_calling$sample_confidences_per_sample %>%
+        lapply(tibble) %>%
+        bind_rows(.id = "sample") %>%
+        rename(sample_confidence = 2)
     }) %>%
     bind_rows(.id = "pool") %>%
     mutate(
