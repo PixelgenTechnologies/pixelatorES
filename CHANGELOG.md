@@ -12,7 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `component_hashing` now returns a sample confidence plot with either hashing purity or hash enrichment factor, depending on which of the metrics is present in the data.
 
-
 ## [0.11.1] 2026-06-09
 
 ### Changed
