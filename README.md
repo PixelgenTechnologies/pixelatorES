@@ -17,8 +17,6 @@ params:
   sample_sheet: "../../../ES_test_data/test_samplesheet.csv"
   data_folder: "../../../ES_test_data/"
   control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
-  do_harmonize: FALSE
-  harmonization_vars: ["condition"]
   norm_method: "CLR"
   clustering_resolution: 1
   annotation_method: "Seurat"
@@ -32,8 +30,6 @@ Users can modify parameters in the YAML header or pass them as arguments when re
 - **`sample_sheet`**: Path to the sample sheet `.csv` file. Must contain the columns `sample`, `sample_alias`, and `condition`.
 - **`data_folder`**: Path to the input data folder.
 - **`control_markers`**: Markers for control samples (e.g., `c('mIgG1', 'mIgG2a', 'mIgG2b')`).
-- **`do_harmonize`**: Logical flag to harmonize data (`TRUE/FALSE`).
-- **`harmonization_vars`**: Variables to harmonize (e.g., `'condition'`).
 - **`norm_method`**: Normalization method (`'CLR'`).
 - **`clustering_resolution`**: Resolution for clustering analysis.
 - **`annotation_method`**: Method for cell type annotation (`'Seurat'` or `'nmf'`).
@@ -58,7 +54,7 @@ The sample sheet should have the following columns, but may have additional colu
 
 `sample_alias` (optional) is the alias for the sample; a short, unique identifier for the sample that is used in the report. If not provided, `sample` will be used.
 
-`condition` is the condition of the sample, which is used for a number of steps in the report, such as harmonization (by default), differential analyses, and visualization.
+`condition` is the condition of the sample, which is used for a number of steps in the report, such as differential analyses and visualization.
 
 #### Data Folder
 

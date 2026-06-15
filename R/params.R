@@ -5,8 +5,6 @@
 default_params <-
   list(
     control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
-    do_harmonize = FALSE,
-    harmonization_vars = "condition",
     norm_method = "CLR",
     clustering_resolution = 1,
     proximity_count_cutoff = 25,

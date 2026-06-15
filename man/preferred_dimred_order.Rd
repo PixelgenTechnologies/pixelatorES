@@ -17,5 +17,5 @@ A character vector of reductions ordered according to the preferred order.
 }
 \description{
 This function orders dimensionality reductions in a preferred way, with
-"harmony_umap" first, followed by "umap", and then "pca".
+"umap" first, followed by "pca".
 }

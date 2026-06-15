@@ -7,8 +7,6 @@ test_that("Parameter tables work as expected", {
       molecule_rank_cutoff = 10000L,
       gini_dispersion_cutoff = 0.7,
       control_score_cutoff = 1.5,
-      do_harmonize = FALSE,
-      harmonization_vars = "'condition'",
       norm_method = "CLR",
       clustering_resolution = 1L,
       run_proximity_analysis = TRUE,

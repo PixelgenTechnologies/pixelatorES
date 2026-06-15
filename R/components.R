@@ -2554,66 +2554,98 @@ component_hashing <-
         scale_y_continuous(limits = plot_limits, labels = scales::percent)
     )
 
+    # Sample confidence plot
     plot_data <-
       qc_metrics_tables$sample_hash_stats$component_sample_confidence %>%
       arrange(pool) %>%
       group_by(pool)
 
-    p2 <-
-      plot_data %>%
-      group_split() %>%
-      set_names(group_keys(plot_data)$pool) %>%
-      lapply(function(g_data) {
-        g_data <-
-          g_data %>%
-          arrange(-sample_confidence) %>%
-          mutate(
-            rank = row_number(),
-            type = ifelse(sample_alias == "undetermined",
-              "Undetermined", "Sample assigned"
-            )
-          )
-        g_data_sum <-
-          g_data %>%
-          group_by(type) %>%
-          count() %>%
-          ungroup() %>%
-          mutate(
-            cumsum_n = cumsum(n),
-            x = cumsum_n - n,
-            hjust = c(0, 1)[seq_len(n())],
-            text_pos = range(c(x, cumsum_n))[seq_len(n())]
-          )
+    .generate_confidence_plots <- function(plot_data, metric, yes_no_palette) {
+      # 1. Define metric-specific plot settings
+      if (metric == "hash_enrichment_factor") {
+        rect_ymin <- 0
+        rect_ymax <- 1
+        text_y <- 1
+        y_scale <- scale_y_log10()
+        y_axis_label <- "Hash enrichment factor"
+        plot_title <- "Component hash enrichment factor"
+      } else if (metric == "sample_confidence") {
+        rect_ymin <- -Inf
+        rect_ymax <- 0
+        text_y <- 0
+        y_scale <- scale_y_continuous(limits = c(0, 1), labels = scales::percent)
+        y_axis_label <- "Hash purity"
+        plot_title <- "Component sample confidence"
+      }
 
-        g_data %>%
-          ggplot(aes(rank, sample_confidence, color = type)) +
-          geom_point(size = 0.5) +
-          geom_rect(
-            data = g_data_sum,
-            aes(xmin = x, xmax = cumsum_n, ymin = -Inf, ymax = 0, fill = type),
-            inherit.aes = FALSE,
-            color = NA
-          ) +
-          geom_text(
-            data = g_data_sum,
-            aes(
-              x = text_pos, y = 0, label = paste0(type, "\n", n, " cells"),
-              hjust = hjust
-            ),
-            vjust = -0.5,
-            inherit.aes = FALSE,
-            size = 3
-          ) +
-          theme_bw() +
-          scale_color_manual(values = yes_no_palette, name = "") +
-          scale_fill_manual(values = yes_no_palette, name = "") +
-          scale_y_continuous(limits = c(0, 1), labels = scales::percent) +
-          labs(x = "Component rank", y = "Hash purity", title = "Component sample confidence") +
-          theme(
-            legend.position = "none",
-            panel.grid = element_blank()
-          )
-      })
+      # 2. Generate the split lists and plots
+      plot_data %>%
+        group_split() %>%
+        set_names(group_keys(plot_data)$pool) %>%
+        lapply(function(g_data) {
+          # Use tidy evaluation (!!sym(metric)) to arrange dynamically
+          g_data <- g_data %>%
+            arrange(desc(!!sym(metric))) %>%
+            mutate(
+              rank = row_number(),
+              type = ifelse(sample_alias == "undetermined",
+                "Undetermined", "Sample assigned"
+              )
+            )
+
+          g_data_sum <- g_data %>%
+            group_by(type) %>%
+            count() %>%
+            ungroup() %>%
+            mutate(
+              cumsum_n = cumsum(n),
+              x = cumsum_n - n,
+              hjust = c(0, 1)[seq_len(n())],
+              text_pos = range(c(x, cumsum_n))[seq_len(n())]
+            )
+
+          # Use tidy evaluation (!!sym(metric)) for the y-axis aesthetic
+          g_data %>%
+            ggplot(aes(x = rank, y = !!sym(metric), color = type)) +
+            geom_point(size = 0.5) +
+            geom_rect(
+              data = g_data_sum,
+              aes(xmin = x, xmax = cumsum_n, ymin = rect_ymin, ymax = rect_ymax, fill = type),
+              inherit.aes = FALSE,
+              color = NA
+            ) +
+            geom_text(
+              data = g_data_sum,
+              aes(
+                x = text_pos, y = text_y, label = paste0(type, "\n", n, " cells"),
+                hjust = hjust
+              ),
+              vjust = -0.5,
+              inherit.aes = FALSE,
+              size = 3
+            ) +
+            theme_bw() +
+            scale_color_manual(values = yes_no_palette, name = "") +
+            scale_fill_manual(values = yes_no_palette, name = "") +
+            y_scale + # Apply the dynamic scale defined earlier
+            labs(x = "Component rank", y = y_axis_label, title = plot_title) +
+            theme(
+              legend.position = "none",
+              panel.grid = element_blank()
+            )
+        })
+    }
+
+    metric <- intersect(c("sample_confidence", "hash_enrichment_factor"), names(plot_data))
+    if (length(metric) == 0) {
+      cli_abort("component_sample_confidence must contain either 'sample_confidence' or 'hash_enrichment_factor'.")
+    }
+
+    p2 <- .generate_confidence_plots(
+      plot_data,
+      metric[[1]],
+      yes_no_palette = yes_no_palette
+    )
 
     tabl <-
       sample_stats %>%
