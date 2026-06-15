@@ -2576,8 +2576,6 @@ component_hashing <-
         y_scale <- scale_y_continuous(limits = c(0, 1), labels = scales::percent)
         y_axis_label <- "Hash purity"
         plot_title <- "Component sample confidence"
-      } else {
-        cli_abort("Invalid metric. Choose 'hash_enrichment_factor' or 'sample_confidence'.")
       }
 
       # 2. Generate the split lists and plots
@@ -2585,9 +2583,9 @@ component_hashing <-
         group_split() %>%
         set_names(group_keys(plot_data)$pool) %>%
         lapply(function(g_data) {
-          # Use tidy evaluation (.data[[metric]]) to arrange dynamically
+          # Use tidy evaluation (!!sym(metric)) to arrange dynamically
           g_data <- g_data %>%
-            arrange(desc(.data[[metric]])) %>%
+            arrange(desc(!!sym(metric))) %>%
             mutate(
               rank = row_number(),
               type = ifelse(sample_alias == "undetermined",
@@ -2606,9 +2604,9 @@ component_hashing <-
               text_pos = range(c(x, cumsum_n))[seq_len(n())]
             )
 
-          # Use tidy evaluation (.data[[metric]]) for the y-axis aesthetic
+          # Use tidy evaluation (!!sym(metric)) for the y-axis aesthetic
           g_data %>%
-            ggplot(aes(x = rank, y = .data[[metric]], color = type)) +
+            ggplot(aes(x = rank, y = !!sym(metric), color = type)) +
             geom_point(size = 0.5) +
             geom_rect(
               data = g_data_sum,
@@ -2638,9 +2636,14 @@ component_hashing <-
         })
     }
 
+    metric <- intersect(c("sample_confidence", "hash_enrichment_factor"), names(plot_data))
+    if (length(metric) == 0) {
+      cli_abort("component_sample_confidence must contain either 'sample_confidence' or 'hash_enrichment_factor'.")
+    }
+
     p2 <- .generate_confidence_plots(
       plot_data,
-      names(plot_data)[grepl("hash_enrichment_factor|sample_confidence", names(plot_data))][1],
+      metric[[1]],
       yes_no_palette = yes_no_palette
     )
 
