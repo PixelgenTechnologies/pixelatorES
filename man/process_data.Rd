@@ -18,5 +18,5 @@ A Seurat object with processed data, including PCA, UMAP, and clustering results
 }
 \description{
 This function processes the provided Seurat object by normalizing, scaling,
-running PCA, and UMAP, and optionally harmonizing the data before clustering.
+running PCA, and UMAP before clustering.
 }
