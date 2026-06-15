@@ -87,7 +87,6 @@
 #' @importFrom ggplot2 waiver
 #' @importFrom ggplotify as.ggplot
 #' @importFrom grid unit
-#' @importFrom harmony RunHarmony
 #' @importFrom htmlwidgets JS
 #' @importFrom knitr hook_plot_md
 #' @importFrom magick image_read

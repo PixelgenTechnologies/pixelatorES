@@ -8,8 +8,6 @@ params:
   sample_sheet: "../extdata/test_samplesheet_hashing.csv"
   data_folder: "../extdata/"
   control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
-  do_harmonize: FALSE
-  harmonization_vars: ["condition"]
   norm_method: "CLR"
   clustering_resolution: 1
   annotation_method: "nmf"

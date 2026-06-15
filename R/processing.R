@@ -1,7 +1,7 @@
 #' Process data for clustering and dimensionality reduction
 #'
 #' This function processes the provided Seurat object by normalizing, scaling,
-#' running PCA, and UMAP, and optionally harmonizing the data before clustering.
+#' running PCA, and UMAP before clustering.
 #'
 #' @param object A Seurat object containing the data to be processed.
 #' @param params A list of parameters.
@@ -30,29 +30,9 @@ process_data <-
       NormalizeData(normalization.method = params$norm_method, margin = 2) %>%
       ScaleData() %>%
       RunPCA(npcs = npcs) %>%
-      RunUMAP(reduction = "pca", dims = 1:max_dims, n.neighbors = n_neighbors)
-
-
-    if (params$do_harmonize) {
-      object <-
-        object %>%
-        RunHarmony(
-          group.by.vars = params$harmonization_vars,
-          plot_convergence = FALSE,
-        ) %>%
-        RunUMAP(
-          reduction = "harmony", dims = 1:max_dims,
-          reduction.name = "harmony_umap",
-          n.neighbors = n_neighbors
-        ) %>%
-        FindNeighbors(reduction = "harmony", dims = 1:max_dims) %>%
-        FindClusters(random.seed = 1, resolution = params$clustering_resolution)
-    } else {
-      object <-
-        object %>%
-        FindNeighbors(reduction = "pca", dims = 1:max_dims) %>%
-        FindClusters(random.seed = 1, resolution = params$clustering_resolution)
-    }
+      RunUMAP(reduction = "pca", dims = 1:max_dims, n.neighbors = n_neighbors) %>%
+      FindNeighbors(reduction = "pca", dims = 1:max_dims) %>%
+      FindClusters(random.seed = 1, resolution = params$clustering_resolution)
 
     if (annotate_cells) {
       reference <- pixelatorR::read_pbmc_reference()

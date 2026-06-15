@@ -8,8 +8,6 @@ test_that("process_data works as expected", {
         params = list(
           test_mode = FALSE,
           norm_method = "CLR",
-          do_harmonize = FALSE,
-          harmonization_vars = "sample_alias",
           clustering_resolution = 1,
           annotation_method = "nmf"
         )
@@ -25,8 +23,6 @@ test_that("process_data works as expected", {
         params = list(
           test_mode = FALSE,
           norm_method = "CLR",
-          do_harmonize = FALSE,
-          harmonization_vars = "sample_alias",
           clustering_resolution = 1,
           annotation_method = "nmf"
         )

@@ -104,7 +104,7 @@ beaut_label <-
 #' Order reductions in a preferred way
 #'
 #' This function orders dimensionality reductions in a preferred way, with
-#' "harmony_umap" first, followed by "umap", and then "pca".
+#' "umap" first, followed by "pca".
 #'
 #' @param reductions A character vector of reduction names.
 #' @param keep_undefined A logical value indicating whether to keep reductions
@@ -123,7 +123,7 @@ preferred_dimred_order <-
     pixelatorR:::assert_class(keep_undefined, "logical")
 
     preferred_order <-
-      c("harmony_umap", "umap", "pca")
+      c("umap", "pca")
 
     reductions_ordered <-
       preferred_order[preferred_order %in% reductions]

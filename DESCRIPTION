@@ -20,7 +20,6 @@ Depends:
     pixelatorR (>= 0.18.0)
 Imports:
     Seurat,
-    harmony,
     cli,
     rlang,
     dplyr,

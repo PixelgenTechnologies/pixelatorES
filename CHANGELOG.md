@@ -10,7 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changes 
 
  - `component_hashing` now returns a sample confidence plot with either hash purity or hash enrichment factor, depending on which metric is present in the data.
-
+ 
+ ### Removed
+ 
+ - `harmony` has been removed, and `do_harmonize` is no longer an option. 
+ 
 ## [0.11.1] 2026-06-09
 
 ### Changed
