@@ -604,8 +604,6 @@ get_hash_stats <- function(object, sample_qc_metrics) {
           rename(hash_enrichment_factor = 2) %>%
           return()
       }
-
-
     }) %>%
     bind_rows(.id = "pool") %>%
     mutate(

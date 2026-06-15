@@ -2561,7 +2561,6 @@ component_hashing <-
       group_by(pool)
 
     .generate_confidence_plots <- function(plot_data, metric, yes_no_palette) {
-
       # 1. Define metric-specific plot settings
       if (metric == "hash_enrichment_factor") {
         rect_ymin <- 0
@@ -2569,12 +2568,14 @@ component_hashing <-
         text_y <- 1
         y_scale <- scale_y_log10()
         y_axis_label <- "Hash enrichment factor"
+        plot_title <- "Component hash enrichment factor"
       } else if (metric == "sample_confidence") {
         rect_ymin <- -Inf
         rect_ymax <- 0
         text_y <- 0
         y_scale <- scale_y_continuous(limits = c(0, 1), labels = scales::percent)
         y_axis_label <- "Hash purity"
+        plot_title <- "Component sample confidence"
       } else {
         cli_abort("Invalid metric. Choose 'hash_enrichment_factor' or 'sample_confidence'.")
       }
@@ -2584,14 +2585,14 @@ component_hashing <-
         group_split() %>%
         set_names(group_keys(plot_data)$pool) %>%
         lapply(function(g_data) {
-
           # Use tidy evaluation (.data[[metric]]) to arrange dynamically
           g_data <- g_data %>%
             arrange(desc(.data[[metric]])) %>%
             mutate(
               rank = row_number(),
               type = ifelse(sample_alias == "undetermined",
-                            "Undetermined", "Sample assigned")
+                "Undetermined", "Sample assigned"
+              )
             )
 
           g_data_sum <- g_data %>%
@@ -2629,7 +2630,7 @@ component_hashing <-
             scale_color_manual(values = yes_no_palette, name = "") +
             scale_fill_manual(values = yes_no_palette, name = "") +
             y_scale + # Apply the dynamic scale defined earlier
-            labs(x = "Component rank", y = y_axis_label, title = "Component sample confidence") +
+            labs(x = "Component rank", y = y_axis_label, title = plot_title) +
             theme(
               legend.position = "none",
               panel.grid = element_blank()
@@ -2641,7 +2642,7 @@ component_hashing <-
       plot_data,
       names(plot_data)[grepl("hash_enrichment_factor|sample_confidence", names(plot_data))][1],
       yes_no_palette = yes_no_palette
-      )
+    )
 
     tabl <-
       sample_stats %>%
