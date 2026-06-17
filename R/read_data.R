@@ -277,14 +277,19 @@ merge_data <-
 
 #' Downsample data to a specified number of cells and markers
 #'
-#' Downsamples the data to a specified number of cells and markers, ensuring that control markers are always included.
+#' Downsamples the data to a specified number of cells and markers,
+#' ensuring that control markers are always included.
+#' If a sample has fewer than `n_cells`, all available cells are kept for that sample.
+#' If fewer non-control markers are available than requested, all available non-control markers are kept.
+#' If `length(control_markers) > n_markers`, all control markers are kept.
+#' In these cases, the function warns and proceeds instead of failing.
 #'
 #' @param pg_data A Seurat object containing the data to be downsampled.
 #' @param control_markers A character vector of control markers to always include in the downsampled data.
 #' @param n_cells An integer specifying the number of cells to keep in each sample.
 #' @param n_markers An integer specifying the total number of markers to keep in the downsampled data.
 #'
-#' @return A downsampled Seurat object with the specified number of cells and markers.
+#' @return A downsampled Seurat object with selected cells and markers.
 #'
 #' @export
 #'
@@ -295,24 +300,93 @@ downsample_data <-
            n_markers = 20) {
     set.seed(37)
 
-    keep_cells <-
+    if (is.null(control_markers)) {
+      control_markers <- character(0)
+    }
+
+    control_markers <- unique(control_markers)
+
+    cell_data <-
       FetchData(pg_data, "sample_alias") %>%
-      as_tibble(rownames = "cell_id") %>%
+      as_tibble(rownames = "cell_id")
+
+    available_cells <-
+      cell_data %>%
+      count(sample_alias, name = "n_available")
+
+    low_cell_samples <-
+      available_cells %>%
+      filter(n_available < n_cells)
+
+    if (nrow(low_cell_samples) > 0) {
+      warning(
+        paste0(
+          "Requested ", n_cells,
+          " cells per sample, but some samples have fewer cells. ",
+          "Using all available cells for those samples."
+        ),
+        call. = FALSE
+      )
+    }
+
+    keep_cells <-
+      cell_data %>%
       group_by(sample_alias) %>%
-      slice_sample(n = n_cells) %>%
+      group_modify(~ slice_sample(.x, n = min(nrow(.x), n_cells))) %>%
+      ungroup() %>%
       pull(cell_id)
 
-    pixelatorR:::assert_x_in_y(control_markers, rownames(pg_data))
+    if (length(control_markers) > 0) {
+      pixelatorR:::assert_x_in_y(control_markers, rownames(pg_data))
+    }
 
-    keep_markers <-
+    non_control_markers <-
       rownames(pg_data) %>%
       {
         .[!. %in% control_markers]
-      } %>%
-      {
-        .[sample(seq_along(.), size = n_markers - length(control_markers), replace = FALSE)]
-      } %>%
-      union(control_markers)
+      }
+
+    requested_non_control <- n_markers - length(control_markers)
+
+    if (requested_non_control <= 0) {
+      if (length(control_markers) > n_markers) {
+        warning(
+          paste0(
+            "Requested n_markers = ", n_markers,
+            " but control_markers has length ", length(control_markers),
+            ". Keeping all control markers."
+          ),
+          call. = FALSE
+        )
+      }
+      sampled_non_control <- character(0)
+    } else {
+      n_non_control <- min(length(non_control_markers), requested_non_control)
+
+      if (n_non_control < requested_non_control) {
+        warning(
+          paste0(
+            "Requested ", requested_non_control,
+            " non-control markers, but only ", n_non_control,
+            " are available. Using all available non-control markers."
+          ),
+          call. = FALSE
+        )
+      }
+
+      sampled_non_control <-
+        if (n_non_control > 0) {
+          non_control_markers[
+            sample(seq_along(non_control_markers), size = n_non_control, replace = FALSE)
+          ]
+        } else {
+          character(0)
+        }
+    }
+
+    keep_markers <-
+      c(control_markers, sampled_non_control) %>%
+      unique()
 
     pg_data <-
       pg_data[keep_markers, keep_cells]
