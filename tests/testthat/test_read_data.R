@@ -209,6 +209,66 @@ test_that("File reading works as expected", {
   expect_s4_class(seur_down, "Seurat")
   expect_equal(dim(seur_down), c(5, 6))
 
+  # Edge case 1: fewer cells than requested in at least one sample
+  expect_warning(
+    seur_down_low_cells <- downsample_data(
+      seur_comb,
+      control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
+      n_cells = 1000,
+      n_markers = 5
+    ),
+    "fewer cells"
+  )
+  expect_equal(ncol(seur_down_low_cells), ncol(seur_comb))
+
+  # Edge case 2: fewer non-control markers available than requested
+  all_markers <- rownames(seur_comb)
+  expect_gt(length(all_markers), 1)
+  control_set <- all_markers[-length(all_markers)]
+  expect_warning(
+    seur_down_low_markers <- downsample_data(
+      seur_comb,
+      control_markers = control_set,
+      n_cells = 3,
+      n_markers = nrow(seur_comb) + 5
+    ),
+    "non-control markers"
+  )
+  expect_equal(nrow(seur_down_low_markers), nrow(seur_comb))
+
+  # Edge case 3: marker downsampling would produce zero-total-count components,
+  # so all markers should be kept.
+  sparse_counts <-
+    matrix(
+      c(
+        1, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 2
+      ),
+      nrow = 3,
+      byrow = TRUE,
+      dimnames = list(c("m1", "m2", "m3"), c("c1", "c2", "c3", "c4"))
+    )
+  sparse_seur <- SeuratObject::CreateSeuratObject(counts = sparse_counts)
+  sparse_seur <- SeuratObject::AddMetaData(
+    sparse_seur,
+    metadata = data.frame(
+      sample_alias = c("S1", "S1", "S2", "S2"),
+      row.names = colnames(sparse_seur)
+    )
+  )
+
+  expect_warning(
+    sparse_down <- downsample_data(
+      sparse_seur,
+      control_markers = c("m1", "m2"),
+      n_cells = 2,
+      n_markers = 2
+    ),
+    "zero total counts"
+  )
+  expect_equal(nrow(sparse_down), nrow(sparse_seur))
+
   # Sample sheet reading
   expect_no_error(sample_sheet <- read_samplesheet(test_samplesheet()))
   expect_equal(
