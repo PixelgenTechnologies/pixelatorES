@@ -282,6 +282,8 @@ merge_data <-
 #' If a sample has fewer than `n_cells`, all available cells are kept for that sample.
 #' If fewer non-control markers are available than requested, all available non-control markers are kept.
 #' If `length(control_markers) > n_markers`, all control markers are kept.
+#' If marker downsampling makes any selected component have zero total counts,
+#' marker downsampling is disabled and all markers are kept.
 #' In these cases, the function warns and proceeds instead of failing.
 #'
 #' @param pg_data A Seurat object containing the data to be downsampled.
@@ -387,6 +389,24 @@ downsample_data <-
     keep_markers <-
       c(control_markers, sampled_non_control) %>%
       unique()
+
+    candidate_data <-
+      pg_data[keep_markers, keep_cells]
+
+    marker_counts <-
+      GetAssayData(candidate_data, slot = "counts")
+
+    if (any(Matrix::colSums(marker_counts) == 0)) {
+      warning(
+        paste0(
+          "Marker downsampling produced components with zero total counts. ",
+          "Disabling marker downsampling and keeping all markers."
+        ),
+        call. = FALSE
+      )
+
+      keep_markers <- rownames(pg_data)
+    }
 
     pg_data <-
       pg_data[keep_markers, keep_cells]
