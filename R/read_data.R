@@ -349,19 +349,12 @@ downsample_data <-
     target_non_control <- max(n_markers - length(control_markers), 0)
     available_non_control <- length(non_control_markers)
 
-    if (length(control_markers) > n_markers) {
-      cli::cli_warn(
-        c(
-          "Requested {.val {n_markers}} total markers, but {.val {length(control_markers)}} control markers were provided.",
-          "i" = "Keeping all control markers."
-        )
-      )
-    }
 
     if (target_non_control > available_non_control) {
       cli::cli_warn(
         c(
-          "Requested {.val {target_non_control}} non-control markers, but only {.val {available_non_control}} are available.",
+          "Requested {.val {target_non_control}} non-control markers,",
+          "but only {.val {available_non_control}} are available.",
           "i" = "Using all available non-control markers."
         )
       )
