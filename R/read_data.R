@@ -332,7 +332,7 @@ downsample_data <-
     keep_cells <-
       cell_data %>%
       group_by(sample_alias) %>%
-      slice_sample(n = min(dplyr::n(), n_cells)) %>%
+      dplyr::group_modify(~ slice_sample(.x, n = min(nrow(.x), n_cells))) %>%
       ungroup() %>%
       pull(cell_id)
 
