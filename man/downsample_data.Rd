@@ -24,7 +24,7 @@ ensuring that control markers are always included.
 If a sample has fewer than \code{n_cells}, all available cells are kept for that sample.
 If fewer non-control markers are available than requested, all available non-control markers are kept.
 If \code{length(control_markers) > n_markers}, all control markers are kept.
-If marker downsampling makes any selected component have zero total counts,
+If marker downsampling makes any selected cell have zero total counts,
 marker downsampling is disabled and all markers are kept.
 In these cases, the function warns and proceeds instead of failing.
 }
