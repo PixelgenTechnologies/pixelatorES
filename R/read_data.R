@@ -334,7 +334,7 @@ downsample_data <-
     keep_cells <-
       cell_data %>%
       group_by(sample_alias) %>%
-      group_modify(~ slice_sample(.x, n = min(nrow(.x), n_cells))) %>%
+      slice_sample(n = min(dplyr::n(), n_cells)) %>%
       ungroup() %>%
       pull(cell_id)
 
@@ -394,7 +394,7 @@ downsample_data <-
       pg_data[keep_markers, keep_cells]
 
     marker_counts <-
-      GetAssayData(candidate_data, slot = "counts")
+          GetAssayData(candidate_data, layer = "counts")
 
     if (any(Matrix::colSums(marker_counts) == 0)) {
       warning(
