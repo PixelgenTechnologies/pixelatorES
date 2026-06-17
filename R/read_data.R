@@ -321,13 +321,11 @@ downsample_data <-
       filter(n_available < n_cells)
 
     if (nrow(low_cell_samples) > 0) {
-      warning(
-        paste0(
-          "Requested ", n_cells,
-          " cells per sample, but some samples have fewer cells. ",
-          "Using all available cells for those samples."
-        ),
-        call. = FALSE
+      cli::cli_warn(
+        c(
+          "Requested {.val {n_cells}} cells per sample, but some samples have fewer cells.",
+          "i" = "Using all available cells for those samples."
+        )
       )
     }
 
@@ -348,43 +346,35 @@ downsample_data <-
         .[!. %in% control_markers]
       }
 
-    requested_non_control <- n_markers - length(control_markers)
+    target_non_control <- max(n_markers - length(control_markers), 0)
+    available_non_control <- length(non_control_markers)
 
-    if (requested_non_control <= 0) {
-      if (length(control_markers) > n_markers) {
-        warning(
-          paste0(
-            "Requested n_markers = ", n_markers,
-            " but control_markers has length ", length(control_markers),
-            ". Keeping all control markers."
-          ),
-          call. = FALSE
+    if (length(control_markers) > n_markers) {
+      cli::cli_warn(
+        c(
+          "Requested {.val {n_markers}} total markers, but {.val {length(control_markers)}} control markers were provided.",
+          "i" = "Keeping all control markers."
         )
-      }
-      sampled_non_control <- character(0)
-    } else {
-      n_non_control <- min(length(non_control_markers), requested_non_control)
-
-      if (n_non_control < requested_non_control) {
-        warning(
-          paste0(
-            "Requested ", requested_non_control,
-            " non-control markers, but only ", n_non_control,
-            " are available. Using all available non-control markers."
-          ),
-          call. = FALSE
-        )
-      }
-
-      sampled_non_control <-
-        if (n_non_control > 0) {
-          non_control_markers[
-            sample(seq_along(non_control_markers), size = n_non_control, replace = FALSE)
-          ]
-        } else {
-          character(0)
-        }
+      )
     }
+
+    if (target_non_control > available_non_control) {
+      cli::cli_warn(
+        c(
+          "Requested {.val {target_non_control}} non-control markers, but only {.val {available_non_control}} are available.",
+          "i" = "Using all available non-control markers."
+        )
+      )
+    }
+
+    n_non_control <- min(target_non_control, available_non_control)
+
+    sampled_non_control <-
+      if (n_non_control > 0) {
+        sample(non_control_markers, size = n_non_control, replace = FALSE)
+      } else {
+        character(0)
+      }
 
     keep_markers <-
       c(control_markers, sampled_non_control) %>%
@@ -397,12 +387,11 @@ downsample_data <-
           GetAssayData(candidate_data, layer = "counts")
 
     if (any(Matrix::colSums(marker_counts) == 0)) {
-      warning(
-        paste0(
-          "Marker downsampling produced cells with zero total counts. ",
-          "Disabling marker downsampling and keeping all markers."
-        ),
-        call. = FALSE
+      cli::cli_warn(
+        c(
+          "Marker downsampling produced cells with zero total counts.",
+          "i" = "Disabling marker downsampling and keeping all markers."
+        )
       )
 
       keep_markers <- rownames(pg_data)
