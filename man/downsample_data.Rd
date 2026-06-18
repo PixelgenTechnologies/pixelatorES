@@ -16,8 +16,13 @@ downsample_data(pg_data, control_markers = NULL, n_cells = 50, n_markers = 20)
 \item{n_markers}{An integer specifying the total number of markers to keep in the downsampled data.}
 }
 \value{
-A downsampled Seurat object with the specified number of cells and markers.
+A downsampled Seurat object with selected cells and markers.
 }
 \description{
-Downsamples the data to a specified number of cells and markers, ensuring that control markers are always included.
+Downsamples the data to a specified number of cells and markers,
+ensuring that control markers are always included.
+If a sample has fewer than \code{n_cells}, all available cells are kept for that sample.
+If fewer non-control markers are available than requested, all available non-control markers are kept.
+\code{control_markers} are always kept.
+In these cases, the function warns and proceeds instead of failing.
 }

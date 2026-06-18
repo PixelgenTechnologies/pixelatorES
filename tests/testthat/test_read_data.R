@@ -209,6 +209,33 @@ test_that("File reading works as expected", {
   expect_s4_class(seur_down, "Seurat")
   expect_equal(dim(seur_down), c(5, 6))
 
+  # Edge case 1: fewer cells than requested in at least one sample
+  expect_warning(
+    seur_down_low_cells <- downsample_data(
+      seur_comb,
+      control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
+      n_cells = 1000,
+      n_markers = 5
+    ),
+    "fewer cells"
+  )
+  expect_equal(ncol(seur_down_low_cells), ncol(seur_comb))
+
+  # Edge case 2: fewer non-control markers available than requested
+  all_markers <- rownames(seur_comb)
+  expect_gt(length(all_markers), 1)
+  control_set <- all_markers[-length(all_markers)]
+  expect_warning(
+    seur_down_low_markers <- downsample_data(
+      seur_comb,
+      control_markers = control_set,
+      n_cells = 3,
+      n_markers = nrow(seur_comb) + 5
+    ),
+    "non-control markers"
+  )
+  expect_equal(nrow(seur_down_low_markers), nrow(seur_comb))
+
   # Sample sheet reading
   expect_no_error(sample_sheet <- read_samplesheet(test_samplesheet()))
   expect_equal(
