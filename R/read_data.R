@@ -281,9 +281,7 @@ merge_data <-
 #' ensuring that control markers are always included.
 #' If a sample has fewer than `n_cells`, all available cells are kept for that sample.
 #' If fewer non-control markers are available than requested, all available non-control markers are kept.
-#' If `length(control_markers) > n_markers`, all control markers are kept.
-#' If marker downsampling makes any selected cell have zero total counts,
-#' marker downsampling is disabled and all markers are kept.
+#' `control_markers` are always kept.
 #' In these cases, the function warns and proceeds instead of failing.
 #'
 #' @param pg_data A Seurat object containing the data to be downsampled.
@@ -302,12 +300,18 @@ downsample_data <-
            n_markers = 20) {
     set.seed(37)
 
-    if (is.null(control_markers)) {
-      control_markers <- character(0)
+    pixelatorR:::assert_class(pg_data, "Seurat")
+    pixelatorR:::assert_vector(control_markers, "character", allow_null = TRUE)
+    pixelatorR:::assert_single_value(n_cells, "integer")
+    pixelatorR:::assert_single_value(n_markers, "integer")
+
+    if (length(control_markers) > 0) {
+      pixelatorR:::assert_x_in_y(control_markers, rownames(pg_data))
     }
 
     control_markers <- unique(control_markers)
 
+    # Downsample cells
     cell_data <-
       FetchData(pg_data, "sample_alias") %>%
       as_tibble(rownames = "cell_id")
@@ -336,15 +340,11 @@ downsample_data <-
       ungroup() %>%
       pull(cell_id)
 
-    if (length(control_markers) > 0) {
-      pixelatorR:::assert_x_in_y(control_markers, rownames(pg_data))
-    }
 
+    # Downsample markers
+    markers <- rownames(pg_data)
     non_control_markers <-
-      rownames(pg_data) %>%
-      {
-        .[!. %in% control_markers]
-      }
+      setdiff(markers, control_markers)
 
     target_non_control <- max(n_markers - length(control_markers), 0)
     available_non_control <- length(non_control_markers)
@@ -372,23 +372,6 @@ downsample_data <-
     keep_markers <-
       c(control_markers, sampled_non_control) %>%
       unique()
-
-    candidate_data <-
-      pg_data[keep_markers, keep_cells]
-
-    marker_counts <-
-          GetAssayData(candidate_data, layer = "counts")
-
-    if (any(Matrix::colSums(marker_counts) == 0)) {
-      cli::cli_warn(
-        c(
-          "Marker downsampling produced cells with zero total counts.",
-          "i" = "Disabling marker downsampling and keeping all markers."
-        )
-      )
-
-      keep_markers <- rownames(pg_data)
-    }
 
     pg_data <-
       pg_data[keep_markers, keep_cells]
