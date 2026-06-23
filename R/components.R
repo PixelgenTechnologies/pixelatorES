@@ -142,7 +142,10 @@ component_denoising <- function(
 
   isotype_data <-
     qc_metrics_tables$denoising_detail$isotype_reduction %>%
-    set_sample_levels(sample_levels)
+    set_sample_levels(sample_levels) %>%
+    mutate(isotype_reduction = ifelse(is.na(isotype_reduction),
+      0, isotype_reduction
+    ))
 
   p_isotype_reduction <-
     isotype_data %>%
@@ -153,7 +156,7 @@ component_denoising <- function(
       y_label = "Isotype reduction by denoising",
       use_pct = TRUE,
       hline = 0,
-      round = 1
+      round = 2
     ) +
     scale_y_continuous(
       labels = scales::percent_format(accuracy = 1),

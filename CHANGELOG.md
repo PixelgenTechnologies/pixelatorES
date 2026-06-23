@@ -9,17 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
  
- - `downsample_data` will now default to the number of markers or cells in the data if `n_markers` or `n_cells` are higher than available in the data.
+- `downsample_data` will now default to the number of markers or cells in the data if `n_markers` or `n_cells` are higher than available in the data.
+- Bug in `component_denoising` in the isotype reduction plot, where components with zero isotype counts would cause the summary median to become `NAs`.
 
 ## [0.11.2] 2026-06-15
 
 ### Changed
 
- - `component_hashing` now returns a sample confidence plot with either hash purity or hash enrichment factor, depending on which metric is present in the data.
+- `component_hashing` now returns a sample confidence plot with either hash purity or hash enrichment factor, depending on which metric is present in the data.
  
 ### Removed
  
- - `harmony` has been removed, and `do_harmonize` is no longer an option. 
+- `harmony` has been removed, and `do_harmonize` is no longer an option. 
  
 ## [0.11.1] 2026-06-09
 
