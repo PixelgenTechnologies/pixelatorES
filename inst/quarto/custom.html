@@ -1,33 +1,377 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
-  const tabsets = document.querySelectorAll('.panel-tabset');
+  const TOOLTIP_OPTS = { container: "body" };
 
-  tabsets.forEach(tabset => {
+  function paneIsActive(pane) {
+    return pane && pane.classList.contains("active");
+  }
 
-    tabset.addEventListener('show.bs.tab', function () {
-      // Lock height before transition to prevent page jump
-      const tabContent = tabset.querySelector('.tab-content');
+  function initTooltips(root) {
+    if (!window.bootstrap || !window.bootstrap.Tooltip) {
+      return;
+    }
+    if (!root) {
+      return;
+    }
+
+    root.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+      const existing = bootstrap.Tooltip.getInstance(el);
+      if (existing) {
+        existing.dispose();
+      }
+      new bootstrap.Tooltip(el, TOOLTIP_OPTS);
+    });
+  }
+
+  function refreshPane(pane) {
+    if (!pane) {
+      return;
+    }
+
+    if (window.HTMLWidgets) {
+      pane.querySelectorAll(".html-widget").forEach(function(el) {
+        const widget = HTMLWidgets.find(el);
+        if (widget && typeof widget.resize === "function") {
+          widget.resize();
+        }
+      });
+    }
+
+    if (window.jQuery && window.jQuery.fn && window.jQuery.fn.dataTable) {
+      pane.querySelectorAll("table.dataTable").forEach(function(table) {
+        try {
+          window.jQuery(table).DataTable().columns.adjust().draw(false);
+        } catch (e) {
+          // DataTable not bound yet
+        }
+      });
+    }
+
+    initTooltips(pane);
+    window.dispatchEvent(new Event("resize"));
+  }
+
+  function schedulePaneRefresh(pane) {
+    if (!pane) {
+      return;
+    }
+
+    requestAnimationFrame(function() {
+      refreshPane(pane);
+    });
+
+    // DataTables in a newly shown tab often render after shown.bs.tab fires.
+    [50, 150, 400, 800].forEach(function(delay) {
+      setTimeout(function() {
+        if (paneIsActive(pane)) {
+          refreshPane(pane);
+        }
+      }, delay);
+    });
+  }
+
+  document.addEventListener("shown.bs.tab", function(event) {
+    const trigger = event.target;
+    if (!trigger || !trigger.getAttribute) {
+      return;
+    }
+
+    const target = trigger.getAttribute("data-bs-target");
+    if (!target) {
+      return;
+    }
+
+    schedulePaneRefresh(document.querySelector(target));
+  });
+
+  if (window.HTMLWidgets && window.HTMLWidgets.addPostRenderHandler) {
+    HTMLWidgets.addPostRenderHandler(function(el) {
+      const pane = el.closest ? el.closest(".tab-pane") : null;
+      if (!pane || paneIsActive(pane)) {
+        initTooltips(el);
+      }
+    });
+  }
+
+  if (window.jQuery) {
+    jQuery(document).on("draw.dt", function(event) {
+      const table = event.target;
+      const pane = table.closest && table.closest(".tab-pane");
+      if (!pane || paneIsActive(pane)) {
+        initTooltips(pane || table);
+      }
+    });
+  }
+
+  function collectAncestorTabPanes(el) {
+    const panes = [];
+    let node = el.parentElement;
+
+    while (node) {
+      if (node.classList && node.classList.contains("tab-pane")) {
+        panes.push(node);
+      }
+      node = node.parentElement;
+    }
+
+    return panes.reverse();
+  }
+
+  function tabTriggerForPane(pane) {
+    if (!pane || !pane.id) {
+      return null;
+    }
+
+    return document.querySelector(
+      '[data-bs-toggle="tab"][data-bs-target="#' + pane.id + '"]'
+    );
+  }
+
+  function showTabPaneChain(panes) {
+    if (!window.bootstrap || !window.bootstrap.Tab) {
+      return Promise.resolve();
+    }
+
+    return panes.reduce(function(chain, pane) {
+      return chain.then(function() {
+        return new Promise(function(resolve) {
+          const trigger = tabTriggerForPane(pane);
+
+          if (!trigger || trigger.classList.contains("active")) {
+            resolve();
+            return;
+          }
+
+          const onShown = function() {
+            trigger.removeEventListener("shown.bs.tab", onShown);
+            resolve();
+          };
+
+          trigger.addEventListener("shown.bs.tab", onShown);
+          bootstrap.Tab.getOrCreateInstance(trigger).show();
+        });
+      });
+    }, Promise.resolve());
+  }
+
+  function anchorTarget(id) {
+    const decoded = decodeURIComponent(id);
+
+    return (
+      document.getElementById(decoded) ||
+      document.querySelector('[data-anchor-id="' + decoded + '"]')
+    );
+  }
+
+  function navigateToAnchor(id) {
+    const target = anchorTarget(id);
+
+    if (!target) {
+      return Promise.resolve(false);
+    }
+
+    const panes = collectAncestorTabPanes(target);
+
+    return showTabPaneChain(panes).then(function() {
+      requestAnimationFrame(function() {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        const activePane = panes.length ? panes[panes.length - 1] : null;
+        if (activePane) {
+          schedulePaneRefresh(activePane);
+        }
+      });
+
+      return true;
+    });
+  }
+
+  function hashLinkTargetId(link) {
+    const href = link.getAttribute("href");
+
+    if (!href || href.charAt(0) !== "#" || href.length < 2) {
+      return null;
+    }
+
+    return href.slice(1);
+  }
+
+  function tabPaneDepth(pane) {
+    let depth = 0;
+    let node = pane.parentElement;
+
+    while (node) {
+      if (node.classList && node.classList.contains("tab-pane")) {
+        depth++;
+      }
+      node = node.parentElement;
+    }
+
+    return depth;
+  }
+
+  const defaultActivePanes = Array.from(document.querySelectorAll(".tab-pane.active"))
+    .sort(function(a, b) {
+      return tabPaneDepth(a) - tabPaneDepth(b);
+    });
+
+  const returnStack = [];
+  let navDepth = 0;
+  let lastNavigatedHash = window.location.hash;
+
+  function captureCurrentView() {
+    const panes = Array.from(document.querySelectorAll(".tab-pane.active"))
+      .sort(function(a, b) {
+        return tabPaneDepth(a) - tabPaneDepth(b);
+      });
+
+    return {
+      paneIds: panes.map(function(pane) {
+        return pane.id;
+      }),
+      scrollY: window.scrollY
+    };
+  }
+
+  function panesFromView(view) {
+    return view.paneIds
+      .map(function(id) {
+        return document.getElementById(id);
+      })
+      .filter(Boolean)
+      .sort(function(a, b) {
+        return tabPaneDepth(a) - tabPaneDepth(b);
+      });
+  }
+
+  function restoreDefaultView() {
+    showTabPaneChain(defaultActivePanes).then(function() {
+      requestAnimationFrame(function() {
+        window.scrollTo({ top: 0, behavior: "auto" });
+
+        const activePane = defaultActivePanes.length
+          ? defaultActivePanes[defaultActivePanes.length - 1]
+          : null;
+        if (activePane) {
+          schedulePaneRefresh(activePane);
+        }
+      });
+    });
+  }
+
+  function restoreView(view) {
+    const panes = panesFromView(view);
+
+    if (!panes.length) {
+      restoreDefaultView();
+      return;
+    }
+
+    showTabPaneChain(panes).then(function() {
+      requestAnimationFrame(function() {
+        window.scrollTo({ top: view.scrollY, behavior: "auto" });
+
+        const activePane = panes[panes.length - 1];
+        if (activePane) {
+          schedulePaneRefresh(activePane);
+        }
+      });
+    });
+  }
+
+  function handleHistoryNavigation(event, fromPopstate) {
+    const hash = window.location.hash;
+
+    if (hash === lastNavigatedHash) {
+      return;
+    }
+
+    const goingBack = fromPopstate &&
+      event.state &&
+      typeof event.state.depth === "number" &&
+      event.state.depth < navDepth;
+
+    if (fromPopstate && event.state && typeof event.state.depth === "number") {
+      navDepth = event.state.depth;
+    }
+
+    lastNavigatedHash = hash;
+
+    if (goingBack) {
+      const view = returnStack.pop();
+
+      if (view) {
+        restoreView(view);
+      } else if (hash.length > 1) {
+        navigateToAnchor(hash.slice(1));
+      } else {
+        restoreDefaultView();
+      }
+      return;
+    }
+
+    if (hash.length > 1) {
+      navigateToAnchor(hash.slice(1));
+    } else if (returnStack.length) {
+      restoreView(returnStack.pop());
+    } else {
+      restoreDefaultView();
+    }
+  }
+
+  history.replaceState({ depth: 0 }, "", window.location.href);
+
+  document.addEventListener("click", function(event) {
+    const link = event.target.closest && event.target.closest('a[href^="#"]');
+
+    if (!link || link.getAttribute("data-bs-toggle") === "tab") {
+      return;
+    }
+
+    const id = hashLinkTargetId(link);
+
+    if (!id || !anchorTarget(id)) {
+      return;
+    }
+
+    event.preventDefault();
+    returnStack.push(captureCurrentView());
+    navigateToAnchor(id);
+    navDepth++;
+    history.pushState({ depth: navDepth }, "", "#" + id);
+    lastNavigatedHash = "#" + id;
+  });
+
+  window.addEventListener("popstate", function(event) {
+    handleHistoryNavigation(event, true);
+  });
+
+  window.addEventListener("hashchange", function(event) {
+    handleHistoryNavigation(event, false);
+  });
+
+  if (window.location.hash.length > 1) {
+    navigateToAnchor(window.location.hash.slice(1));
+    lastNavigatedHash = window.location.hash;
+  }
+
+  const tabsets = document.querySelectorAll(".panel-tabset");
+
+  tabsets.forEach(function(tabset) {
+    tabset.addEventListener("show.bs.tab", function() {
+      const tabContent = tabset.querySelector(".tab-content");
       if (tabContent) {
         tabContent.style.minHeight = tabContent.offsetHeight + "px";
       }
     });
 
-    tabset.addEventListener('shown.bs.tab', function () {
-      const tabContent = tabset.querySelector('.tab-content');
+    tabset.addEventListener("shown.bs.tab", function() {
+      const tabContent = tabset.querySelector(".tab-content");
       if (tabContent) {
-        // Release height after transition
         tabContent.style.minHeight = "";
       }
-
-      // Force DataTables to recalc layout if any are visible
-      if (window.jQuery && window.jQuery.fn && window.jQuery.fn.dataTable) {
-        window.jQuery.fn.dataTable.tables({ visible: true }).forEach(function (table) {
-          window.jQuery(table).DataTable().columns.adjust();
-        });
-      }
     });
-
   });
 
 });
