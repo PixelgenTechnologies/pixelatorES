@@ -104,9 +104,9 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  function collectAncestorTabPanes(el) {
+  function collectTabPanes(el) {
     const panes = [];
-    let node = el.parentElement;
+    let node = el;
 
     while (node) {
       if (node.classList && node.classList.contains("tab-pane")) {
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", function() {
       return Promise.resolve(false);
     }
 
-    const panes = collectAncestorTabPanes(target);
+    const panes = collectTabPanes(target);
 
     return showTabPaneChain(panes).then(function() {
       requestAnimationFrame(function() {

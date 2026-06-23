@@ -4,7 +4,7 @@
 \alias{tabset_nested_plotlist}
 \title{Tabset nested plots}
 \usage{
-tabset_nested_plotlist(plots, level = 2, close = TRUE)
+tabset_nested_plotlist(plots, level = 2, close = TRUE, anchor_prefix = NULL)
 }
 \arguments{
 \item{plots}{List of plots or list of lists of plots to be tabsetted.}
@@ -12,6 +12,9 @@ tabset_nested_plotlist(plots, level = 2, close = TRUE)
 \item{level}{Integer indicating the header level for the tabset title (default is 2).}
 
 \item{close}{Logical indicating whether to close the tabset after plotting (default is TRUE).}
+
+\item{anchor_prefix}{Prefix for in-report deep-link anchor IDs. \code{NULL} (default)
+auto-detects from the current knitr chunk label; pass a string to override.}
 }
 \value{
 A formatted tabset of plots.
