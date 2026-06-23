@@ -42,6 +42,13 @@ title_plotlist <- function(plots, level = 2, anchor_prefix = NULL) {
     # Generate a header for each plot in the tabset
     cat(paste0(strrep("#", level), " ", nams[tab], "\n\n"))
 
+    if (!is.null(prefix)) {
+      cat(sprintf(
+        '<div class="plot-anchor" data-anchor-id="%s" aria-hidden="true"></div>\n\n',
+        plot_anchor_slug(prefix, nams[tab])
+      ))
+    }
+
     # Print the plot
     msg <- try(print(plots[[tab]]), silent = TRUE)
     if (inherits(msg, "try-error")) {
@@ -53,14 +60,7 @@ title_plotlist <- function(plots, level = 2, anchor_prefix = NULL) {
       )
     }
 
-    if (!is.null(prefix)) {
-      cat(sprintf(
-        '<div class="plot-anchor" data-anchor-id="%s" aria-hidden="true"></div>\n\n',
-        plot_anchor_slug(prefix, nams[tab])
-      ))
-    } else {
-      cat("\n\n")
-    }
+    cat("\n\n")
   }
 }
 
