@@ -31,9 +31,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (window.HTMLWidgets) {
       pane.querySelectorAll(".html-widget").forEach(function(el) {
-        const widget = HTMLWidgets.find(el);
-        if (widget && typeof widget.resize === "function") {
-          widget.resize();
+        if (!el.id) {
+          return;
+        }
+        try {
+          const widget = HTMLWidgets.find(el.id);
+          if (widget && typeof widget.resize === "function") {
+            widget.resize();
+          }
+        } catch (e) {
+          // Widget not bound yet
         }
       });
     }
