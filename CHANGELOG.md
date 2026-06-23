@@ -16,7 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  
 - `downsample_data` will now default to the number of markers or cells in the data if `n_markers` or `n_cells` are higher than available in the data.
 - Bug in `component_denoising` in the isotype reduction plot, where components with zero isotype counts would cause the summary median to become `NAs`.
-- Tab deep-link navigation when the hash target is itself a `.tab-pane` element (the target pane was not activated).
 
 ## [0.11.2] 2026-06-15
 
