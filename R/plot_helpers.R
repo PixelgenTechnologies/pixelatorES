@@ -1,17 +1,38 @@
+plot_anchor_slug <- function(...) {
+  x <- paste(..., collapse = "-")
+  x <- tolower(x)
+  x <- gsub("[^a-z0-9]+", "-", x)
+  gsub("^-+|-+$", "", x)
+}
+
+resolve_anchor_prefix <- function(anchor_prefix = NULL) {
+  if (is.null(anchor_prefix)) {
+    label <- knitr::opts_current$get("label")
+    if (is.null(label) || !nzchar(label)) {
+      return(NULL)
+    }
+    return(plot_anchor_slug(label))
+  }
+  anchor_prefix
+}
+
 #' Header wrap plots
 #'
 #' Wraps a list of plots with headers for each plot.
 #'
 #' @param plots List of plots to be wrapped.
 #' @param level Integer indicating the header level for the headers (default is 2).
+#' @param anchor_prefix Prefix for in-report deep-link anchor IDs. `NULL` (default)
+#'   auto-detects from the current knitr chunk label; pass a string to override.
 #'
 #' @return A formatted list of plots with headers.
 #'
 #' @export
-title_plotlist <- function(plots, level = 2) {
+title_plotlist <- function(plots, level = 2, anchor_prefix = NULL) {
   pixelatorR:::assert_class(plots, "list")
   for (plot in plots) pixelatorR:::assert_class(plot, c("ggplot", "datatables"))
 
+  prefix <- resolve_anchor_prefix(anchor_prefix)
   nams <- names(plots)
 
   if (is.null(nams)) nams <- rep(" ", length(plots))
@@ -20,6 +41,13 @@ title_plotlist <- function(plots, level = 2) {
   for (tab in seq_along(plots)) {
     # Generate a header for each plot in the tabset
     cat(paste0(strrep("#", level), " ", nams[tab], "\n\n"))
+
+    if (!is.null(prefix)) {
+      cat(sprintf(
+        '<div class="plot-anchor" data-anchor-id="%s" aria-hidden="true"></div>\n\n',
+        plot_anchor_slug(prefix, nams[tab])
+      ))
+    }
 
     # Print the plot
     msg <- try(print(plots[[tab]]), silent = TRUE)
@@ -31,6 +59,7 @@ title_plotlist <- function(plots, level = 2) {
           geom_blank()
       )
     }
+
     cat("\n\n")
   }
 }
@@ -42,6 +71,8 @@ title_plotlist <- function(plots, level = 2) {
 #' @param plots List of plots to be tabsetted.
 #' @param level Integer indicating the header level for the tabset title (default is 2).
 #' @param close Logical indicating whether to close the tabset after plotting (default is TRUE).
+#' @param anchor_prefix Prefix for in-report deep-link anchor IDs. `NULL` (default)
+#'   auto-detects from the current knitr chunk label; pass a string to override.
 #'
 #' @return A formatted tabset of plots.
 #'
@@ -50,15 +81,18 @@ tabset_plotlist <-
   function(
     plots,
     level = 2,
-    close = TRUE
+    close = TRUE,
+    anchor_prefix = NULL
   ) {
     pixelatorR:::assert_class(plots, "list")
     for (plot in plots) pixelatorR:::assert_class(plot, c("ggplot", "datatables"))
 
+    prefix <- resolve_anchor_prefix(anchor_prefix)
+
     # Start the tabset
     cat("::: {.panel-tabset .nav-pills}\n")
 
-    title_plotlist(plots, level)
+    title_plotlist(plots, level, anchor_prefix = prefix)
 
     # Close the tabset
     if (close) cat(":::\n")
@@ -72,6 +106,8 @@ tabset_plotlist <-
 #' @param plots List of plots or list of lists of plots to be tabsetted.
 #' @param level Integer indicating the header level for the tabset title (default is 2).
 #' @param close Logical indicating whether to close the tabset after plotting (default is TRUE).
+#' @param anchor_prefix Prefix for in-report deep-link anchor IDs. `NULL` (default)
+#'   auto-detects from the current knitr chunk label; pass a string to override.
 #'
 #' @return A formatted tabset of plots.
 #'
@@ -80,7 +116,8 @@ tabset_nested_plotlist <-
   function(
     plots,
     level = 2,
-    close = TRUE
+    close = TRUE,
+    anchor_prefix = NULL
   ) {
     pixelatorR:::assert_class(plots, "list")
     for (plot in plots) {
@@ -94,6 +131,8 @@ tabset_nested_plotlist <-
       )
     }
 
+    prefix <- resolve_anchor_prefix(anchor_prefix)
+
     # Start the tabset
     cat("\n\n")
     cat("::: {.panel-tabset .nav-pills}\n")
@@ -104,12 +143,24 @@ tabset_nested_plotlist <-
 
         cat(paste0(strrep("#", level), " ", names(plots)[tab], "\n"))
 
-        tabset_nested_plotlist(plots[[tab]], level + 1)
+        child_prefix <- if (!is.null(prefix)) {
+          plot_anchor_slug(prefix, names(plots)[tab])
+        } else {
+          NULL
+        }
+
+        tabset_nested_plotlist(
+          plots[[tab]],
+          level + 1,
+          anchor_prefix = child_prefix
+        )
       } else if (inherits(plots[[tab]], "ggplot")) {
         # Otherwise, just print the plot
-        list(plots[[tab]]) %>%
-          set_names(names(plots)[tab]) %>%
-          title_plotlist(level)
+        title_plotlist(
+          list(plots[[tab]]) %>% set_names(names(plots)[tab]),
+          level,
+          anchor_prefix = prefix
+        )
       }
     }
     # Close the tabset

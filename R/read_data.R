@@ -301,7 +301,7 @@ downsample_data <-
     set.seed(37)
 
     pixelatorR:::assert_class(pg_data, "Seurat")
-    pixelatorR:::assert_vector(control_markers, "character", allow_null = TRUE)
+    pixelatorR:::assert_vector(control_markers, "character", n = 1, allow_null = TRUE)
     pixelatorR:::assert_single_value(n_cells, "integer")
     pixelatorR:::assert_single_value(n_markers, "integer")
 

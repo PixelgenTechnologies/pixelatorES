@@ -7,24 +7,24 @@ test_that("Tab setting and title setting work as expected", {
     list("a" = g, "b" = g, "c" = g)
 
   expect_equal(
-    capture.output(title_plotlist(plot_list)),
+    capture.output(title_plotlist(plot_list, anchor_prefix = NULL)),
     c("## a", "", "", "", "## b", "", "", "", "## c", "", "", "")
   )
   expect_equal(
-    capture.output(title_plotlist(plot_list, level = 3)),
+    capture.output(title_plotlist(plot_list, level = 3, anchor_prefix = NULL)),
     c("### a", "", "", "", "### b", "", "", "", "### c", "", "", "")
   )
 
 
   expect_equal(
-    capture.output(tabset_plotlist(plot_list)),
+    capture.output(tabset_plotlist(plot_list, anchor_prefix = NULL)),
     c(
       "::: {.panel-tabset .nav-pills}", "## a", "", "", "", "## b",
       "", "", "", "## c", "", "", "", ":::"
     )
   )
   expect_equal(
-    capture.output(tabset_plotlist(plot_list, level = 3)),
+    capture.output(tabset_plotlist(plot_list, level = 3, anchor_prefix = NULL)),
     c(
       "::: {.panel-tabset .nav-pills}", "### a", "", "", "", "### b",
       "", "", "", "### c", "", "", "", ":::"
@@ -43,12 +43,12 @@ test_that("Tab setting and title setting work as expected", {
   plot_list <-
     list("a" = g, "b" = g, "c" = g_bad)
 
-  expect_no_error(title_plotlist(plot_list))
+  expect_no_error(title_plotlist(plot_list, anchor_prefix = NULL))
 
   ## Throw error in dev mode
   options(pixelatorES.dev_mode = TRUE)
 
-  expect_error(title_plotlist(plot_list))
+  expect_error(title_plotlist(plot_list, anchor_prefix = NULL))
 
   options(pixelatorES.dev_mode = FALSE)
 
@@ -64,7 +64,7 @@ test_that("Tab setting and title setting work as expected", {
     )
 
   expect_equal(
-    capture.output(tabset_nested_plotlist(nested_plot_list, level = 3)),
+    capture.output(tabset_nested_plotlist(nested_plot_list, level = 3, anchor_prefix = NULL)),
     c(
       "", "", "::: {.panel-tabset .nav-pills}", "### a", "", "",
       "", "### b", "", "", "", "### c", "", "", "", "### plot_list",
@@ -72,6 +72,43 @@ test_that("Tab setting and title setting work as expected", {
       "#### b", "", "", "", "#### c", "", "", "", ":::", ":::"
     )
   )
+})
+
+test_that("plot anchor slugs are stable and URL-safe", {
+  expect_equal(pixelatorES:::plot_anchor_slug("HLA-DR"), "hla-dr")
+  expect_equal(
+    pixelatorES:::plot_anchor_slug("abundance_per_marker", "CD3"),
+    "abundance-per-marker-cd3"
+  )
+})
+
+test_that("title_plotlist emits anchor divs when anchor_prefix is set", {
+  g <- ggplot() + theme_void()
+  plot_list <- list("CD3" = g, "HLA-DR" = g)
+
+  out <- capture.output(
+    title_plotlist(plot_list, level = 5, anchor_prefix = "abundance-per-marker")
+  )
+
+  expect_true(any(grepl('data-anchor-id="abundance-per-marker-cd3"', out)))
+  expect_true(any(grepl('data-anchor-id="abundance-per-marker-hla-dr"', out)))
+})
+
+test_that("tabset_nested_plotlist extends anchor prefixes for nested tabs", {
+  g <- ggplot() + theme_void()
+  nested_plot_list <- list(
+    "B cell" = list("CD19" = g)
+  )
+
+  out <- capture.output(
+    tabset_nested_plotlist(
+      nested_plot_list,
+      level = 3,
+      anchor_prefix = "coloc-celltype"
+    )
+  )
+
+  expect_true(any(grepl('data-anchor-id="coloc-celltype-b-cell-cd19"', out)))
 })
 
 test_that("Embedding plots work as expected", {

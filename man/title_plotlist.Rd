@@ -4,12 +4,15 @@
 \alias{title_plotlist}
 \title{Header wrap plots}
 \usage{
-title_plotlist(plots, level = 2)
+title_plotlist(plots, level = 2, anchor_prefix = NULL)
 }
 \arguments{
 \item{plots}{List of plots to be wrapped.}
 
 \item{level}{Integer indicating the header level for the headers (default is 2).}
+
+\item{anchor_prefix}{Prefix for in-report deep-link anchor IDs. \code{NULL} (default)
+auto-detects from the current knitr chunk label; pass a string to override.}
 }
 \value{
 A formatted list of plots with headers.
