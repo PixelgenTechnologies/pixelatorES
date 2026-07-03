@@ -5,23 +5,21 @@ set -e
 
 CONTAINER_IMAGE="ghcr.io/pixelgentechnologies/pixelatores:main" # Default container image
 MOUNT_DIRS=()
-OUTPUT_PATH=""
+NAME=""
 CSV_FILE=""
-SKIP_CLEANUP="false"  # Default: do cleanup
-MISSING_FLAGS="false"   # Flag to track missing required arguments
-QUARTO_PARAMS=() # Initialize an array to store multiple -P parameters
-
+RUN_TERMINAL="false"    # Explicitly initialize to false
+QUARTO_PARAMS=()        # Initialize an array to store multiple -P parameters
 
 # Usage function (updated)
 usage() {
   echo ""
-  echo "Usage: $0 -i <container> -d <pixelator-dir> -n <output-name> -s <samplesheet-csv> [-c <container-name>] [-skip]"
+  echo "Usage: $0 -d <pixelator-dir> -n <output-name> -s <samplesheet-csv> [-i <container-image>] [-P <param>] [-D]"
   echo ""
-  echo "  -d <pixelator-dir>	  : The Pixelator output directory to mount in the container (required)."
-  echo "  -n <output-name>  	  :  Path of the output HTML file without extension (required)."
-  echo "  -s <samplesheet-csv> 	: The ES samplesheet CSV file (required)."
-  echo "  -i <ghcr-image>	      : The Docker image to use."
-  echo "  -P <parameter>	      : Additional parameters to pass to Quarto (can be used multiple times)."
+  echo "  -d <pixelator-dir>    : The Pixelator output directory to mount in the container (required)."
+  echo "  -n <output-name>      : Name or path of the output HTML file (required)."
+  echo "  -s <samplesheet-csv>  : The ES samplesheet CSV file (required)."
+  echo "  -i <ghcr-image>       : The Docker image to use (optional)."
+  echo "  -P <parameter>        : Additional parameters to pass to Quarto (can be used multiple times)."
   echo "  -D <debug>            : Run a bash terminal inside the container instead of experiment-summary."
   exit 1
 }
@@ -30,7 +28,8 @@ usage() {
 while getopts "d:n:s:i:P:D" opt; do
   case $opt in
     P)
-      QUARTO_PARAMS+=("-P $OPTARG") # Append each -P parameter to the array
+      # Store -P and the argument as separate elements for clean bash expansion
+      QUARTO_PARAMS+=("-P" "$OPTARG") 
       ;;
     d)
       MOUNT_DIRS+=("$OPTARG")
@@ -49,17 +48,14 @@ while getopts "d:n:s:i:P:D" opt; do
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
-      MISSING_FLAGS="true" # Set the flag
       usage
       ;;
     :)
       echo "Option -$OPTARG requires an argument." >&2
-       MISSING_FLAGS="true" # Set the flag
       usage
       ;;
   esac
 done
-
 
 # Check for required arguments only if not running in terminal mode
 if [ "$RUN_TERMINAL" == "false" ]; then
@@ -67,20 +63,30 @@ if [ "$RUN_TERMINAL" == "false" ]; then
     RED='\033[0;31m'
     NC='\033[0m'
     printf "${RED}Error${NC}: When not using -D, all required arguments (-d, -n, -s) must be provided.\n" >&2
-    MISSING_FLAGS="true" # Set flag BEFORE calling usage
     usage
-    exit 1 #Must exit after usage, otherwise trap will run
   fi
 fi
 
+# Robustly handle output paths and names (resolves relative path issues)
+if [ -n "$NAME" ]; then
+  OUTPUT_DIR=$(realpath "$(dirname "$NAME")")
+  OUTPUT_BASE=$(basename "$NAME")
+else
+  OUTPUT_DIR=$(pwd)
+  OUTPUT_BASE="summary"
+fi
 
 # Build base docker args
 docker_args=(
   --rm
   -it
-  -v "$(dirname "$NAME")":/workspace/output
-  --mount type=bind,source="$(realpath "$CSV_FILE")",target=/workspace/samplesheet.csv,readonly
+  -v "$OUTPUT_DIR":/workspace/output
 )
+
+# Only attempt to mount CSV if it was actually provided
+if [ -n "$CSV_FILE" ]; then
+  docker_args+=(--mount type=bind,source="$(realpath "$CSV_FILE")",target=/workspace/samplesheet.csv,readonly)
+fi
 
 # Add each data directory as a subfolder in /workspace/data
 for dir in "${MOUNT_DIRS[@]}"; do
@@ -88,6 +94,7 @@ for dir in "${MOUNT_DIRS[@]}"; do
   docker_args+=("-v" "$(realpath "$dir"):/workspace/data/$base")
 done
 
+echo "Pulling image: $CONTAINER_IMAGE..."
 docker pull "$CONTAINER_IMAGE"
 
 # Run the container
@@ -104,9 +111,9 @@ else
     "$CONTAINER_IMAGE" \
     bash -c "experiment-summary \
       -P sample_sheet=/workspace/samplesheet.csv -P data_folder=/workspace/data \
-      ${QUARTO_PARAMS[@]} && \
-      mv /workspace/inst/quarto/pixelatorES.html /workspace/output/$NAME.html && \
-      chown $(id -u):$(id -g) output/$NAME.html"
+      \"${QUARTO_PARAMS[@]}\" && \
+      mv /workspace/inst/quarto/pixelatorES.html /workspace/output/${OUTPUT_BASE}.html && \
+      chown $(id -u):$(id -g) /workspace/output/${OUTPUT_BASE}.html"
 fi
 
 exit 0
