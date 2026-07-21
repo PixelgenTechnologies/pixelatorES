@@ -655,6 +655,15 @@ for (data_type in data_types) {
       sample_qc_tables <-
         get_qc_metrics(seur, sample_qc_metrics, sample_sheet)
     )
+
+    # Regression test: undetermined entries in component_sample_confidence are
+    # preserved with sample_alias == "undetermined" after sample -> sample_alias mapping
+    if (data_type == "hashing") {
+      conf <- sample_qc_tables$sample_hash_stats$component_sample_confidence
+      expect_true("undetermined" %in% conf$sample_alias)
+      expect_true(all(!is.na(conf$sample_confidence[conf$sample_alias == "undetermined"])))
+    }
+
     expect_no_error(
       tabl <- key_metric_table(sample_qc_tables)
     )
