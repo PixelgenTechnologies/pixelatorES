@@ -669,7 +669,7 @@ get_qc_metrics <-
         # If the table contains a "sample" column but not a "sample_alias" column, add it from samplesheet
         if ("sample" %in% names(tb) && !"sample_alias" %in% names(tb)) {
           tb <- tb %>%
-            inner_join(
+            left_join(
               select(sample_sheet, sample_alias, sample),
               by = c("sample")
             ) %>%
