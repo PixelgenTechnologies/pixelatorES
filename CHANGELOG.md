@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `run_ES_docker.sh` now supports relative/nested output paths (`-n`), optional samplesheet in debug mode (`-D`), and correctly forwards Quarto `-P` parameters and output file ownership.
 - `experiment-summary` exits with an error when Quarto rendering fails.
 
+## [0.11.4] 2026-07-21
+
+### Fixed
+
+- Bug which would cause the sample confidence / hashing enrichment ratio of undetermined to not be displayed for undetermined cells in the sample confidence plot. 
+
 ## [0.11.3] 2026-06-23
 
 ### Added
