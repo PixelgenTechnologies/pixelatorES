@@ -674,6 +674,7 @@ get_qc_metrics <-
               by = c("sample")
             ) %>%
             mutate(sample_alias = ifelse(sample == "undetermined", "undetermined", sample_alias)) %>%
+            filter(!is.na(sample_alias)) %>%
             select(-sample)
         }
 
