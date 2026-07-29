@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 pushd ./inst/quarto
 set -x
 quarto render pixelatorES.qmd "$@"

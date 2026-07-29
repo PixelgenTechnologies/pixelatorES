@@ -111,7 +111,7 @@ else
     "$CONTAINER_IMAGE" \
     bash -c "experiment-summary \
       -P sample_sheet=/workspace/samplesheet.csv -P data_folder=/workspace/data \
-      \"${QUARTO_PARAMS[@]}\" && \
+      ${QUARTO_PARAMS[*]} && \
       mv /workspace/inst/quarto/pixelatorES.html /workspace/output/${OUTPUT_BASE}.html && \
       chown $(id -u):$(id -g) /workspace/output/${OUTPUT_BASE}.html"
 fi
