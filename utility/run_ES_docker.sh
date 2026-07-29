@@ -69,7 +69,9 @@ fi
 
 # Robustly handle output paths and names (resolves relative path issues)
 if [ -n "$NAME" ]; then
-  OUTPUT_DIR=$(realpath "$(dirname "$NAME")")
+  OUTPUT_DIR=$(dirname "$NAME")
+  mkdir -p "$OUTPUT_DIR"
+  OUTPUT_DIR=$(realpath "$OUTPUT_DIR")
   OUTPUT_BASE=$(basename "$NAME")
 else
   OUTPUT_DIR=$(pwd)
