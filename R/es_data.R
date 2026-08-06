@@ -27,7 +27,7 @@ new_es_data <- function(params) {
   }
   pixelatorR:::assert_single_value(workflow, "string")
 
-  structure(
+  object <- structure(
     list(
       params = params,
       diagnostics = list(),
@@ -42,6 +42,8 @@ new_es_data <- function(params) {
     ),
     class = c("es_data", "list")
   )
+
+  return(object)
 }
 
 #' Extractor registry for the amplicon_demux workflow
@@ -54,11 +56,10 @@ new_es_data <- function(params) {
 #'
 #' @noRd
 .amplicon_demux_extractors <- function() {
-  list(
-    samplesheet = function(object) {
-      read_samplesheet(object$params$sample_sheet)
-    },
+  extractors <- list(
+    samplesheet = .extract_samplesheet,
     pxl_data = function(object) NULL,
+    effective_samplesheet = .extract_effective_samplesheet,
     qc_raw = function(object) NULL,
     qc = list(
       read_stats = function(object) NULL,
@@ -74,6 +75,47 @@ new_es_data <- function(params) {
     pxl_data_processed = function(object) NULL,
     proximity = function(object) NULL
   )
+
+  return(extractors)
+}
+
+#' Extract the experiment samplesheet
+#'
+#' @param object An `es_data` object containing `params$sample_sheet`.
+#'
+#' @return The parsed samplesheet.
+#'
+#' @noRd
+.extract_samplesheet <- function(object) {
+  return(read_samplesheet(object$params$sample_sheet))
+}
+
+#' Extract the effective samplesheet
+#'
+#' Filters the original samplesheet to samples represented in `pxl_data`. If
+#' no pxl data loaded, returns an empty samplesheet with the original columns.
+#'
+#' @param object An `es_data` object.
+#'
+#' @return A samplesheet containing samples represented in `pxl_data`.
+#'
+#' @noRd
+.extract_effective_samplesheet <- function(object) {
+  loaded_samples <-
+    if (is.null(object$pxl_data)) {
+      character()
+    } else {
+      FetchData(object$pxl_data, "sample_alias") %>%
+        pull(sample_alias) %>%
+        as.character() %>%
+        unique()
+    }
+
+  effective_samplesheet <-
+    object$samplesheet %>%
+    filter(sample_alias %in% loaded_samples)
+
+  return(effective_samplesheet)
 }
 
 #' Add a diagnostic to an `es_data` object
@@ -103,7 +145,8 @@ add_es_data_diagnostic <- function(object, type, target, message) {
     message = message
   )
   object$diagnostics <- append(object$diagnostics, list(diagnostic))
-  object
+
+  return(object)
 }
 
 #' Run registered `es_data` extractors
@@ -160,7 +203,7 @@ run_es_data_extractors <- function(
     object <- .set_es_data_slot(object, node_path, result$value)
   }
 
-  object
+  return(object)
 }
 
 #' Build Experiment Summary data
@@ -187,7 +230,8 @@ build_es_data <- function(params) {
   remaining_extractors <- object$extractors[
     setdiff(names(object$extractors), "samplesheet")
   ]
-  run_es_data_extractors(object, remaining_extractors)
+
+  return(run_es_data_extractors(object, remaining_extractors))
 }
 
 #' Set a (possibly nested) slot on an `es_data`-like list
@@ -219,9 +263,20 @@ build_es_data <- function(params) {
   }
 
   object[slot_name] <- list(.set_es_data_slot(child, slot[-1], value))
-  object
+
+  return(object)
 }
 
+#' Print an `es_data` object
+#'
+#' Prints the workflow, how many data slots are populated, and the number of
+#' recorded diagnostics.
+#'
+#' @param x An `es_data` object.
+#' @param ... Not used.
+#'
+#' @return `x`, invisibly.
+#'
 #' @export
 print.es_data <- function(x, ...) {
   data_slots <- setdiff(names(x), c("params", "diagnostics", "extractors"))

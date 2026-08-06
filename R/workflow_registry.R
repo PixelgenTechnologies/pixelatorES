@@ -43,7 +43,7 @@ register_es_data_workflow <- function(name, extractors, overwrite = FALSE) {
 #'
 #' @export
 list_es_data_workflows <- function() {
-  ls(envir = .es_data_workflow_registry, all.names = TRUE, sorted = TRUE)
+  return(ls(envir = .es_data_workflow_registry, all.names = TRUE, sorted = TRUE))
 }
 
 #' Get extractors for a registered workflow
@@ -70,5 +70,6 @@ list_es_data_workflows <- function() {
   )
   extractors <- extractor_factory()
   pixelatorR:::assert_class(extractors, "list")
-  extractors
+
+  return(extractors)
 }

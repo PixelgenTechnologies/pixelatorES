@@ -24,7 +24,12 @@ test_that("es_data construction works as expected", {
   params <- list(sample_sheet = test_samplesheet())
   expect_no_error(built <- build_es_data(params))
   expect_equal(
-    built[c("params", "samplesheet", "diagnostics")],
+    built[c(
+      "params",
+      "samplesheet",
+      "effective_samplesheet",
+      "diagnostics"
+    )],
     list(
       params = list(
         sample_sheet = test_samplesheet(),
@@ -39,11 +44,60 @@ test_that("es_data construction works as expected", {
         row.names = c(NA, -2L),
         class = c("tbl_df", "tbl", "data.frame")
       ),
+      effective_samplesheet = structure(
+        list(
+          sample = character(),
+          sample_alias = character(),
+          condition = character()
+        ),
+        row.names = integer(),
+        class = c("tbl_df", "tbl", "data.frame")
+      ),
       diagnostics = list()
     )
   )
   expect_error(
     build_es_data(list(sample_sheet = tempfile(fileext = ".csv")))
+  )
+})
+
+test_that("Samplesheet extractors work as expected", {
+  samplesheet <- tibble(
+    sample = c("sample_1", "sample_2"),
+    sample_alias = c("S1", "S2"),
+    condition = c("A", "B")
+  )
+  counts <- matrix(
+    c(1, 0, 0, 1),
+    nrow = 2,
+    dimnames = list(
+      "marker" = c("CD3", "CD4"),
+      "cell" = c("cell_1", "cell_2")
+    )
+  ) %>%
+    as("dgCMatrix")
+  pxl_data <- CreateSeuratObject(counts)
+  pxl_data$sample_alias <- c("S2", "S2")
+
+  object <- pixelatorES:::new_es_data(list())
+  object$samplesheet <- samplesheet
+  object$extractors <- list(
+    pxl_data = function(object) pxl_data,
+    effective_samplesheet = pixelatorES:::.extract_effective_samplesheet
+  )
+  object <- pixelatorES:::run_es_data_extractors(object)
+
+  expect_equal(
+    object$effective_samplesheet,
+    structure(
+      list(
+        sample = "sample_2",
+        sample_alias = "S2",
+        condition = "B"
+      ),
+      row.names = 1L,
+      class = c("tbl_df", "tbl", "data.frame")
+    )
   )
 })
 
