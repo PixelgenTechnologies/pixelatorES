@@ -3,6 +3,45 @@
 #' @noRd
 .es_data_diagnostic_types <- c("pxl_load", "qc_load", "extractor")
 
+#' Create an extractor result with diagnostics
+#'
+#' Allows an extractor to return a partial value together with non-fatal
+#' diagnostics collected while producing it.
+#'
+#' @param value The extracted slot value.
+#' @param diagnostics A list of diagnostics.
+#'
+#' @return An internal extractor result.
+#'
+#' @noRd
+.new_es_data_extractor_result <- function(value, diagnostics = list()) {
+  result <- structure(
+    list(value = value, diagnostics = diagnostics),
+    class = "es_data_extractor_result"
+  )
+
+  return(result)
+}
+
+#' Create an `es_data` diagnostic
+#'
+#' @param type Diagnostic type.
+#' @param target Sample alias, pool id, or slot path.
+#' @param message Human-readable reason.
+#'
+#' @return A diagnostic list.
+#'
+#' @noRd
+.new_es_data_diagnostic <- function(type, target, message) {
+  diagnostic <- list(
+    type = type,
+    target = target,
+    message = message
+  )
+
+  return(diagnostic)
+}
+
 #' Create an Experiment Summary data object
 #'
 #' `es_data` is the single data object passed through Experiment Summary
@@ -106,13 +145,71 @@ new_es_data <- function(params) {
     sample_sheet = object$samplesheet
   )
 
-  pxl_data <-
-    load_pxl_data_list(
-      object$params$data_folder,
-      file_paths$data_files,
-      object$samplesheet
-    ) %>%
-    merge_data(object$samplesheet)
+  pxl_data <- list()
+  diagnostics <- list()
+  expected_aliases <- object$samplesheet$sample_alias
+  available_aliases <- file_paths$data_files$sample_alias[
+    file_paths$data_files$sample_alias %in% expected_aliases
+  ]
+  aliases_to_load <- c(
+    available_aliases,
+    setdiff(expected_aliases, available_aliases)
+  )
+
+  for (current_sample_alias in aliases_to_load) {
+    sample_file <- file_paths$data_files$filename[
+      file_paths$data_files$sample_alias == current_sample_alias
+    ]
+
+    if (length(sample_file) == 0) {
+      message <- "No PXL file was found."
+      cli::cli_warn(
+        "Skipping PXL data for sample {.val {current_sample_alias}}: {message}"
+      )
+      diagnostics <- append(
+        diagnostics,
+        list(.new_es_data_diagnostic("pxl_load", current_sample_alias, message))
+      )
+      next
+    }
+
+    loaded <- tryCatch(
+      list(
+        value = ReadPNA_Seurat(
+          sample_file,
+          load_proximity_scores = FALSE
+        ),
+        error = NULL
+      ),
+      error = function(error) {
+        return(list(value = NULL, error = error))
+      }
+    )
+
+    if (!is.null(loaded$error)) {
+      message <- conditionMessage(loaded$error)
+      cli::cli_warn(
+        "Skipping PXL data for sample {.val {current_sample_alias}}: {message}"
+      )
+      diagnostics <- append(
+        diagnostics,
+        list(.new_es_data_diagnostic("pxl_load", current_sample_alias, message))
+      )
+      next
+    }
+
+    pxl_data[[current_sample_alias]] <- loaded$value
+  }
+
+  if (length(pxl_data) == 0) {
+    return(.new_es_data_extractor_result(NULL, diagnostics))
+  }
+
+  effective_samplesheet <-
+    object$samplesheet %>%
+    filter(sample_alias %in% names(pxl_data))
+
+  pxl_data <- merge_data(pxl_data, effective_samplesheet)
 
   if (isTRUE(object$params$debug_mode)) {
     pxl_data <- downsample_data(
@@ -123,7 +220,7 @@ new_es_data <- function(params) {
     )
   }
 
-  return(pxl_data)
+  return(.new_es_data_extractor_result(pxl_data, diagnostics))
 }
 
 #' Extract the effective samplesheet
@@ -169,7 +266,104 @@ new_es_data <- function(params) {
     sample_sheet = object$samplesheet
   )
 
-  return(read_qc_files(file_paths, object$samplesheet))
+  sample_result <- .read_qc_groups_soft(
+    files = file_paths$qc_files,
+    aliases = sort(object$samplesheet$sample_alias),
+    alias_column = "sample_alias",
+    target_label = "sample"
+  )
+
+  pool_qc_files <- NULL
+  pool_diagnostics <- list()
+  if ("pool" %in% names(object$samplesheet)) {
+    pool_result <- .read_qc_groups_soft(
+      files = file_paths$pool_qc_files,
+      aliases = sort(unique(object$samplesheet$pool)),
+      alias_column = "pool_alias",
+      target_label = "pool"
+    )
+    pool_qc_files <- pool_result$value
+    pool_diagnostics <- pool_result$diagnostics
+  }
+
+  qc_raw <- list(
+    qc_files = sample_result$value,
+    pool_qc_files = pool_qc_files
+  )
+  diagnostics <- c(sample_result$diagnostics, pool_diagnostics)
+
+  return(.new_es_data_extractor_result(qc_raw, diagnostics))
+}
+
+#' Read QC file groups without aborting the build
+#'
+#' Reads all stage files for each expected sample or pool. A missing or
+#' unreadable group is skipped and returned as a diagnostic.
+#'
+#' @param files A data frame of QC file paths.
+#' @param aliases Expected sample or pool aliases.
+#' @param alias_column Name of the alias column in `files`.
+#' @param target_label Label used in warning messages.
+#'
+#' @return An extractor result containing parsed QC groups and diagnostics.
+#'
+#' @noRd
+.read_qc_groups_soft <- function(
+  files,
+  aliases,
+  alias_column,
+  target_label
+) {
+  values <- list()
+  diagnostics <- list()
+
+  for (alias in aliases) {
+    if (is.null(files)) {
+      alias_files <- NULL
+    } else {
+      alias_files <- files[files[[alias_column]] == alias, , drop = FALSE]
+    }
+
+    if (is.null(alias_files) || nrow(alias_files) == 0) {
+      message <- "No QC files were found."
+      cli::cli_warn(
+        "Skipping QC data for {target_label} {.val {alias}}: {message}"
+      )
+      diagnostics <- append(
+        diagnostics,
+        list(.new_es_data_diagnostic("qc_load", alias, message))
+      )
+      next
+    }
+
+    parsed <- tryCatch(
+      list(
+        value = alias_files$filename %>%
+          set_names(alias_files$stage) %>%
+          lapply(fload),
+        error = NULL
+      ),
+      error = function(error) {
+        return(list(value = NULL, error = error))
+      }
+    )
+
+    if (!is.null(parsed$error)) {
+      message <- conditionMessage(parsed$error)
+      cli::cli_warn(
+        "Skipping QC data for {target_label} {.val {alias}}: {message}"
+      )
+      diagnostics <- append(
+        diagnostics,
+        list(.new_es_data_diagnostic("qc_load", alias, message))
+      )
+      next
+    }
+
+    values[[alias]] <- parsed$value
+  }
+
+  return(.new_es_data_extractor_result(values, diagnostics))
 }
 
 #' Extract formatted read statistics
@@ -369,11 +563,7 @@ add_es_data_diagnostic <- function(object, type, target, message) {
   pixelatorR:::assert_single_value(target, "string")
   pixelatorR:::assert_single_value(message, "string")
 
-  diagnostic <- list(
-    type = type,
-    target = target,
-    message = message
-  )
+  diagnostic <- .new_es_data_diagnostic(type, target, message)
   object$diagnostics <- append(object$diagnostics, list(diagnostic))
 
   return(object)
@@ -386,9 +576,10 @@ add_es_data_diagnostic <- function(object, type, target, message) {
 #' slot. Nested lists (e.g. under `qc`) fill nested slots such as
 #' `object$qc$read_stats`.
 #'
-#' An extractor failure records a diagnostic with `type = "extractor"` and
-#' leaves its destination slot `NULL` without stopping the remaining
-#' extractors.
+#' An extractor may return an `es_data_extractor_result` to provide a partial
+#' value with diagnostics. An unhandled extractor failure records a diagnostic
+#' with `type = "extractor"` and leaves its destination slot `NULL` without
+#' stopping the remaining extractors.
 #'
 #' @param object An `es_data` object.
 #' @param extractors Nested named list of functions. Defaults to
@@ -430,6 +621,19 @@ run_es_data_extractors <- function(
         target = target,
         message = conditionMessage(result$error)
       )
+    }
+
+    if (inherits(result$value, "es_data_extractor_result")) {
+      extractor_result <- result$value
+      for (diagnostic in extractor_result$diagnostics) {
+        object <- add_es_data_diagnostic(
+          object,
+          type = diagnostic$type,
+          target = diagnostic$target,
+          message = diagnostic$message
+        )
+      }
+      result$value <- extractor_result$value
     }
 
     object <- .set_es_data_slot(object, node_path, result$value)

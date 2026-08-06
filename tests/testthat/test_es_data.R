@@ -1,3 +1,19 @@
+.copy_es_data_test_folder <- function(type) {
+  src <- test_data_folder(type = type)
+  dest <- tempfile(paste0("pixelatorES_test_", type, "_"))
+  dir.create(dest)
+  copied <- file.copy(
+    list.files(src, full.names = TRUE),
+    dest,
+    recursive = TRUE
+  )
+  if (!all(copied)) {
+    stop("Failed to copy es_data fixture data", call. = FALSE)
+  }
+
+  return(dest)
+}
+
 test_that("es_data construction works as expected", {
   object <- pixelatorES:::new_es_data(list())
 
@@ -190,22 +206,85 @@ test_that("es_data workflow registration works as expected", {
   )
 })
 
-test_that("es_data parity with legacy preprocessing works as expected", {
-  .copy_parity_data_folder <- function(type) {
-    src <- test_data_folder(type = type)
-    dest <- tempfile(paste0("pixelatorES_parity_", type, "_"))
-    dir.create(dest)
-    copied <- file.copy(
-      list.files(src, full.names = TRUE),
-      dest,
-      recursive = TRUE
-    )
-    if (!all(copied)) {
-      stop("Failed to copy parity fixture data", call. = FALSE)
-    }
-    return(dest)
-  }
+test_that("Partial input failures work as expected", {
+  sample_sheet <- read_samplesheet(test_samplesheet())
+  data_folder <- .copy_es_data_test_folder("default")
 
+  pxl_file <- list.files(
+    data_folder,
+    pattern = paste0("^", sample_sheet$sample[[1]], ".*\\.pxl$"),
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  unlink(pxl_file)
+
+  qc_file <- list.files(
+    data_folder,
+    pattern = paste0("^", sample_sheet$sample[[2]], ".*\\.report\\.json$"),
+    recursive = TRUE,
+    full.names = TRUE
+  )[[1]]
+  writeLines("{ invalid json", qc_file)
+
+  object <- pixelatorES:::new_es_data(list(
+    sample_sheet = test_samplesheet(),
+    data_folder = data_folder
+  ))
+  object$samplesheet <- object$extractors$samplesheet(object)
+  expect_warning(
+    object <- pixelatorES:::run_es_data_extractors(
+      object,
+      object$extractors["pxl_data"]
+    ),
+    "Skipping PXL"
+  )
+  object <- pixelatorES:::run_es_data_extractors(
+    object,
+    object$extractors["effective_samplesheet"]
+  )
+  expect_warning(
+    object <- pixelatorES:::run_es_data_extractors(
+      object,
+      object$extractors["qc_raw"]
+    ),
+    "Skipping QC"
+  )
+
+  diagnostics <- lapply(
+    object$diagnostics,
+    function(diagnostic) {
+      return(diagnostic[c("type", "target")])
+    }
+  )
+
+  expect_equal(
+    list(
+      effective_samplesheet = object$effective_samplesheet,
+      qc_samples = names(object$qc_raw$qc_files),
+      qc_pools = object$qc_raw$pool_qc_files,
+      diagnostics = diagnostics
+    ),
+    list(
+      effective_samplesheet = structure(
+        list(
+          sample = "S02_PHA_S2",
+          sample_alias = "S2",
+          condition = "PHA"
+        ),
+        row.names = 1L,
+        class = c("tbl_df", "tbl", "data.frame")
+      ),
+      qc_samples = "S1",
+      qc_pools = NULL,
+      diagnostics = list(
+        list(type = "pxl_load", target = "S1"),
+        list(type = "qc_load", target = "S2")
+      )
+    )
+  )
+})
+
+test_that("es_data parity with legacy preprocessing works as expected", {
   .legacy_preprocessing <- function(params) {
     sample_sheet <- read_samplesheet(params$sample_sheet)
     sample_aliases <-
@@ -287,7 +366,7 @@ test_that("es_data parity with legacy preprocessing works as expected", {
       default_params,
       list(
         sample_sheet = test_samplesheet(type = data_type),
-        data_folder = .copy_parity_data_folder(data_type),
+        data_folder = .copy_es_data_test_folder(data_type),
         test_mode = TRUE,
         workflow = "amplicon_demux"
       )
@@ -295,7 +374,7 @@ test_that("es_data parity with legacy preprocessing works as expected", {
 
     legacy <- .legacy_preprocessing(params)
 
-    params$data_folder <- .copy_parity_data_folder(data_type)
+    params$data_folder <- .copy_es_data_test_folder(data_type)
     set.seed(37)
     built <- build_es_data(params)
 

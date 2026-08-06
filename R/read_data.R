@@ -234,13 +234,19 @@ merge_data <-
         ))
 
 
-    pg_data <-
-      merge(
-        pg_data[[1]],
-        y = pg_data[-1],
-        add.cell.ids = names(pg_data)
-      ) %>%
-      JoinLayers()
+    if (length(pg_data) == 1) {
+      sample_alias <- names(pg_data)
+      pg_data <- pg_data[[1]]
+      colnames(pg_data) <- paste(sample_alias, colnames(pg_data), sep = "_")
+    } else {
+      pg_data <-
+        merge(
+          pg_data[[1]],
+          y = pg_data[-1],
+          add.cell.ids = names(pg_data)
+        ) %>%
+        JoinLayers()
+    }
 
     metadata <-
       sample_sheet %>%
