@@ -770,3 +770,73 @@ for (data_type in data_types) {
     )
   })
 }
+
+test_that("Key metric tables handle missing metrics as expected", {
+  partial_metrics <- list(
+    read_stats = tibble(
+      sample_alias = c("S1", "S2"),
+      n_cells = c(10, 20),
+      median_reads_per_cell = c(1000, 2000)
+    ),
+    seq_saturation = NULL,
+    denoising = tibble(
+      sample_alias = "S2",
+      percent_umis_denoised = 5
+    ),
+    sample_hash_stats = NULL,
+    coreness = NULL,
+    top_markers = NULL,
+    crossing_edges = NULL
+  )
+
+  expect_equal(
+    key_metric_table(partial_metrics, return_data = TRUE),
+    list(
+      sample = structure(
+        list(
+          `Sample ID` = c("S1", "S2"),
+          `Number of cells in sample` = c("10", "20"),
+          `Median reads per cell [k]` = c("1", "2"),
+          `% Denoised UMIs` = c(NA_character_, "5")
+        ),
+        row.names = c(NA, -2L),
+        class = c("tbl_df", "tbl", "data.frame")
+      ),
+      pool = NULL
+    )
+  )
+
+  pool_metrics <- list(
+    sample_hash_stats = list(
+      pool_stats = tibble(
+        pool = c("P1", "P2"),
+        cells_in_pool = c(12, 18),
+        percent_called_cells = c(80, 90)
+      )
+    )
+  )
+  expect_equal(
+    key_metric_table(pool_metrics, return_data = TRUE),
+    list(
+      sample = NULL,
+      pool = structure(
+        list(
+          `Pool ID` = c("P1", "P2"),
+          `Number of cells in pool` = c("12", "18"),
+          `% Sample called cells` = c("80", "90")
+        ),
+        row.names = c(NA, -2L),
+        class = c("tbl_df", "tbl", "data.frame")
+      )
+    )
+  )
+
+  expect_equal(
+    key_metric_table(list(), return_data = TRUE),
+    list(sample = NULL, pool = NULL)
+  )
+  expect_equal(
+    key_metric_table(list()),
+    list(pool = NULL, sample = NULL)
+  )
+})
