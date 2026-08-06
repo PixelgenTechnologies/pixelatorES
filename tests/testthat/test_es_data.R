@@ -189,3 +189,137 @@ test_that("es_data workflow registration works as expected", {
     list(proximity = identity)
   )
 })
+
+test_that("es_data parity with legacy preprocessing works as expected", {
+  .copy_parity_data_folder <- function(type) {
+    src <- test_data_folder(type = type)
+    dest <- tempfile(paste0("pixelatorES_parity_", type, "_"))
+    dir.create(dest)
+    copied <- file.copy(
+      list.files(src, full.names = TRUE),
+      dest,
+      recursive = TRUE
+    )
+    if (!all(copied)) {
+      stop("Failed to copy parity fixture data", call. = FALSE)
+    }
+    return(dest)
+  }
+
+  .legacy_preprocessing <- function(params) {
+    sample_sheet <- read_samplesheet(params$sample_sheet)
+    sample_aliases <-
+      sample_sheet %>%
+      select(sample, sample_alias) %>%
+      deframe()
+
+    if ("pool" %in% names(sample_sheet)) {
+      pool_aliases <- unique(sample_sheet$pool)
+      sample_aliases <-
+        c(sample_aliases, set_names(setdiff(pool_aliases, sample_aliases)))
+    }
+
+    file_paths <- get_file_paths(
+      data_folder = params$data_folder,
+      sample_sheet = sample_sheet
+    )
+
+    pg_data <-
+      load_pxl_data_list(
+        params$data_folder,
+        file_paths$data_files,
+        sample_sheet
+      ) %>%
+      merge_data(sample_sheet)
+
+    sample_qc_metrics <- read_qc_files(file_paths, sample_sheet)
+    qc_metrics_tables <- get_qc_metrics(
+      pg_data,
+      sample_qc_metrics,
+      sample_sheet
+    )
+
+    set.seed(37)
+    pg_data_processed <- process_data(pg_data, params)
+    proximity_scores <- filter_proximity_scores(
+      pg_data_processed,
+      params,
+      sample_levels = sample_aliases
+    )
+
+    return(list(
+      samplesheet = sample_sheet,
+      pxl_data = pg_data,
+      qc_raw = sample_qc_metrics,
+      qc = qc_metrics_tables,
+      pxl_data_processed = pg_data_processed,
+      proximity = proximity_scores
+    ))
+  }
+
+  .seurat_parity_structure <- function(object) {
+    meta <-
+      object[[]] %>%
+      as_tibble(rownames = "cell_id") %>%
+      arrange(cell_id)
+
+    reductions <- Reductions(object)
+    if (length(reductions) == 0) {
+      reduction_embeddings <- list()
+    } else {
+      reduction_embeddings <- lapply(
+        set_names(reductions),
+        function(reduction) {
+          return(Embeddings(object, reduction)[meta$cell_id, , drop = FALSE])
+        }
+      )
+    }
+
+    return(list(
+      counts = as.matrix(LayerData(object, "counts"))[, meta$cell_id, drop = FALSE],
+      meta = meta,
+      reductions = reduction_embeddings
+    ))
+  }
+
+  for (data_type in c("default", "hashing")) {
+    params <- modifyList(
+      default_params,
+      list(
+        sample_sheet = test_samplesheet(type = data_type),
+        data_folder = .copy_parity_data_folder(data_type),
+        test_mode = TRUE,
+        workflow = "amplicon_demux"
+      )
+    )
+
+    legacy <- .legacy_preprocessing(params)
+
+    params$data_folder <- .copy_parity_data_folder(data_type)
+    set.seed(37)
+    built <- build_es_data(params)
+
+    expect_equal(
+      list(
+        samplesheet = built$samplesheet,
+        effective_samplesheet = built$effective_samplesheet,
+        diagnostics = built$diagnostics,
+        qc_raw = built$qc_raw,
+        qc = built$qc,
+        proximity = built$proximity,
+        pxl_data = .seurat_parity_structure(built$pxl_data),
+        pxl_data_processed = .seurat_parity_structure(built$pxl_data_processed)
+      ),
+      list(
+        samplesheet = legacy$samplesheet,
+        effective_samplesheet = legacy$samplesheet,
+        diagnostics = list(),
+        qc_raw = legacy$qc_raw,
+        qc = legacy$qc,
+        proximity = legacy$proximity,
+        pxl_data = .seurat_parity_structure(legacy$pxl_data),
+        pxl_data_processed = .seurat_parity_structure(legacy$pxl_data_processed)
+      )
+    )
+  }
+})
