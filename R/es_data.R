@@ -9,32 +9,29 @@
 #' preprocessing. Its slots are filled by workflow-specific extractors attached
 #' at construction time.
 #'
-#' @param workflow The workflow used to select extractors. Defaults to
-#'   `"amplicon_demux"`.
-#' @param samplesheet The original experiment samplesheet, or `NULL` until set.
-#' @param meta A named list of build metadata.
+#' @param params A list of Experiment Summary parameters. If `workflow` is
+#'   absent, it defaults to `"amplicon_demux"`.
 #'
 #' @return An `es_data` object with extractors attached but data slots unfilled.
 #'   `effective_samplesheet` starts as `NULL` and is set during loading once
 #'   successful samples are known.
 #'
 #' @keywords internal
-new_es_data <- function(
-  workflow = "amplicon_demux",
-  samplesheet = NULL,
-  meta = list()
-) {
-  pixelatorR:::assert_single_value(workflow, "string")
-  pixelatorR:::assert_class(samplesheet, "data.frame", allow_null = TRUE)
-  pixelatorR:::assert_class(meta, "list")
+new_es_data <- function(params) {
+  pixelatorR:::assert_class(params, c("list", "knit_param_list"))
 
-  meta$workflow <- workflow
+  workflow <- params$workflow
+  if (is.null(workflow)) {
+    workflow <- "amplicon_demux"
+    params$workflow <- workflow
+  }
+  pixelatorR:::assert_single_value(workflow, "string")
 
   structure(
     list(
-      meta = meta,
+      params = params,
       diagnostics = list(),
-      samplesheet = samplesheet,
+      samplesheet = NULL,
       effective_samplesheet = NULL,
       pxl_data = NULL,
       qc_raw = NULL,
@@ -58,6 +55,9 @@ new_es_data <- function(
 #' @noRd
 .amplicon_demux_extractors <- function() {
   list(
+    samplesheet = function(object) {
+      read_samplesheet(object$params$sample_sheet)
+    },
     pxl_data = function(object) NULL,
     qc_raw = function(object) NULL,
     qc = list(
@@ -165,27 +165,29 @@ run_es_data_extractors <- function(
 
 #' Build Experiment Summary data
 #'
-#' Creates an `es_data` object for `workflow` and runs its extractors. The
-#' workflow selects which extractor registry fills the bag.
+#' Creates an `es_data` object, fills the required samplesheet, then runs the
+#' remaining workflow extractors. Samplesheet errors are not caught and stop
+#' the build; remaining extractor errors are recorded as diagnostics.
 #'
-#' @param workflow The workflow to build. Defaults to `"amplicon_demux"`.
-#' @param samplesheet The original experiment samplesheet, or `NULL`.
-#' @param meta A named list of build metadata.
+#' @param params A list of Experiment Summary parameters.
 #'
 #' @return An `es_data` object.
 #'
 #' @export
-build_es_data <- function(
-  workflow = "amplicon_demux",
-  samplesheet = NULL,
-  meta = list()
-) {
-  object <- new_es_data(
-    workflow = workflow,
-    samplesheet = samplesheet,
-    meta = meta
-  )
-  run_es_data_extractors(object)
+build_es_data <- function(params) {
+  object <- new_es_data(params)
+
+  if (is.null(object$extractors$samplesheet)) {
+    cli_abort(
+      "Workflow {.val {object$params$workflow}} must define a samplesheet extractor."
+    )
+  }
+
+  object$samplesheet <- object$extractors$samplesheet(object)
+  remaining_extractors <- object$extractors[
+    setdiff(names(object$extractors), "samplesheet")
+  ]
+  run_es_data_extractors(object, remaining_extractors)
 }
 
 #' Set a (possibly nested) slot on an `es_data`-like list
@@ -222,10 +224,10 @@ build_es_data <- function(
 
 #' @export
 print.es_data <- function(x, ...) {
-  data_slots <- setdiff(names(x), c("meta", "diagnostics", "extractors"))
+  data_slots <- setdiff(names(x), c("params", "diagnostics", "extractors"))
   populated <- vapply(x[data_slots], Negate(is.null), logical(1))
 
-  cat("<es_data:", x$meta$workflow, ">\n", sep = "")
+  cat("<es_data:", x$params$workflow, ">\n", sep = "")
   cat("Populated slots:", sum(populated), "of", length(populated), "\n")
   cat("Diagnostics:", length(x$diagnostics), "\n")
   invisible(x)

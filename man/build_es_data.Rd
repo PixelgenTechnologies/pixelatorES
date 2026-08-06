@@ -4,19 +4,16 @@
 \alias{build_es_data}
 \title{Build Experiment Summary data}
 \usage{
-build_es_data(workflow = "amplicon_demux", samplesheet = NULL, meta = list())
+build_es_data(params)
 }
 \arguments{
-\item{workflow}{The workflow to build. Defaults to \code{"amplicon_demux"}.}
-
-\item{samplesheet}{The original experiment samplesheet, or \code{NULL}.}
-
-\item{meta}{A named list of build metadata.}
+\item{params}{A list of Experiment Summary parameters.}
 }
 \value{
 An \code{es_data} object.
 }
 \description{
-Creates an \code{es_data} object for \code{workflow} and runs its extractors. The
-workflow selects which extractor registry fills the bag.
+Creates an \code{es_data} object, fills the required samplesheet, then runs the
+remaining workflow extractors. Samplesheet errors are not caught and stop
+the build; remaining extractor errors are recorded as diagnostics.
 }

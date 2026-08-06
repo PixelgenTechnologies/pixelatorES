@@ -1,11 +1,11 @@
 test_that("es_data construction works as expected", {
-  object <- pixelatorES:::new_es_data()
+  object <- pixelatorES:::new_es_data(list())
 
   expect_s3_class(object, "es_data")
   expect_equal(
     object[setdiff(names(object), "extractors")],
     list(
-      meta = list(workflow = "amplicon_demux"),
+      params = list(workflow = "amplicon_demux"),
       diagnostics = list(),
       samplesheet = NULL,
       effective_samplesheet = NULL,
@@ -17,25 +17,38 @@ test_that("es_data construction works as expected", {
     )
   )
 
-  samplesheet <- tibble::tibble(
-    sample = "S1",
-    sample_alias = "S1",
-    condition = "A"
+  expect_error(
+    pixelatorES:::new_es_data(list(workflow = "unknown"))
   )
+
+  params <- list(sample_sheet = test_samplesheet())
+  expect_no_error(built <- build_es_data(params))
   expect_equal(
-    pixelatorES:::new_es_data(samplesheet = samplesheet)$samplesheet,
-    samplesheet
+    built[c("params", "samplesheet", "diagnostics")],
+    list(
+      params = list(
+        sample_sheet = test_samplesheet(),
+        workflow = "amplicon_demux"
+      ),
+      samplesheet = structure(
+        list(
+          sample = c("S01_PBMC_unstimulated_S1", "S02_PHA_S2"),
+          sample_alias = c("S1", "S2"),
+          condition = c("PBMC", "PHA")
+        ),
+        row.names = c(NA, -2L),
+        class = c("tbl_df", "tbl", "data.frame")
+      ),
+      diagnostics = list()
+    )
   )
-
-  expect_error(pixelatorES:::new_es_data(workflow = "unknown"))
-
-  expect_no_error(built <- build_es_data())
-  expect_s3_class(built, "es_data")
-  expect_equal(built$diagnostics, list())
+  expect_error(
+    build_es_data(list(sample_sheet = tempfile(fileext = ".csv")))
+  )
 })
 
 test_that("Running es_data extractors works as expected", {
-  object <- pixelatorES:::new_es_data()
+  object <- pixelatorES:::new_es_data(list())
   object$extractors <- list(
     pxl_data = function(object) "raw pxl",
     qc = list(
@@ -70,7 +83,7 @@ test_that("Running es_data extractors works as expected", {
 })
 
 test_that("es_data diagnostics work as expected", {
-  object <- pixelatorES:::new_es_data()
+  object <- pixelatorES:::new_es_data(list())
   object <- pixelatorES:::add_es_data_diagnostic(
     object,
     type = "pxl_load",
@@ -104,7 +117,9 @@ test_that("es_data workflow registration works as expected", {
     c("amplicon_demux", "test_workflow")
   )
   expect_equal(
-    pixelatorES:::new_es_data(workflow = "test_workflow")$extractors,
+    pixelatorES:::new_es_data(
+      list(workflow = "test_workflow")
+    )$extractors,
     list(pxl_data = identity)
   )
   expect_error(
@@ -120,7 +135,9 @@ test_that("es_data workflow registration works as expected", {
     overwrite = TRUE
   )
   expect_equal(
-    pixelatorES:::new_es_data(workflow = "test_workflow")$extractors,
+    pixelatorES:::new_es_data(
+      list(workflow = "test_workflow")
+    )$extractors,
     list(proximity = identity)
   )
 })

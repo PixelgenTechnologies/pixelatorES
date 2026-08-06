@@ -4,15 +4,11 @@
 \alias{new_es_data}
 \title{Create an Experiment Summary data object}
 \usage{
-new_es_data(workflow = "amplicon_demux", samplesheet = NULL, meta = list())
+new_es_data(params)
 }
 \arguments{
-\item{workflow}{The workflow used to select extractors. Defaults to
-\code{"amplicon_demux"}.}
-
-\item{samplesheet}{The original experiment samplesheet, or \code{NULL} until set.}
-
-\item{meta}{A named list of build metadata.}
+\item{params}{A list of Experiment Summary parameters. If \code{workflow} is
+absent, it defaults to \code{"amplicon_demux"}.}
 }
 \value{
 An \code{es_data} object with extractors attached but data slots unfilled.
