@@ -210,7 +210,7 @@ Renders a **figure + table** pair as a two-tab set ("Figure" and "Table").
 
 ```r
 #| results: 'asis'
-component <- component_control_markers(pg_data)
+component <- component_control_markers(es_data)
 
 tabset_figure_table(
   component$p1,

@@ -64,7 +64,7 @@ for (data_type in data_types) {
     expect_s3_class(component$tabl, "datatables")
 
     # component_crossing_edges
-    expect_no_error(component <- component_crossing_edges(qc_metrics_tables))
+    expect_no_error(component <- component_crossing_edges(es_data))
     expect_no_error(
       ggplot2::ggplot_build(component$plot)
     )
@@ -104,7 +104,7 @@ for (data_type in data_types) {
 
     # component_node_degree
     expect_no_error(
-      component <- component_node_degree(pg_data, sample_levels = NULL)
+      component <- component_node_degree(es_data)
     )
 
     expect_s3_class(component$plot, "ggplot")
@@ -115,7 +115,7 @@ for (data_type in data_types) {
 
     # component_node_edge_count
     expect_no_error(
-      component <- component_node_edge_count(sample_qc_metrics, sample_levels = NULL)
+      component <- component_node_edge_count(es_data)
     )
 
     for (plot in component$plots) {
@@ -128,7 +128,7 @@ for (data_type in data_types) {
 
     # component_sequencing_saturation
     expect_no_error(
-      component <- component_sequencing_saturation(qc_metrics_tables, sample_levels = NULL)
+      component <- component_sequencing_saturation(es_data)
     )
 
     for (plot in component$plots) {
@@ -416,11 +416,12 @@ for (data_type in data_types) {
 
     # component_proximity_selected
     set.seed(37)
+    selected_es_data <- proximity_es_data
+    selected_es_data$proximity <- proximity_scores %>%
+      filter(as.character(marker_1) == as.character(marker_2))
     expect_no_error(
       component <- component_proximity_selected(
-        temp,
-        proximity_scores %>%
-          filter(as.character(marker_1) == as.character(marker_2)),
+        selected_es_data,
         sample_palette = c("red", "black"),
         selected_contrasts = FALSE,
         proximity_score = "log2_ratio"

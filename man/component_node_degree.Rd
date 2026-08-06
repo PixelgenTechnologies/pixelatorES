@@ -4,12 +4,10 @@
 \alias{component_node_degree}
 \title{Create the component node degree}
 \usage{
-component_node_degree(object, sample_levels = NULL)
+component_node_degree(es_data)
 }
 \arguments{
-\item{object}{A Seurat object containing the sample data.}
-
-\item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
+\item{es_data}{An \code{es_data} object containing processed PXL data and sample aliases.}
 }
 \value{
 A list containing a plot and a table summarizing the mean node degree.

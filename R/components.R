@@ -899,15 +899,18 @@ component_cell_recovery <-
 #' This function creates a component that visualizes the number of nodes and edges
 #' before and after cell recovery.
 #'
-#' @param sample_qc_metrics A list of sample QC metrics.
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
+#' @param es_data An `es_data` object containing raw QC metrics and sample aliases.
 #'
 #' @return A list containing two plots and a table summarizing the node and edge counts.
 #'
 #' @export
 #'
 component_node_edge_count <-
-  function(sample_qc_metrics, sample_levels = NULL) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    sample_qc_metrics <- es_data$qc_raw
+    sample_levels <- es_data$sample_aliases
+
     plot_data <-
       extract_sample_qc_metrics(
         sample_qc_metrics,
@@ -1009,15 +1012,18 @@ component_node_edge_count <-
 #' This function creates a component that visualizes the mean node degree for A and B nodes
 #' for each sample.
 #'
-#' @param object A Seurat object containing the sample data.
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
+#' @param es_data An `es_data` object containing processed PXL data and sample aliases.
 #'
 #' @return A list containing a plot and a table summarizing the mean node degree.
 #'
 #' @export
 #'
 component_node_degree <-
-  function(object, sample_levels = NULL) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    object <- es_data$pxl_data_processed
+    sample_levels <- es_data$sample_aliases
+
     plot_data <-
       FetchData(
         object,
@@ -1075,15 +1081,18 @@ component_node_degree <-
 #' This function creates a component that visualizes the percentage of crossing edges
 #' for each sample, both in the initial and refinement stages.
 #'
-#' @param qc_metrics_tables A list of QC metrics tables.
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
+#' @param es_data An `es_data` object containing QC metrics and sample aliases.
 #'
 #' @return A list containing a plot and a table summarizing the crossing edges.
 #'
 #' @export
 #'
 component_crossing_edges <-
-  function(qc_metrics_tables, sample_levels = NULL) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    qc_metrics_tables <- es_data$qc
+    sample_levels <- es_data$sample_aliases
+
     plot_data <-
       qc_metrics_tables$crossing_edges %>%
       rename(sample_alias = 1) %>%
@@ -1414,12 +1423,10 @@ component_abundance_per_marker <- function(
 #' This function creates plots visualizing the proximity Z scores for selected
 #' contrasts.
 #'
-#' @param object A Seurat object containing the sample data.
-#' @param proximity_scores A data frame containing proximity scores for different markers.
+#' @param es_data An `es_data` object containing proximity scores and sample aliases.
 #' @param sample_palette A color palette for the samples.
 #' @param proximity_score One of "join_count_z" or "log2_ratio".
 #' @param selected_contrasts A boolean indicating whether to filter for selected contrasts (default is TRUE).
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots.
@@ -1428,14 +1435,16 @@ component_abundance_per_marker <- function(
 #'
 component_proximity_selected <-
   function(
-    object,
-    proximity_scores,
+    es_data,
     sample_palette,
     proximity_score = "log2_ratio",
     selected_contrasts = TRUE,
-    sample_levels = NULL,
     test_mode = FALSE
   ) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    proximity_scores <- es_data$proximity
+    sample_levels <- es_data$sample_aliases
+
     plot_contrasts <-
       c(
         "B2M" = "HLA-ABC",
@@ -1648,7 +1657,7 @@ component_proximity_per_marker <- function(
 #'
 #' This function generates summary plots of the clustering scores.
 #'
-#' @param proximity_scores A data frame containing proximity scores.
+#' @param es_data An `es_data` object containing proximity scores.
 #' @param heatmap_gradient A color gradient for the heatmap.
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
@@ -1657,10 +1666,13 @@ component_proximity_per_marker <- function(
 #' @export
 #'
 component_clustering_summary <- function(
-  proximity_scores,
+  es_data,
   heatmap_gradient,
   test_mode = FALSE
 ) {
+  pixelatorR:::assert_class(es_data, "es_data")
+  proximity_scores <- es_data$proximity
+
   plot_data <-
     proximity_scores %>%
     filter(marker_1 == marker_2) %>%
@@ -2347,15 +2359,18 @@ component_annotation <-
 #' This function creates a component that visualizes the sequencing saturation
 #' for each sample.
 #'
-#' @param qc_metrics_tables A list of QC metrics tables.
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
+#' @param es_data An `es_data` object containing QC metrics and sample aliases.
 #'
 #' @return A list containing plots and a table summarizing the sequencing saturation.
 #'
 #' @export
 #'
 component_sequencing_saturation <-
-  function(qc_metrics_tables, sample_levels = NULL) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    qc_metrics_tables <- es_data$qc
+    sample_levels <- es_data$sample_aliases
+
     ss <- qc_metrics_tables$seq_saturation %>%
       rename(sample_alias = 1)
     ss <- set_sample_levels(ss, sample_levels)
