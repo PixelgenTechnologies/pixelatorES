@@ -91,3 +91,29 @@ test_that("es_data diagnostics work as expected", {
     )
   )
 })
+
+test_that("es_data workflow registration works as expected", {
+  expect_equal(list_es_data_workflows(), "amplicon_demux")
+
+  register_es_data_workflow(
+    "test_workflow",
+    function() list(pxl_data = identity)
+  )
+
+  expect_equal(
+    list_es_data_workflows(),
+    c("amplicon_demux", "test_workflow")
+  )
+  expect_equal(
+    pixelatorES:::new_es_data(workflow = "test_workflow")$extractors,
+    list(pxl_data = identity)
+  )
+
+  # Can't overwrite registered workflow
+  expect_error(
+    register_es_data_workflow(
+      "test_workflow",
+      function() list()
+    )
+  )
+})

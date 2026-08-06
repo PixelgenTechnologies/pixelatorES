@@ -1,8 +1,3 @@
-#' Supported Experiment Summary workflows
-#'
-#' @noRd
-.es_data_workflows <- c("amplicon_demux")
-
 #' Valid diagnostic types for `es_data`
 #'
 #' @noRd
@@ -30,7 +25,6 @@ new_es_data <- function(
   meta = list()
 ) {
   pixelatorR:::assert_single_value(workflow, "string")
-  pixelatorR:::assert_x_in_y(workflow, .es_data_workflows)
   pixelatorR:::assert_class(samplesheet, "data.frame", allow_null = TRUE)
   pixelatorR:::assert_class(meta, "list")
 
@@ -47,27 +41,9 @@ new_es_data <- function(
       qc = list(),
       pxl_data_processed = NULL,
       proximity = NULL,
-      extractors = .es_data_extractors_for_workflow(workflow)
+      extractors = .get_es_data_extractors(workflow)
     ),
     class = c("es_data", "list")
-  )
-}
-
-#' Select extractors for a workflow
-#'
-#' @param workflow Workflow name.
-#'
-#' @return A nested named list of extractor functions.
-#'
-#' @noRd
-.es_data_extractors_for_workflow <- function(workflow) {
-  switch(
-    workflow,
-    amplicon_demux = .amplicon_demux_extractors(),
-    cli_abort(c(
-      "Unsupported {.arg workflow}: {.val {workflow}}.",
-      "i" = "Supported workflows: {.val {.es_data_workflows}}."
-    ))
   )
 }
 
