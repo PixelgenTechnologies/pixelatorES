@@ -38,19 +38,7 @@ options(pixelatorES.dev_mode = isTRUE(params$test_mode) || isTRUE(params$debug_m
 #| label: build_es_data
 
 es_data <- build_es_data(params)
-
-sample_aliases <-
-  es_data$samplesheet %>%
-  select(sample, sample_alias) %>%
-  deframe()
-
-if ("pool" %in% names(es_data$samplesheet)) {
-  pool_aliases <-
-    unique(es_data$samplesheet$pool)
-
-  sample_aliases <-
-    c(sample_aliases, set_names(setdiff(pool_aliases, sample_aliases)))
-}
+sample_aliases <- es_data$sample_aliases
 ```
 
 ```{r}

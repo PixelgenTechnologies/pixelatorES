@@ -24,6 +24,7 @@ test_that("es_data construction works as expected", {
       params = list(workflow = "amplicon_demux"),
       diagnostics = list(),
       samplesheet = NULL,
+      sample_aliases = NULL,
       effective_samplesheet = NULL,
       file_paths = NULL,
       pxl_data = NULL,
@@ -67,6 +68,37 @@ test_that("es_data construction works as expected", {
   )
   expect_error(
     build_es_data(list(sample_sheet = tempfile(fileext = ".csv")))
+  )
+})
+
+test_that("Sample aliases work as expected", {
+  expect_equal(
+    pixelatorES:::.sample_aliases_from_samplesheet(
+      tibble(
+        sample = c("sample_1", "sample_2"),
+        sample_alias = c("S1", "S2"),
+        condition = c("A", "B")
+      )
+    ),
+    c(sample_1 = "S1", sample_2 = "S2")
+  )
+
+  expect_equal(
+    pixelatorES:::.sample_aliases_from_samplesheet(
+      tibble(
+        pool = c("pool_1", "pool_1", "pool_2"),
+        sample = c("sample_1", "sample_2", "sample_3"),
+        sample_alias = c("S1", "S2", "S3"),
+        condition = c("A", "B", "A")
+      )
+    ),
+    c(
+      sample_1 = "S1",
+      sample_2 = "S2",
+      sample_3 = "S3",
+      pool_1 = "pool_1",
+      pool_2 = "pool_2"
+    )
   )
 })
 
@@ -415,15 +447,7 @@ test_that("es_data parity with legacy preprocessing works as expected", {
   .legacy_preprocessing <- function(params) {
     sample_sheet <- read_samplesheet(params$sample_sheet)
     sample_aliases <-
-      sample_sheet %>%
-      select(sample, sample_alias) %>%
-      deframe()
-
-    if ("pool" %in% names(sample_sheet)) {
-      pool_aliases <- unique(sample_sheet$pool)
-      sample_aliases <-
-        c(sample_aliases, set_names(setdiff(pool_aliases, sample_aliases)))
-    }
+      pixelatorES:::.sample_aliases_from_samplesheet(sample_sheet)
 
     file_paths <- get_file_paths(
       data_folder = params$data_folder,
@@ -455,6 +479,7 @@ test_that("es_data parity with legacy preprocessing works as expected", {
 
     return(list(
       samplesheet = sample_sheet,
+      sample_aliases = sample_aliases,
       pxl_data = pg_data,
       qc_raw = sample_qc_metrics,
       qc = qc_metrics_tables,
@@ -508,6 +533,7 @@ test_that("es_data parity with legacy preprocessing works as expected", {
     expect_equal(
       list(
         samplesheet = built$samplesheet,
+        sample_aliases = built$sample_aliases,
         effective_samplesheet = built$effective_samplesheet,
         diagnostics = built$diagnostics,
         qc_raw = built$qc_raw,
@@ -518,6 +544,7 @@ test_that("es_data parity with legacy preprocessing works as expected", {
       ),
       list(
         samplesheet = legacy$samplesheet,
+        sample_aliases = legacy$sample_aliases,
         effective_samplesheet = legacy$samplesheet,
         diagnostics = list(),
         qc_raw = legacy$qc_raw,

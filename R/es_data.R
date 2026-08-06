@@ -52,8 +52,8 @@
 #'   absent, it defaults to `"amplicon_demux"`.
 #'
 #' @return An `es_data` object with extractors attached but data slots unfilled.
-#'   `effective_samplesheet` and `file_paths` start as `NULL` and are set during
-#'   loading once the samplesheet is known.
+#'   `sample_aliases`, `effective_samplesheet`, and `file_paths` start as `NULL`
+#'   and are set during loading once the samplesheet is known.
 #'
 #' @keywords internal
 new_es_data <- function(params) {
@@ -71,6 +71,7 @@ new_es_data <- function(params) {
       params = params,
       diagnostics = list(),
       samplesheet = NULL,
+      sample_aliases = NULL,
       effective_samplesheet = NULL,
       file_paths = NULL,
       pxl_data = NULL,
@@ -503,31 +504,32 @@ new_es_data <- function(params) {
   return(process_data(object$pxl_data, object$params))
 }
 
-#' Derive sample levels used by proximity scores
+#' Derive sample aliases from a samplesheet
 #'
-#' Reproduces the sample and pool ordering used by report preprocessing.
+#' Creates the named sample and pool alias vector used to order samples in
+#' report components.
 #'
-#' @param object An `es_data` object.
+#' @param samplesheet An Experiment Summary samplesheet.
 #'
 #' @return A named character vector of sample and pool aliases.
 #'
 #' @noRd
-.es_data_sample_levels <- function(object) {
-  sample_levels <-
-    object$samplesheet %>%
+.sample_aliases_from_samplesheet <- function(samplesheet) {
+  sample_aliases <-
+    samplesheet %>%
     select(sample, sample_alias) %>%
     deframe()
 
-  if ("pool" %in% names(object$samplesheet)) {
-    pool_aliases <- unique(object$samplesheet$pool)
-    sample_levels <-
+  if ("pool" %in% names(samplesheet)) {
+    pool_aliases <- unique(samplesheet$pool)
+    sample_aliases <-
       c(
-        sample_levels,
-        set_names(setdiff(pool_aliases, sample_levels))
+        sample_aliases,
+        set_names(setdiff(pool_aliases, sample_aliases))
       )
   }
 
-  return(sample_levels)
+  return(sample_aliases)
 }
 
 #' Extract filtered proximity scores
@@ -541,7 +543,7 @@ new_es_data <- function(params) {
   proximity <- filter_proximity_scores(
     object$pxl_data_processed,
     object$params,
-    sample_levels = .es_data_sample_levels(object)
+    sample_levels = object$sample_aliases
   )
 
   return(proximity)
@@ -677,6 +679,8 @@ build_es_data <- function(params) {
   }
 
   object$samplesheet <- object$extractors$samplesheet(object)
+  object$sample_aliases <-
+    .sample_aliases_from_samplesheet(object$samplesheet)
   object <- .fill_es_data_file_paths(object)
   remaining_extractors <- object$extractors[
     setdiff(names(object$extractors), "samplesheet")
