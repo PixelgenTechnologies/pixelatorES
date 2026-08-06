@@ -37,8 +37,8 @@ options(pixelatorES.dev_mode = isTRUE(params$test_mode) || isTRUE(params$debug_m
 ```{r}
 #| label: read_sample_sheet
 
-sample_sheet <-
-  read_samplesheet(params$sample_sheet)
+es_data <- build_es_data(params)
+sample_sheet <- es_data$samplesheet
 
 sample_aliases <-
   sample_sheet %>%

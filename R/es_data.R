@@ -58,22 +58,22 @@ new_es_data <- function(params) {
 .amplicon_demux_extractors <- function() {
   extractors <- list(
     samplesheet = .extract_samplesheet,
-    pxl_data = function(object) NULL,
+    pxl_data = function(object) return(NULL),
     effective_samplesheet = .extract_effective_samplesheet,
-    qc_raw = function(object) NULL,
+    qc_raw = function(object) return(NULL),
     qc = list(
-      read_stats = function(object) NULL,
-      sample_hash_stats = function(object) NULL,
-      seq_saturation = function(object) NULL,
-      crossing_edges = function(object) NULL,
-      degree_distribution = function(object) NULL,
-      denoising = function(object) NULL,
-      denoising_detail = function(object) NULL,
-      coreness = function(object) NULL,
-      top_markers = function(object) NULL
+      read_stats = function(object) return(NULL),
+      sample_hash_stats = function(object) return(NULL),
+      seq_saturation = function(object) return(NULL),
+      crossing_edges = function(object) return(NULL),
+      degree_distribution = function(object) return(NULL),
+      denoising = function(object) return(NULL),
+      denoising_detail = function(object) return(NULL),
+      coreness = function(object) return(NULL),
+      top_markers = function(object) return(NULL)
     ),
-    pxl_data_processed = function(object) NULL,
-    proximity = function(object) NULL
+    pxl_data_processed = function(object) return(NULL),
+    proximity = function(object) return(NULL)
   )
 
   return(extractors)
@@ -188,7 +188,9 @@ run_es_data_extractors <- function(
 
     result <- tryCatch(
       list(value = node(object), error = NULL),
-      error = function(error) list(value = NULL, error = error)
+      error = function(error) {
+        return(list(value = NULL, error = error))
+      }
     )
 
     if (!is.null(result$error)) {
@@ -285,5 +287,5 @@ print.es_data <- function(x, ...) {
   cat("<es_data:", x$params$workflow, ">\n", sep = "")
   cat("Populated slots:", sum(populated), "of", length(populated), "\n")
   cat("Diagnostics:", length(x$diagnostics), "\n")
-  invisible(x)
+  return(invisible(x))
 }

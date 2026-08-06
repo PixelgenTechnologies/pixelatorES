@@ -7,6 +7,7 @@ editor_options:
 params: 
   sample_sheet: "../extdata/test_samplesheet_hashing.csv"
   data_folder: "../extdata/"
+  workflow: "amplicon_demux"
   control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
   norm_method: "CLR"
   clustering_resolution: 1

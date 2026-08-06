@@ -34,7 +34,8 @@ register_es_data_workflow <- function(name, extractors, overwrite = FALSE) {
   }
 
   assign(name, extractors, envir = .es_data_workflow_registry)
-  invisible(name)
+
+  return(invisible(name))
 }
 
 #' List registered Experiment Summary workflows

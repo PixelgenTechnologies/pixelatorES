@@ -82,7 +82,7 @@ test_that("Samplesheet extractors work as expected", {
   object <- pixelatorES:::new_es_data(list())
   object$samplesheet <- samplesheet
   object$extractors <- list(
-    pxl_data = function(object) pxl_data,
+    pxl_data = function(object) return(pxl_data),
     effective_samplesheet = pixelatorES:::.extract_effective_samplesheet
   )
   object <- pixelatorES:::run_es_data_extractors(object)
@@ -104,9 +104,11 @@ test_that("Samplesheet extractors work as expected", {
 test_that("Running es_data extractors works as expected", {
   object <- pixelatorES:::new_es_data(list())
   object$extractors <- list(
-    pxl_data = function(object) "raw pxl",
+    pxl_data = function(object) return("raw pxl"),
     qc = list(
-      read_stats = function(object) data.frame(reads = nchar(object$pxl_data)),
+      read_stats = function(object) {
+        return(data.frame(reads = nchar(object$pxl_data)))
+      },
       crossing_edges = function(object) stop("missing edges")
     ),
     proximity = function(object) stop("proximity unavailable")
@@ -162,7 +164,7 @@ test_that("es_data diagnostics work as expected", {
 test_that("es_data workflow registration works as expected", {
   register_es_data_workflow(
     "test_workflow",
-    function() list(pxl_data = identity),
+    function() return(list(pxl_data = identity)),
     overwrite = TRUE
   )
 
@@ -179,13 +181,13 @@ test_that("es_data workflow registration works as expected", {
   expect_error(
     register_es_data_workflow(
       "test_workflow",
-      function() list()
+      function() return(list())
     )
   )
 
   register_es_data_workflow(
     "test_workflow",
-    function() list(proximity = identity),
+    function() return(list(proximity = identity)),
     overwrite = TRUE
   )
   expect_equal(

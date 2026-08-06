@@ -12,5 +12,6 @@
     extractors = .amplicon_demux_extractors,
     overwrite = TRUE
   )
-  invisible(NULL)
+
+  return(invisible(NULL))
 }

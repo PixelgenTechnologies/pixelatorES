@@ -4,6 +4,7 @@
 #'
 default_params <-
   list(
+    workflow = "amplicon_demux",
     control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
     norm_method = "CLR",
     clustering_resolution = 1,

@@ -1,4 +1,19 @@
 test_that("Parameter tables work as expected", {
+  expect_equal(
+    default_params,
+    list(
+      workflow = "amplicon_demux",
+      control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
+      norm_method = "CLR",
+      clustering_resolution = 1,
+      proximity_count_cutoff = 25,
+      annotation_method = "nmf",
+      mc_cores = 1,
+      debug_mode = FALSE,
+      test_mode = FALSE
+    )
+  )
+
   expect_no_error(
     print_params(structure(list(
       sample_sheet = "../../../ES_test_data/test_samplesheet.csv",
