@@ -4,15 +4,10 @@
 \alias{component_sequencing_reads_and_molecules}
 \title{Create the component sequencing reads and molecules component}
 \usage{
-component_sequencing_reads_and_molecules(
-  sample_qc_metrics,
-  sample_levels = NULL
-)
+component_sequencing_reads_and_molecules(es_data)
 }
 \arguments{
-\item{sample_qc_metrics}{A list of sample QC metrics.}
-
-\item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
+\item{es_data}{An \code{es_data} object containing raw QC metrics and sample aliases.}
 }
 \value{
 A list containing plots and a table.

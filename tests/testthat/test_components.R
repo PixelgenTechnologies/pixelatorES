@@ -24,18 +24,33 @@ for (data_type in data_types) {
   sample_qc_metrics <- read_qc_files(file_paths, sample_sheet)
 
 
-  data_files <- file_paths$data_files
-
   qc_metrics_tables <-
     get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)
 
+  es_data <- structure(
+    list(
+      params = list(
+        control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
+      ),
+      samplesheet = sample_sheet,
+      sample_aliases =
+        pixelatorES:::.sample_aliases_from_samplesheet(sample_sheet),
+      effective_samplesheet = sample_sheet,
+      file_paths = file_paths,
+      pxl_data_processed = pg_data,
+      qc_raw = sample_qc_metrics,
+      qc = qc_metrics_tables,
+      proximity = NULL
+    ),
+    class = c("es_data", "list")
+  )
 
   test_message <- paste("Components work as expected for", data_type, "data")
 
   test_that(test_message, {
     # component_control_markers
     expect_no_error(
-      component <- component_control_markers(pg_data)
+      component <- component_control_markers(es_data)
     )
 
     expect_s3_class(component$p1, "ggplot")
@@ -55,7 +70,7 @@ for (data_type in data_types) {
     )
 
     # component_cell_recovery
-    expect_no_error(component <- component_cell_recovery(pg_data, sample_qc_metrics, sample_levels = NULL))
+    expect_no_error(component <- component_cell_recovery(es_data))
     expect_no_error(
       ggplot2::ggplot_build(component$plots[[1]])
     )
@@ -125,7 +140,7 @@ for (data_type in data_types) {
     expect_s3_class(component$table, "datatables")
 
     # component_sequencing_reads_per_cell
-    expect_no_error(component <- component_sequencing_reads_per_cell(pg_data))
+    expect_no_error(component <- component_sequencing_reads_per_cell(es_data))
     expect_s3_class(component$plot, "ggplot")
     expect_no_error(
       ggplot2::ggplot_build(component$plot)
@@ -133,7 +148,7 @@ for (data_type in data_types) {
     expect_s3_class(component$table, "datatables")
 
     # component_sequencing_reads_and_molecules
-    expect_no_error(component <- component_sequencing_reads_and_molecules(sample_qc_metrics, sample_levels = NULL))
+    expect_no_error(component <- component_sequencing_reads_and_molecules(es_data))
 
     for (plot in component$plots) {
       expect_s3_class(plot, "ggplot")
@@ -145,11 +160,11 @@ for (data_type in data_types) {
 
     # component_sequencing_saturation_curve
     expect_no_error(
-      component <- component_sequencing_saturation_curve(pg_data, data_files)
+      component <- component_sequencing_saturation_curve(es_data)
     )
 
     # component_denoising
-    expect_no_error(component <- component_denoising(qc_metrics_tables))
+    expect_no_error(component <- component_denoising(es_data))
     expect_type(component, "list")
     expect_named(component, c("plots", "tables"))
     expect_named(component$plots, c("removed_umis", "by_method", "isotype_reduction"))
@@ -168,7 +183,9 @@ for (data_type in data_types) {
       temp$denoising %>%
       rename(pool = 1)
 
-    expect_no_error(component <- component_denoising(temp))
+    temp_es_data <- es_data
+    temp_es_data$qc <- temp
+    expect_no_error(component <- component_denoising(temp_es_data))
     expect_s3_class(component$plots$removed_umis, "ggplot")
     expect_no_error(
       ggplot2::ggplot_build(component$plots$removed_umis)
@@ -186,12 +203,11 @@ for (data_type in data_types) {
     )
     temp[["seurat_clusters"]] <- 1
 
+    abundance_es_data <- es_data
+    abundance_es_data$pxl_data_processed <- temp
     expect_no_error(
       component <- component_abundance_per_marker(
-        temp,
-        params = list(
-          control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
-        ),
+        abundance_es_data,
         sample_palette = c("red", "black", "blue")
       )
     )
@@ -222,9 +238,11 @@ for (data_type in data_types) {
         )
       )
 
+    proximity_es_data <- es_data
+    proximity_es_data$proximity <- proximity_scores
     expect_no_error(
       component <- component_proximity_per_marker(
-        proximity_scores,
+        proximity_es_data,
         sample_palette = c("red", "black")
       )
     )
@@ -313,8 +331,8 @@ for (data_type in data_types) {
           structure(list(
             sample_alias = structure(c(
               1L, 1L, 1L, 1L, 1L,
-              2L, 2L, 2L, 2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 4L, 4L, 4L, 4L, 4L
-            ), levels = c("S1", "S11", "S12", "S2"), class = "factor"), celltype = c(
+              3L, 3L, 3L, 3L, 3L, 3L, 4L, 4L, 4L, 4L, 4L, 2L, 2L, 2L, 2L, 2L
+            ), levels = c("S1", "S2", "S11", "S12"), class = "factor"), celltype = c(
               "B",
               "Mono & DC", "NK", "Platelets", "T", "B", "B", "Mono & DC", "NK",
               "Platelets", "T", "B", "Mono & DC", "NK", "Platelets", "T", "B",
@@ -421,16 +439,19 @@ for (data_type in data_types) {
 
     # component_dimred_plots
     expect_no_error(
-      component <- component_dimred_plots(pg_data, sample_palette = c("red", "black", "blue"))
+      component <- component_dimred_plots(es_data,
+        sample_palette = c("red", "black", "blue")
+      )
     )
 
     expect_s3_class(component$PCA, "ggplot")
 
     # component_proximity_heatmap_sample
+    proximity_es_data$pxl_data_processed <- temp
+
     expect_no_error(
       component <- component_proximity_heatmap_sample(
-        proximity_scores,
-        temp,
+        proximity_es_data,
         heatmap_gradient = c("red", "cyan"),
         n_markers = 2,
         plot_markers = NULL,
@@ -440,8 +461,7 @@ for (data_type in data_types) {
     # component_proximity_heatmap_celltype
     expect_no_error(
       component <- component_proximity_heatmap_celltype(
-        proximity_scores,
-        temp,
+        proximity_es_data,
         heatmap_gradient = c("red", "cyan"),
         n_markers = 2,
         plot_markers = NULL,
@@ -452,7 +472,7 @@ for (data_type in data_types) {
     # component_hashing
     if (data_type == "hashing") {
       expect_no_error(
-        component <- component_hashing(qc_metrics_tables, colors = cherry_gradient)
+        component <- component_hashing(es_data, colors = cherry_gradient)
       )
       expect_s3_class(component$plot, "ggplot")
       expect_no_error(
@@ -485,8 +505,10 @@ for (data_type in data_types) {
       qc_metrics_tables_missing_undetermined$sample_hash_stats$component_sample_confidence <-
         qc_metrics_tables_missing_undetermined$sample_hash_stats$component_sample_confidence %>%
         filter(sample_alias != "undetermined")
+      hashing_es_data <- es_data
+      hashing_es_data$qc <- qc_metrics_tables_missing_undetermined
       expect_no_error(
-        component <- component_hashing(qc_metrics_tables_missing_undetermined,
+        component <- component_hashing(hashing_es_data,
           colors = cherry_gradient
         )
       )

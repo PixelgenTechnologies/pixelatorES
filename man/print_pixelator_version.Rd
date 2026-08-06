@@ -4,12 +4,11 @@
 \alias{print_pixelator_version}
 \title{Print Pixelator Version table}
 \usage{
-print_pixelator_version(object, sample_sheet)
+print_pixelator_version(es_data)
 }
 \arguments{
-\item{object}{A Seurat object.}
-
-\item{sample_sheet}{A sample sheet.}
+\item{es_data}{An \code{es_data} object containing processed PXL data and the
+effective samplesheet.}
 }
 \value{
 A printed table of Pixelator version information.

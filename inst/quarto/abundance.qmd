@@ -7,11 +7,9 @@
 #| results: 'asis'
 plots <-
   component_abundance_per_marker(
-    es_data$pxl_data_processed,
-    params,
+    es_data,
     sample_palette,
     per_celltype = TRUE,
-    sample_levels = sample_aliases,
     test_mode = params$test_mode
   )
 

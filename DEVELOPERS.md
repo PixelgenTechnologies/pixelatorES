@@ -175,7 +175,7 @@ Renders a **named list of plots** as a tabset — one tab per plot.
 
 ```r
 #| results: 'asis'
-plots <- component_sequencing_saturation_curve(pg_data, data_files, sample_levels = sample_aliases)
+plots <- component_sequencing_saturation_curve(es_data)
 tabset_plotlist(plots, level = 5)
 ```
 

@@ -5,8 +5,8 @@
 \title{Create the component dimensionality reduction plots}
 \usage{
 component_dimred_plots(
-  object,
-  plot_reductions = "pca",
+  es_data,
+  plot_reductions = NULL,
   sample_palette = NULL,
   cluster_palette = NULL,
   sample_plots = FALSE,
@@ -14,9 +14,11 @@ component_dimred_plots(
 )
 }
 \arguments{
-\item{object}{A Seurat object containing the processed data.}
+\item{es_data}{An \code{es_data} object containing processed PXL data.}
 
-\item{plot_reductions}{A character vector specifying which dimensionality reductions to plot.}
+\item{plot_reductions}{An optional character vector specifying which
+dimensionality reductions to plot. By default, all available reductions
+are plotted in the preferred order.}
 
 \item{sample_palette}{Optional color palette for samples.}
 

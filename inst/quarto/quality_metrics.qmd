@@ -5,7 +5,7 @@
 #| label: key_metrics
 #| results: 'asis'
 key_tables <-
-  key_metric_table(es_data$qc, detailed = FALSE)
+  key_metric_table(es_data, detailed = FALSE)
 
 eval_standard_results_and_sample_hashing <-
   !is.null(key_tables$pool)
@@ -50,7 +50,7 @@ section_intro(
 #| eval: !expr eval_standard_results_and_sample_hashing
 #| results: 'asis'
 component <-
-  component_hashing(es_data$qc, colors = cherry_gradient)
+  component_hashing(es_data, colors = cherry_gradient)
 
 tabset_figure_table(
   component$plot,
@@ -81,11 +81,8 @@ set.seed(123)
 
 plots <-
   component_sequencing_saturation_curve(
-    es_data$pxl_data_processed,
-    es_data$file_paths$data_files %>%
-      filter(sample_alias %in% es_data$effective_samplesheet$sample_alias),
-    seqsat_comps = seqsat_comps,
-    sample_levels = sample_aliases
+    es_data,
+    seqsat_comps = seqsat_comps
   )
 
 tabset_plotlist(plots,
@@ -103,10 +100,7 @@ mapped to.
 #| fig-height: 4
 #| results: 'asis'
 component <-
-  component_sequencing_reads_and_molecules(
-    es_data$qc_raw,
-    sample_levels = sample_aliases
-  )
+  component_sequencing_reads_and_molecules(es_data)
 
 tabset_figure_table(
   component$plots,
@@ -122,7 +116,7 @@ close_tabset()
 #| label: qc_metrics_reads_per_cell
 #| results: 'asis'
 component <-
-  component_sequencing_reads_per_cell(es_data$pxl_data_processed)
+  component_sequencing_reads_per_cell(es_data)
 
 tabset_figure_table(
   component$plot,
@@ -141,11 +135,7 @@ close_tabset()
 #| results: 'asis'
 
 component <-
-  component_cell_recovery(
-    es_data$pxl_data_processed,
-    es_data$qc_raw,
-    sample_levels = sample_aliases
-  )
+  component_cell_recovery(es_data)
 
 tabset_figure_table(
   component$plots[[2]],
@@ -158,7 +148,7 @@ close_tabset()
 ```{r}
 #| label: qc_metrics_molecule_count
 #| results: 'asis'
-component_molecule_plot(es_data$pxl_data_processed, sample_palette)
+component_molecule_plot(es_data, sample_palette)
 ```
 
 ### Graph metrics
@@ -173,7 +163,7 @@ other nodes in the graph.
 #| label: qc_metrics_nodes_kcore
 #| results: 'asis'
 component <-
-  component_coreness(es_data$qc)
+  component_coreness(es_data)
 
 tabset_figure_table(
   component$plots[[1]],
@@ -192,7 +182,7 @@ Denoising removes low-connectivity graph nodes to improve data quality.
 #| label: qc_metrics_denoising
 #| results: 'asis'
 component <-
-  component_denoising(es_data$qc, sample_levels = sample_aliases)
+  component_denoising(es_data)
 
 tabset_figure_table(
   component$plots$removed_umis,
@@ -208,7 +198,7 @@ close_tabset()
 ```{r}
 #| label: qc_metrics_frac_control
 #| results: 'asis'
-component <- component_control_markers(es_data$pxl_data_processed)
+component <- component_control_markers(es_data)
 
 tabset_figure_table(
   component$p1,

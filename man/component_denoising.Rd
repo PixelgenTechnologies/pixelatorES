@@ -4,13 +4,10 @@
 \alias{component_denoising}
 \title{Create the denoising component}
 \usage{
-component_denoising(qc_metrics_tables, sample_levels = NULL)
+component_denoising(es_data)
 }
 \arguments{
-\item{qc_metrics_tables}{A list from \code{\link[=get_qc_metrics]{get_qc_metrics()}} containing \code{denoising}
-and \code{denoising_detail} slots.}
-
-\item{sample_levels}{Optional vector of sample levels to order samples in plots.}
+\item{es_data}{An \code{es_data} object containing QC metrics and sample aliases.}
 }
 \value{
 A list with named \code{plots} and \code{tables} for removed UMIs, denoising

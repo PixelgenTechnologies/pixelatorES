@@ -851,8 +851,7 @@ get_qc_metrics <-
 #' This function creates a key metric table for samples by combining various
 #' quality control metrics and formatting them for display.
 #'
-#' @param qc_metrics_tables A list containing quality control metrics tables
-#' for each sample.
+#' @param es_data An `es_data` object containing quality control metrics.
 #' @param detailed A logical value indicating whether to include all metrics.
 #' @param return_data A logical value indicating whether to return the data instead of the formatted table.
 #'
@@ -862,7 +861,10 @@ get_qc_metrics <-
 #' @export
 #'
 key_metric_table <-
-  function(qc_metrics_tables, detailed = TRUE, return_data = FALSE) {
+  function(es_data, detailed = TRUE, return_data = FALSE) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    qc_metrics_tables <- es_data$qc
+
     crossing_edges <- qc_metrics_tables$crossing_edges
     if (
       is.null(crossing_edges) ||

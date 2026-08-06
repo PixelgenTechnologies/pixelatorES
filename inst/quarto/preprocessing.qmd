@@ -38,7 +38,6 @@ options(pixelatorES.dev_mode = isTRUE(params$test_mode) || isTRUE(params$debug_m
 #| label: build_es_data
 
 es_data <- build_es_data(params)
-sample_aliases <- es_data$sample_aliases
 ```
 
 ```{r}

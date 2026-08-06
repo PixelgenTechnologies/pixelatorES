@@ -4,9 +4,7 @@
 #' including the fraction of UMIs removed, UMIs removed by method, and
 #' reduction in isotype fraction.
 #'
-#' @param qc_metrics_tables A list from [get_qc_metrics()] containing `denoising`
-#'   and `denoising_detail` slots.
-#' @param sample_levels Optional vector of sample levels to order samples in plots.
+#' @param es_data An `es_data` object containing QC metrics and sample aliases.
 #'
 #' @return A list with named `plots` and `tables` for removed UMIs, denoising
 #'   by method, and isotype reduction.
@@ -14,9 +12,11 @@
 #' @export
 #'
 component_denoising <- function(
-  qc_metrics_tables,
-  sample_levels = NULL
+  es_data
 ) {
+  pixelatorR:::assert_class(es_data, "es_data")
+  qc_metrics_tables <- es_data$qc
+  sample_levels <- es_data$sample_aliases
   pixelatorR:::assert_class(qc_metrics_tables, "list")
 
   if (is.null(qc_metrics_tables$denoising)) {
@@ -200,15 +200,17 @@ component_denoising <- function(
 #'
 #' This function creates a list with two plots and a summary table.
 #'
-#' @param pg_data A Seurat object containing the data to be plotted.
+#' @param es_data An `es_data` object containing processed PXL data.
 #'
 #' @return A list containing two violin plots and a summary table.
 #'
 #' @export
 #'
 component_control_markers <- function(
-  pg_data
+  es_data
 ) {
+  pixelatorR:::assert_class(es_data, "es_data")
+  pg_data <- es_data$pxl_data_processed
   pixelatorR:::assert_class(pg_data, "Seurat")
   plot_data <-
     pg_data[[]] %>%
@@ -263,7 +265,7 @@ component_control_markers <- function(
 #' This function generates a violin plot showing the distribution of the number
 #' of molecules per sample, with a horizontal line indicating the molecule count cutoff.
 #'
-#' @param pg_data A Seurat object containing the data to be plotted.
+#' @param es_data An `es_data` object containing processed PXL data.
 #' @param sample_palette A named vector of colors for the samples.
 #'
 #' @return A ggplot object representing the violin plot of molecule counts.
@@ -271,9 +273,12 @@ component_control_markers <- function(
 #' @export
 #'
 component_molecule_plot <- function(
-  pg_data,
+  es_data,
   sample_palette
 ) {
+  pixelatorR:::assert_class(es_data, "es_data")
+  pg_data <- es_data$pxl_data_processed
+
   p <- pg_data[[]] %>%
     plot_violin(
       x = "sample_alias",
@@ -294,15 +299,18 @@ component_molecule_plot <- function(
 #' This function creates a component that visualizes the sequencing reads
 #' and molecules processed at each stage of the sequencing pipeline.
 #'
-#' @param sample_qc_metrics A list of sample QC metrics.
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
+#' @param es_data An `es_data` object containing raw QC metrics and sample aliases.
 #'
 #' @return A list containing plots and a table.
 #'
 #' @export
 #'
 component_sequencing_reads_and_molecules <-
-  function(sample_qc_metrics, sample_levels = NULL) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    sample_qc_metrics <- es_data$qc_raw
+    sample_levels <- es_data$sample_aliases
+
     if ("qc_files" %in% names(sample_qc_metrics)) {
       qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
         sample_qc_metrics$qc_files
@@ -443,14 +451,17 @@ component_sequencing_reads_and_molecules <-
 #'
 #' This function creates a component that visualizes the reads per cell per sample.
 #'
-#' @param object A Seurat object.
+#' @param es_data An `es_data` object containing processed PXL data.
 #'
 #' @return A list containing a plot and a table.
 #'
 #' @export
 #'
 component_sequencing_reads_per_cell <-
-  function(object) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    object <- es_data$pxl_data_processed
+
     plot_data <-
       FetchData(object, c("sample_alias", "reads_in_component"))
 
@@ -487,10 +498,9 @@ component_sequencing_reads_per_cell <-
 #' This function creates a component that visualizes the sequencing saturation
 #' curve for each sample.
 #'
-#' @param object A Seurat object containing the sample data.
-#' @param data_files A data frame containing the sample aliases and corresponding file names.
+#' @param es_data An `es_data` object containing processed PXL data, discovered
+#'   data files, the effective samplesheet, and sample aliases.
 #' @param seqsat_comps The number of components to consider for sequencing saturation.
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #'
 #' @return A list containing plots showing the sequencing saturation curve for
 #' each sample.
@@ -498,7 +508,14 @@ component_sequencing_reads_per_cell <-
 #' @export
 #'
 component_sequencing_saturation_curve <-
-  function(object, data_files, seqsat_comps = 100L, sample_levels = NULL) {
+  function(es_data, seqsat_comps = 100L) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    object <- es_data$pxl_data_processed
+    sample_levels <- es_data$sample_aliases
+    data_files <-
+      es_data$file_paths$data_files %>%
+      filter(sample_alias %in% es_data$effective_samplesheet$sample_alias)
+
     object_meta <-
       FetchData(object, c("sample_alias", "reads_in_component")) %>%
       group_by(sample_alias) %>%
@@ -647,16 +664,20 @@ component_sequencing_saturation_curve <-
 #' This function creates a component that visualizes the cell recovery
 #' after filtering components based on size.
 #'
-#' @param object A Seurat object containing the sample data.
-#' @param sample_qc_metrics A list of sample QC metrics.
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
+#' @param es_data An `es_data` object containing processed PXL data, raw QC
+#'   metrics, and sample aliases.
 #'
 #' @return A list containing a plot and a table summarizing the cell recovery.
 #'
 #' @export
 #'
 component_cell_recovery <-
-  function(object, sample_qc_metrics, sample_levels = NULL) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    object <- es_data$pxl_data_processed
+    sample_qc_metrics <- es_data$qc_raw
+    sample_levels <- es_data$sample_aliases
+
     if (is.null(sample_qc_metrics$pool_qc_files)) {
       qc_data <- sample_qc_metrics$qc_files
       hashed_experiment <- FALSE
@@ -1161,14 +1182,17 @@ component_crossing_edges <-
 #'
 #' This function creates a component that visualizes the k-coreness of nodes in each component.
 #'
-#' @param qc_metrics_tables A list of QC metrics tables containing coreness data.
+#' @param es_data An `es_data` object containing QC metrics.
 #'
 #' @return A list containing three plots and a table summarizing the coreness metrics.
 #'
 #' @export
 #'
 component_coreness <-
-  function(qc_metrics_tables) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    qc_metrics_tables <- es_data$qc
+
     p1 <-
       qc_metrics_tables$coreness$component_summary %>%
       plot_violin(
@@ -1273,12 +1297,11 @@ component_coreness <-
 #' This function creates plots visualizing the abundance of each marker
 #' across samples and, optionally, across cell types.
 #'
-#' @param object A processed data object containing marker abundance data.
-#' @param params A list of parameters, including control markers.
+#' @param es_data An `es_data` object containing processed PXL data, parameters,
+#'   and sample aliases.
 #' @param sample_palette A color palette for the samples.
 #' @param per_celltype A boolean indicating whether to add a plot per cell type
 #'   (default is TRUE).
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots for each marker.
@@ -1286,13 +1309,16 @@ component_coreness <-
 #' @export
 #'
 component_abundance_per_marker <- function(
-  object,
-  params,
+  es_data,
   sample_palette,
   per_celltype = TRUE,
-  sample_levels = NULL,
   test_mode = FALSE
 ) {
+  pixelatorR:::assert_class(es_data, "es_data")
+  object <- es_data$pxl_data_processed
+  params <- es_data$params
+  sample_levels <- es_data$sample_aliases
+
   .abundance_plot_data <- function(object, params, test_mode = FALSE) {
     object %>%
       LayerData("data") %>%
@@ -1529,10 +1555,9 @@ component_proximity_selected <-
 #' This function creates plots visualizing the proximity scores for each marker
 #' across different samples and conditions.
 #'
-#' @param proximity_scores A data frame containing proximity scores for different markers.
+#' @param es_data An `es_data` object containing proximity scores and sample aliases.
 #' @param sample_palette A color palette for the samples.
 #' @param per_celltype A boolean indicating whether to add a plot per cell type (default is TRUE).
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
 #' @return A list containing plots for each marker.
@@ -1540,12 +1565,15 @@ component_proximity_selected <-
 #' @export
 #'
 component_proximity_per_marker <- function(
-  proximity_scores,
+  es_data,
   sample_palette,
   per_celltype = TRUE,
-  sample_levels = NULL,
   test_mode = FALSE
 ) {
+  pixelatorR:::assert_class(es_data, "es_data")
+  proximity_scores <- es_data$proximity
+  sample_levels <- es_data$sample_aliases
+
   plot_data <-
     proximity_scores %>%
     filter(marker_1 == marker_2) %>%
@@ -1714,8 +1742,8 @@ component_clustering_summary <- function(
 #'
 #' This function creates plots visualizing the proximity scores as heatmaps per sample and condition.
 #'
-#' @param proximity_scores A data frame containing proximity scores for different markers.
-#' @param pg_data_processed A processed data object.
+#' @param es_data An `es_data` object containing proximity scores and processed
+#'   PXL data.
 #' @param heatmap_gradient A color palette for the heatmaps.
 #' @param min_pct_detected Minimum percentage of cells in which a marker must be detected to be included
 #' (default is 0.25).
@@ -1728,14 +1756,17 @@ component_clustering_summary <- function(
 #' @export
 #'
 component_proximity_heatmap_sample <- function(
-  proximity_scores,
-  pg_data_processed,
+  es_data,
   heatmap_gradient,
   n_markers = 40,
   min_pct_detected = 0.25,
   plot_markers = NULL,
   test_mode = FALSE
 ) {
+  pixelatorR:::assert_class(es_data, "es_data")
+  proximity_scores <- es_data$proximity
+  pg_data_processed <- es_data$pxl_data_processed
+
   pixelatorR:::assert_class(proximity_scores, "tbl_df")
   pixelatorR:::assert_class(pg_data_processed, "Seurat")
   pixelatorR:::assert_class(heatmap_gradient, "character")
@@ -1840,8 +1871,8 @@ component_proximity_heatmap_sample <- function(
 #'
 #' This function creates plots visualizing the proximity scores as heatmaps per celltype and condition.
 #'
-#' @param proximity_scores A data frame containing proximity scores for different markers.
-#' @param pg_data_processed A processed data object.
+#' @param es_data An `es_data` object containing proximity scores and processed
+#'   PXL data.
 #' @param heatmap_gradient A color palette for the heatmaps.
 #' @param n_markers The number of markers to plot (default is 40).
 #' @param min_pct_detected Minimum percentage of cells in which a marker must be detected to be included
@@ -1854,14 +1885,17 @@ component_proximity_heatmap_sample <- function(
 #' @export
 #'
 component_proximity_heatmap_celltype <- function(
-  proximity_scores,
-  pg_data_processed,
+  es_data,
   heatmap_gradient,
   n_markers = 40,
   min_pct_detected = 0.25,
   plot_markers = NULL,
   test_mode = FALSE
 ) {
+  pixelatorR:::assert_class(es_data, "es_data")
+  proximity_scores <- es_data$proximity
+  pg_data_processed <- es_data$pxl_data_processed
+
   pixelatorR:::assert_class(proximity_scores, "tbl_df")
   pixelatorR:::assert_class(pg_data_processed, "Seurat")
   pixelatorR:::assert_class(heatmap_gradient, "character")
@@ -1988,8 +2022,10 @@ component_proximity_heatmap_celltype <- function(
 #' This function creates a component that visualizes the dimensionality reduction plots
 #' for PCA, colored by clusters, samples, and conditions.
 #'
-#' @param object A Seurat object containing the processed data.
-#' @param plot_reductions A character vector specifying which dimensionality reductions to plot.
+#' @param es_data An `es_data` object containing processed PXL data.
+#' @param plot_reductions An optional character vector specifying which
+#'   dimensionality reductions to plot. By default, all available reductions
+#'   are plotted in the preferred order.
 #' @param sample_palette Optional color palette for samples.
 #' @param cluster_palette Optional color palette for clusters.
 #' @param sample_plots Logical indicating whether to include sample-wise plots.
@@ -2000,13 +2036,19 @@ component_proximity_heatmap_celltype <- function(
 #' @export
 component_dimred_plots <-
   function(
-    object,
-    plot_reductions = "pca",
+    es_data,
+    plot_reductions = NULL,
     sample_palette = NULL,
     cluster_palette = NULL,
     sample_plots = FALSE,
     plot_height = 5
   ) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    object <- es_data$pxl_data_processed
+    if (is.null(plot_reductions)) {
+      plot_reductions <- preferred_dimred_order(Reductions(object))
+    }
+
     plot_reductions %>%
       set_names(toupper(plot_reductions)) %>%
       lapply(function(red) {
@@ -2067,7 +2109,7 @@ component_dimred_plots <-
 #' This function creates a component that visualizes the annotation summary
 #' for l1 and l2 annotations in the specified reduction.
 #'
-#' @param object A Seurat object containing the processed data.
+#' @param es_data An `es_data` object containing processed PXL data.
 #' @param heatmap_gradient A color gradient for the heatmap.
 #' @param reduction Optional character specifying the reduction to use. If NULL, the first preferred reduction is used.
 #'
@@ -2077,10 +2119,13 @@ component_dimred_plots <-
 #'
 component_annotation <-
   function(
-    object,
+    es_data,
     heatmap_gradient,
     reduction = NULL
   ) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    object <- es_data$pxl_data_processed
+
     if (is.null(reduction)) {
       reduction <- preferred_dimred_order(Reductions(object))[1]
     }
@@ -2495,7 +2540,7 @@ component_sequencing_saturation <-
 
 #' Create the component hashing
 #'
-#' @param qc_metrics_tables QC metrics from [get_qc_metrics()] including `sample_hash_stats`.
+#' @param es_data An `es_data` object containing sample hashing QC metrics.
 #' @param colors A gradient color palette to use.
 #'
 #' @return List with `plot`, `table`, `heatmap_plots_hash_purity`, and `heatmap_plots_hash_fraction`.
@@ -2503,7 +2548,10 @@ component_sequencing_saturation <-
 #' @export
 #'
 component_hashing <-
-  function(qc_metrics_tables, colors) {
+  function(es_data, colors) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    qc_metrics_tables <- es_data$qc
+
     component_stats <- qc_metrics_tables$sample_hash_stats$component_stats
     pixelatorR:::assert_class(component_stats, "tbl_df")
     n_unique_hashes <- component_stats$id %>%

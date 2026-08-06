@@ -4,11 +4,10 @@
 \alias{key_metric_table}
 \title{Create a key metric table for samples}
 \usage{
-key_metric_table(qc_metrics_tables, detailed = TRUE, return_data = FALSE)
+key_metric_table(es_data, detailed = TRUE, return_data = FALSE)
 }
 \arguments{
-\item{qc_metrics_tables}{A list containing quality control metrics tables
-for each sample.}
+\item{es_data}{An \code{es_data} object containing quality control metrics.}
 
 \item{detailed}{A logical value indicating whether to include all metrics.}
 

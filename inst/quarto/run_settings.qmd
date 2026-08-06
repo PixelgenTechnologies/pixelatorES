@@ -5,10 +5,7 @@
 #| label: run_settings_version
 
 # Print Pixelator version
-print_pixelator_version(
-  es_data$pxl_data_processed,
-  es_data$effective_samplesheet
-)
+print_pixelator_version(es_data)
 ```
 
 ### Run parameters
@@ -16,7 +13,7 @@ print_pixelator_version(
 ```{r}
 #| label: run_settings_params
 # Print parameters
-print_params(params)
+print_params(es_data)
 ```
 
 ### Session info

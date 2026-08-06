@@ -4,10 +4,10 @@
 \alias{component_sequencing_reads_per_cell}
 \title{Create the component reads per cell}
 \usage{
-component_sequencing_reads_per_cell(object)
+component_sequencing_reads_per_cell(es_data)
 }
 \arguments{
-\item{object}{A Seurat object.}
+\item{es_data}{An \code{es_data} object containing processed PXL data.}
 }
 \value{
 A list containing a plot and a table.

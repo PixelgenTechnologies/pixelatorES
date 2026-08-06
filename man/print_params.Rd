@@ -4,10 +4,10 @@
 \alias{print_params}
 \title{Print analysis parameters}
 \usage{
-print_params(params)
+print_params(es_data)
 }
 \arguments{
-\item{params}{A list of parameters used in the analysis.}
+\item{es_data}{An \code{es_data} object containing analysis parameters.}
 }
 \value{
 A printed table of parameters with their values and defaults.

@@ -4,10 +4,10 @@
 \alias{component_molecule_plot}
 \title{Create the component for molecule plot}
 \usage{
-component_molecule_plot(pg_data, sample_palette)
+component_molecule_plot(es_data, sample_palette)
 }
 \arguments{
-\item{pg_data}{A Seurat object containing the data to be plotted.}
+\item{es_data}{An \code{es_data} object containing processed PXL data.}
 
 \item{sample_palette}{A named vector of colors for the samples.}
 }

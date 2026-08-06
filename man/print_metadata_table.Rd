@@ -4,10 +4,11 @@
 \alias{print_metadata_table}
 \title{Print metadata table}
 \usage{
-print_metadata_table(sample_sheet)
+print_metadata_table(es_data)
 }
 \arguments{
-\item{sample_sheet}{A sample sheet.}
+\item{es_data}{An \code{es_data} object containing the samplesheet and processed
+PXL data.}
 }
 \value{
 A printed table of sample metadata.
