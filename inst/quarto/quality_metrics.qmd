@@ -7,31 +7,38 @@
 key_tables <-
   key_metric_table(es_data, detailed = FALSE)
 
-eval_standard_results_and_sample_hashing <-
-  !is.null(key_tables$pool)
-eval_standard_results <- !eval_standard_results_and_sample_hashing
+is_hashed_experiment <- "pool" %in% names(es_data$samplesheet)
+has_key_metrics <-
+  !is.null(key_tables$pool) || !is.null(key_tables$sample)
+eval_hashed_key_metrics <- is_hashed_experiment && has_key_metrics
+eval_standard_key_metrics <-
+  !is_hashed_experiment && !is.null(key_tables$sample)
 ```
 
 ```{r}
 #| label: key_metrics_pool
-#| eval: !expr eval_standard_results_and_sample_hashing
+#| eval: !expr eval_hashed_key_metrics
 #| results: 'asis'
 cat("::: {.panel-tabset .nav-pills}\n")
-section_table(key_tables$pool, "Hash pool metrics", 3)
-section_table(key_tables$sample, "Sample metrics", 3)
+if (!is.null(key_tables$pool)) {
+  section_table(key_tables$pool, "Hash pool metrics", 3)
+}
+if (!is.null(key_tables$sample)) {
+  section_table(key_tables$sample, "Sample metrics", 3)
+}
 cat(":::\n")
 ```
 
 ```{r}
 #| label: key_metrics_sample
-#| eval: !expr eval_standard_results
+#| eval: !expr eval_standard_key_metrics
 #| results: 'asis'
 section_table(key_tables$sample, "Sample metrics", 3)
 ```
 
 ```{r}
 #| label: sample_hashing_section_intro
-#| eval: !expr eval_standard_results_and_sample_hashing
+#| eval: !expr is_hashed_experiment
 #| results: 'asis'
 section_intro(
   "Sample hashing",
@@ -47,7 +54,7 @@ section_intro(
 
 ```{r}
 #| label: sample_hashing
-#| eval: !expr eval_standard_results_and_sample_hashing
+#| eval: !expr is_hashed_experiment
 #| results: 'asis'
 component <-
   component_hashing(es_data, colors = cherry_gradient)
