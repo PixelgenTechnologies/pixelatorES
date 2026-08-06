@@ -4,13 +4,16 @@
 \alias{register_es_data_workflow}
 \title{Register an Experiment Summary workflow}
 \usage{
-register_es_data_workflow(name, extractors)
+register_es_data_workflow(name, extractors, overwrite = FALSE)
 }
 \arguments{
 \item{name}{A unique workflow identifier.}
 
 \item{extractors}{A zero-argument function returning a nested named list of
 extractor functions.}
+
+\item{overwrite}{If \code{TRUE}, replace an existing registration for \code{name}.
+Defaults to \code{FALSE}.}
 }
 \value{
 \code{name}, invisibly.

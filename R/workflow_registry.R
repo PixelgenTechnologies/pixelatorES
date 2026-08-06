@@ -15,15 +15,21 @@
 #' @param name A unique workflow identifier.
 #' @param extractors A zero-argument function returning a nested named list of
 #'   extractor functions.
+#' @param overwrite If `TRUE`, replace an existing registration for `name`.
+#'   Defaults to `FALSE`.
 #'
 #' @return `name`, invisibly.
 #'
 #' @export
-register_es_data_workflow <- function(name, extractors) {
+register_es_data_workflow <- function(name, extractors, overwrite = FALSE) {
   pixelatorR:::assert_single_value(name, "string")
   pixelatorR:::assert_class(extractors, "function")
+  pixelatorR:::assert_single_value(overwrite, "bool")
 
-  if (exists(name, envir = .es_data_workflow_registry, inherits = FALSE)) {
+  if (
+    !overwrite &&
+      exists(name, envir = .es_data_workflow_registry, inherits = FALSE)
+  ) {
     cli_abort("Workflow {.val {name}} is already registered.")
   }
 

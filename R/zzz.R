@@ -9,7 +9,8 @@
 .onLoad <- function(libname, pkgname) {
   register_es_data_workflow(
     name = "amplicon_demux",
-    extractors = .amplicon_demux_extractors
+    extractors = .amplicon_demux_extractors,
+    overwrite = TRUE
   )
   invisible(NULL)
 }
