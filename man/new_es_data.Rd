@@ -12,8 +12,8 @@ absent, it defaults to \code{"amplicon_demux"}.}
 }
 \value{
 An \code{es_data} object with extractors attached but data slots unfilled.
-\code{effective_samplesheet} starts as \code{NULL} and is set during loading once
-successful samples are known.
+\code{effective_samplesheet} and \code{file_paths} start as \code{NULL} and are set during
+loading once the samplesheet is known.
 }
 \description{
 \code{es_data} is the single data object passed through Experiment Summary

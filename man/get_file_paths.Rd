@@ -8,7 +8,8 @@ get_file_paths(
   data_folder = NULL,
   file_paths = NULL,
   sample_sheet = NULL,
-  allow_unknown = FALSE
+  allow_unknown = FALSE,
+  on_duplicate_samples = c("error", "omit")
 )
 }
 \arguments{
@@ -20,9 +21,15 @@ get_file_paths(
 optionally \code{pool} for hashed experiments. When supplied, pool-level QC files are detected.}
 
 \item{allow_unknown}{A logical indicating whether to allow files from unknown stages (default: FALSE).}
+
+\item{on_duplicate_samples}{How to handle samples that still match multiple PXL files after
+stage selection: \code{"error"} aborts (default), \code{"omit"} drops those samples and records them
+in attribute \code{duplicate_data_samples} on the returned list.}
 }
 \value{
 A list with \code{data_files}, \code{qc_files}, and \code{pool_qc_files} (the last is \code{NULL} when absent).
+When \code{on_duplicate_samples = "omit"}, attribute \code{duplicate_data_samples} is a character
+vector of omitted sample aliases.
 }
 \description{
 Retrieve file paths for data and QC files from a specified data folder.

@@ -13,7 +13,8 @@ build_es_data(params)
 An \code{es_data} object.
 }
 \description{
-Creates an \code{es_data} object, fills the required samplesheet, then runs the
-remaining workflow extractors. Samplesheet errors are not caught and stop
-the build; remaining extractor errors are recorded as diagnostics.
+Creates an \code{es_data} object, fills the required samplesheet and discovers
+input file paths once, then runs the remaining workflow extractors.
+Samplesheet errors are not caught and stop the build; remaining extractor
+errors are recorded as diagnostics.
 }

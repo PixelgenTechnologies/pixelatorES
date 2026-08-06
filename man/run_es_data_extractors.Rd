@@ -29,8 +29,9 @@ slot. Nested lists (e.g. under \code{qc}) fill nested slots such as
 \code{object$qc$read_stats}.
 }
 \details{
-An extractor failure records a diagnostic with \code{type = "extractor"} and
-leaves its destination slot \code{NULL} without stopping the remaining
-extractors.
+An extractor may return an \code{es_data_extractor_result} to provide a partial
+value with diagnostics. An unhandled extractor failure records a diagnostic
+with \code{type = "extractor"} and leaves its destination slot \code{NULL} without
+stopping the remaining extractors.
 }
 \keyword{internal}

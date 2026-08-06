@@ -25,6 +25,7 @@ test_that("es_data construction works as expected", {
       diagnostics = list(),
       samplesheet = NULL,
       effective_samplesheet = NULL,
+      file_paths = NULL,
       pxl_data = NULL,
       qc_raw = NULL,
       qc = list(),
@@ -231,6 +232,7 @@ test_that("Partial input failures work as expected", {
     data_folder = data_folder
   ))
   object$samplesheet <- object$extractors$samplesheet(object)
+  object <- pixelatorES:::.fill_es_data_file_paths(object)
   expect_warning(
     object <- pixelatorES:::run_es_data_extractors(
       object,
@@ -279,6 +281,68 @@ test_that("Partial input failures work as expected", {
       diagnostics = list(
         list(type = "pxl_load", target = "S1"),
         list(type = "qc_load", target = "S2")
+      )
+    )
+  )
+})
+
+test_that("Duplicate PXL matches soft-fail as expected", {
+  sample_sheet <- read_samplesheet(test_samplesheet())
+  data_folder <- .copy_es_data_test_folder("default")
+  original_pxl <- list.files(
+    data_folder,
+    pattern = paste0("^", sample_sheet$sample[[1]], ".*\\.pxl$"),
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  extra_dir <- file.path(data_folder, "extra")
+  dir.create(extra_dir)
+  file.copy(original_pxl, file.path(extra_dir, basename(original_pxl)))
+
+  expect_error(
+    get_file_paths(
+      data_folder = data_folder,
+      sample_sheet = sample_sheet
+    )
+  )
+
+  expect_warning(
+    object <- build_es_data(list(
+      sample_sheet = test_samplesheet(),
+      data_folder = data_folder,
+      test_mode = TRUE,
+      workflow = "amplicon_demux"
+    )),
+    "Multiple PXL files"
+  )
+
+  expect_equal(
+    list(
+      effective_samplesheet = object$effective_samplesheet$sample_alias,
+      duplicate_diagnostics = lapply(
+        object$diagnostics[vapply(
+          object$diagnostics,
+          function(diagnostic) {
+            return(
+              identical(diagnostic$type, "pxl_load") &&
+                identical(diagnostic$target, "S1")
+            )
+          },
+          logical(1)
+        )],
+        function(diagnostic) {
+          return(diagnostic[c("type", "target", "message")])
+        }
+      )
+    ),
+    list(
+      effective_samplesheet = "S2",
+      duplicate_diagnostics = list(
+        list(
+          type = "pxl_load",
+          target = "S1",
+          message = "Multiple PXL files matched this sample."
+        )
       )
     )
   )

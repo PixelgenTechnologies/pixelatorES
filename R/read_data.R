@@ -65,16 +65,28 @@ find_stage <-
 #' @param sample_sheet A sample sheet [tibble::tibble()] including `sample`, `sample_alias`, and
 #'   optionally `pool` for hashed experiments. When supplied, pool-level QC files are detected.
 #' @param allow_unknown A logical indicating whether to allow files from unknown stages (default: FALSE).
+#' @param on_duplicate_samples How to handle samples that still match multiple PXL files after
+#'   stage selection: `"error"` aborts (default), `"omit"` drops those samples and records them
+#'   in attribute `duplicate_data_samples` on the returned list.
 #'
 #' @return A list with `data_files`, `qc_files`, and `pool_qc_files` (the last is `NULL` when absent).
+#'   When `on_duplicate_samples = "omit"`, attribute `duplicate_data_samples` is a character
+#'   vector of omitted sample aliases.
 #'
 #' @export
 #'
 get_file_paths <-
-  function(data_folder = NULL, file_paths = NULL, sample_sheet = NULL, allow_unknown = FALSE) {
+  function(
+    data_folder = NULL,
+    file_paths = NULL,
+    sample_sheet = NULL,
+    allow_unknown = FALSE,
+    on_duplicate_samples = c("error", "omit")
+  ) {
     pixelatorR:::assert_single_value(data_folder, type = "string", allow_null = TRUE)
     pixelatorR:::assert_vector(file_paths, "character", allow_null = TRUE)
     pixelatorR:::assert_single_value(allow_unknown, type = "bool")
+    on_duplicate_samples <- match.arg(on_duplicate_samples)
 
     if (is.null(file_paths)) {
       file_paths <- list.files(data_folder, recursive = TRUE, full.names = TRUE)
@@ -121,13 +133,22 @@ get_file_paths <-
       ungroup() %>%
       select(sample_alias, filename)
 
+    duplicate_data_samples <- character()
     if (nrow(data_files) > length(unique(data_files$sample_alias))) {
-      dup_files <- data_files$sample_alias[duplicated(data_files$sample_alias)]
-      cli_abort(
-        c(
-          "x" = "Some samples match multiple data files: {.val {dup_files}}"
+      duplicate_data_samples <-
+        unique(data_files$sample_alias[duplicated(data_files$sample_alias)])
+
+      if (on_duplicate_samples == "error") {
+        cli_abort(
+          c(
+            "x" = "Some samples match multiple data files: {.val {duplicate_data_samples}}"
+          )
         )
-      )
+      }
+
+      data_files <-
+        data_files %>%
+        filter(!sample_alias %in% duplicate_data_samples)
     }
 
     all_qc_files <-
@@ -149,13 +170,16 @@ get_file_paths <-
       pool_qc_files <- NULL
     }
 
-    return(
-      list(
-        data_files = data_files,
-        qc_files = qc_files,
-        pool_qc_files = pool_qc_files
-      )
+    result <- list(
+      data_files = data_files,
+      qc_files = qc_files,
+      pool_qc_files = pool_qc_files
     )
+    if (on_duplicate_samples == "omit") {
+      attr(result, "duplicate_data_samples") <- duplicate_data_samples
+    }
+
+    return(result)
   }
 
 

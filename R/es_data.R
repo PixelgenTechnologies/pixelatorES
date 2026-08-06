@@ -52,8 +52,8 @@
 #'   absent, it defaults to `"amplicon_demux"`.
 #'
 #' @return An `es_data` object with extractors attached but data slots unfilled.
-#'   `effective_samplesheet` starts as `NULL` and is set during loading once
-#'   successful samples are known.
+#'   `effective_samplesheet` and `file_paths` start as `NULL` and are set during
+#'   loading once the samplesheet is known.
 #'
 #' @keywords internal
 new_es_data <- function(params) {
@@ -72,6 +72,7 @@ new_es_data <- function(params) {
       diagnostics = list(),
       samplesheet = NULL,
       effective_samplesheet = NULL,
+      file_paths = NULL,
       pxl_data = NULL,
       qc_raw = NULL,
       qc = list(),
@@ -140,10 +141,10 @@ new_es_data <- function(params) {
 #'
 #' @noRd
 .extract_pxl_data <- function(object) {
-  file_paths <- get_file_paths(
-    data_folder = object$params$data_folder,
-    sample_sheet = object$samplesheet
-  )
+  file_paths <- object$file_paths
+  if (is.null(file_paths)) {
+    cli_abort("{.field file_paths} must be filled before extracting {.field pxl_data}.")
+  }
 
   pxl_data <- list()
   diagnostics <- list()
@@ -151,9 +152,13 @@ new_es_data <- function(params) {
   available_aliases <- file_paths$data_files$sample_alias[
     file_paths$data_files$sample_alias %in% expected_aliases
   ]
+  duplicate_samples <- attr(file_paths, "duplicate_data_samples")
+  if (is.null(duplicate_samples)) {
+    duplicate_samples <- character()
+  }
   aliases_to_load <- c(
     available_aliases,
-    setdiff(expected_aliases, available_aliases)
+    setdiff(expected_aliases, c(available_aliases, duplicate_samples))
   )
 
   for (current_sample_alias in aliases_to_load) {
@@ -261,10 +266,10 @@ new_es_data <- function(params) {
 #'
 #' @noRd
 .extract_qc_raw <- function(object) {
-  file_paths <- get_file_paths(
-    data_folder = object$params$data_folder,
-    sample_sheet = object$samplesheet
-  )
+  file_paths <- object$file_paths
+  if (is.null(file_paths)) {
+    cli_abort("{.field file_paths} must be filled before extracting {.field qc_raw}.")
+  }
 
   sample_result <- .read_qc_groups_soft(
     files = file_paths$qc_files,
@@ -644,9 +649,10 @@ run_es_data_extractors <- function(
 
 #' Build Experiment Summary data
 #'
-#' Creates an `es_data` object, fills the required samplesheet, then runs the
-#' remaining workflow extractors. Samplesheet errors are not caught and stop
-#' the build; remaining extractor errors are recorded as diagnostics.
+#' Creates an `es_data` object, fills the required samplesheet and discovers
+#' input file paths once, then runs the remaining workflow extractors.
+#' Samplesheet errors are not caught and stop the build; remaining extractor
+#' errors are recorded as diagnostics.
 #'
 #' @param params A list of Experiment Summary parameters.
 #'
@@ -663,11 +669,51 @@ build_es_data <- function(params) {
   }
 
   object$samplesheet <- object$extractors$samplesheet(object)
+  object <- .fill_es_data_file_paths(object)
   remaining_extractors <- object$extractors[
     setdiff(names(object$extractors), "samplesheet")
   ]
 
   return(run_es_data_extractors(object, remaining_extractors))
+}
+
+#' Discover and store input file paths for an `es_data` object
+#'
+#' Calls [get_file_paths()] once after the samplesheet is available. Duplicate
+#' PXL matches are omitted for the affected sample and recorded as diagnostics.
+#'
+#' @param object An `es_data` object with `samplesheet` filled.
+#'
+#' @return The updated `es_data` object.
+#'
+#' @noRd
+.fill_es_data_file_paths <- function(object) {
+  file_paths <- get_file_paths(
+    data_folder = object$params$data_folder,
+    sample_sheet = object$samplesheet,
+    on_duplicate_samples = "omit"
+  )
+
+  duplicate_samples <- attr(file_paths, "duplicate_data_samples")
+  if (is.null(duplicate_samples)) {
+    duplicate_samples <- character()
+  }
+  for (sample_alias in duplicate_samples) {
+    message <- "Multiple PXL files matched this sample."
+    cli::cli_warn(
+      "Skipping PXL data for sample {.val {sample_alias}}: {message}"
+    )
+    object <- add_es_data_diagnostic(
+      object,
+      type = "pxl_load",
+      target = sample_alias,
+      message = message
+    )
+  }
+
+  object$file_paths <- file_paths
+
+  return(object)
 }
 
 #' Set a (possibly nested) slot on an `es_data`-like list
@@ -715,7 +761,10 @@ build_es_data <- function(params) {
 #'
 #' @export
 print.es_data <- function(x, ...) {
-  data_slots <- setdiff(names(x), c("params", "diagnostics", "extractors"))
+  data_slots <- setdiff(
+    names(x),
+    c("params", "diagnostics", "extractors", "file_paths")
+  )
   populated <- vapply(x[data_slots], Negate(is.null), logical(1))
 
   cat("<es_data:", x$params$workflow, ">\n", sep = "")
