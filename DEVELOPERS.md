@@ -9,6 +9,7 @@ This document contains instructions for developers working on the Proxiome Exper
 - [Styler](#styler)
 - [Type assertions and error messages](#type-assertions-and-error-messages)
 - [Package dev tasks](#package-dev-tasks)
+- [The `es_data` ingestion system](#the-es_data-ingestion-system)
 - [Quarto report rendering](#quarto-report-rendering)
 - [Violin plots with points](#violin-plots-with-points)
 - [Updating test data](#updating-test-data)
@@ -145,6 +146,89 @@ Run a subset of tests:
 ```r
 devtools::test(filter = "component|key_table")
 ```
+
+---
+
+## The `es_data` ingestion system
+
+All Experiment Summary preprocessing flows through a single `es_data` object. The report calls `build_es_data(params)` once, and every child `.qmd` and every `component_*()` function reads what it needs from that object. The code lives in [`R/es_data.R`](R/es_data.R) and [`R/workflow_registry.R`](R/workflow_registry.R).
+
+### The `es_data` object
+
+`es_data` is a plain `list` with the S3 class `c("es_data", "list")` and a fixed set of slots:
+
+| Slot | Contents |
+|---|---|
+| `params` | The report parameters (`knit_param_list` or `list`), including `workflow`. |
+| `diagnostics` | List of non-fatal problems recorded during the build. |
+| `samplesheet` | The parsed experiment samplesheet. |
+| `sample_aliases` | Named character vector mapping sample (and pool) ids to aliases; defines sample ordering across the report. |
+| `effective_samplesheet` | The samplesheet reduced to samples that actually loaded. |
+| `file_paths` | Discovered input file paths, found once and reused. |
+| `pxl_data` | Merged raw PXL data (released after processing to save memory). |
+| `qc_raw` | Raw QC data used to derive formatted metrics. |
+| `qc` | Nested list of formatted QC tables (`qc$read_stats`, `qc$crossing_edges`, ...). |
+| `pxl_data_processed` | The processed Seurat object (normalized, clustered, annotated). |
+| `proximity` | Proximity scores. |
+
+`new_es_data(params)` builds the empty shell and attaches the workflow's extractors; the data slots start `NULL`/empty and are filled during the build.
+
+### Extractors and the build
+
+The object is populated by **extractors** — functions that each take the current `es_data` and return the value for one slot. They are held in a nested named list where top-level names map to slots and names nested under `qc` map to `es_data$qc$...`:
+
+```r
+list(
+  samplesheet = .extract_samplesheet,
+  pxl_data    = .extract_pxl_data,
+  qc = list(
+    read_stats     = .extract_read_stats,
+    crossing_edges = .extract_crossing_edges,
+    # ...
+  ),
+  pxl_data_processed = .extract_pxl_data_processed,
+  proximity          = .extract_proximity
+)
+```
+
+`build_es_data()` orchestrates the build:
+
+1. `new_es_data(params)` creates the shell and looks up the workflow extractors.
+2. The samplesheet is read first — this is the **only** hard requirement, and a failure here stops the build.
+3. `sample_aliases` is derived from the samplesheet with `.sample_aliases_from_samplesheet()`, and input files are discovered once with `get_file_paths()`.
+4. `run_es_data_extractors()` walks the extractor tree depth-first and fills the remaining slots. Once `pxl_data_processed` is set, the raw `pxl_data` slot is cleared to release memory.
+
+### Soft-fail diagnostics
+
+Ingestion is resilient: a broken sample or missing QC file should not lose the whole report. Two mechanisms support this:
+
+- An extractor can return an `es_data_extractor_result` (via the internal `.new_es_data_extractor_result(value, diagnostics)`) to hand back a **partial** value together with diagnostics — for example, PXL loading returns the samples that loaded plus `pxl_load` diagnostics for those that did not.
+- If an extractor throws instead, `run_es_data_extractors()` catches the error, records an `extractor` diagnostic, and leaves that slot `NULL` while continuing with the rest.
+
+Each diagnostic (`.new_es_data_diagnostic()`) has a `type` (`"pxl_load"`, `"qc_load"`, or `"extractor"`), a `target` (a sample alias, pool id, or slot path such as `"qc$crossing_edges"`), and a human-readable `message`. Inspect them via `es_data$diagnostics`.
+
+### Registering a workflow
+
+Workflows are stored in a package-local registry (`R/workflow_registry.R`). `params$workflow` selects one and defaults to `"amplicon_demux"`, which is registered when the package loads. An extension package can add its own from its `.onLoad()` hook:
+
+```r
+register_es_data_workflow(
+  "my_workflow",
+  function() {
+    list(
+      samplesheet = my_extract_samplesheet,
+      pxl_data    = my_extract_pxl_data,
+      # ...
+    )
+  }
+)
+```
+
+Use `list_es_data_workflows()` to see what is registered.
+
+### Consuming `es_data`
+
+Report code should treat `es_data` as the single source of truth: `component_*()` functions, `key_metric_table()`, and the `print_*()` helpers all take `es_data` as their first argument and pull the slots they need internally. When adding a new component, accept `es_data` and read from its slots rather than threading individual objects through the `.qmd` files.
 
 ---
 
