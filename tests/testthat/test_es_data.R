@@ -348,6 +348,69 @@ test_that("Duplicate PXL matches soft-fail as expected", {
   )
 })
 
+test_that("QC-only builds work as expected", {
+  data_folder <- .copy_es_data_test_folder("default")
+  unlink(list.files(
+    data_folder,
+    pattern = "\\.pxl$",
+    recursive = TRUE,
+    full.names = TRUE
+  ))
+
+  params <- modifyList(
+    default_params,
+    list(
+      sample_sheet = test_samplesheet(),
+      data_folder = data_folder,
+      test_mode = TRUE
+    )
+  )
+  object <- suppressWarnings(build_es_data(params))
+
+  diagnostics <- lapply(
+    object$diagnostics,
+    function(diagnostic) {
+      return(diagnostic[c("type", "target")])
+    }
+  )
+
+  expect_equal(
+    list(
+      pxl_data = object$pxl_data,
+      pxl_data_processed = object$pxl_data_processed,
+      proximity = object$proximity,
+      effective_samples = object$effective_samplesheet$sample_alias,
+      qc_raw_samples = names(object$qc_raw$qc_files),
+      populated_qc = names(Filter(Negate(is.null), object$qc)),
+      diagnostics = diagnostics
+    ),
+    list(
+      pxl_data = NULL,
+      pxl_data_processed = NULL,
+      proximity = NULL,
+      effective_samples = character(),
+      qc_raw_samples = c("S1", "S2"),
+      populated_qc = c(
+        "crossing_edges",
+        "degree_distribution",
+        "denoising"
+      ),
+      diagnostics = list(
+        list(type = "pxl_load", target = "S1"),
+        list(type = "pxl_load", target = "S2"),
+        list(type = "extractor", target = "qc$read_stats"),
+        list(type = "extractor", target = "qc$sample_hash_stats"),
+        list(type = "extractor", target = "qc$seq_saturation"),
+        list(type = "extractor", target = "qc$denoising_detail"),
+        list(type = "extractor", target = "qc$coreness"),
+        list(type = "extractor", target = "qc$top_markers"),
+        list(type = "extractor", target = "pxl_data_processed"),
+        list(type = "extractor", target = "proximity")
+      )
+    )
+  )
+})
+
 test_that("es_data parity with legacy preprocessing works as expected", {
   .legacy_preprocessing <- function(params) {
     sample_sheet <- read_samplesheet(params$sample_sheet)
@@ -450,7 +513,7 @@ test_that("es_data parity with legacy preprocessing works as expected", {
         qc_raw = built$qc_raw,
         qc = built$qc,
         proximity = built$proximity,
-        pxl_data = .seurat_parity_structure(built$pxl_data),
+        pxl_data = built$pxl_data,
         pxl_data_processed = .seurat_parity_structure(built$pxl_data_processed)
       ),
       list(
@@ -460,7 +523,7 @@ test_that("es_data parity with legacy preprocessing works as expected", {
         qc_raw = legacy$qc_raw,
         qc = legacy$qc,
         proximity = legacy$proximity,
-        pxl_data = .seurat_parity_structure(legacy$pxl_data),
+        pxl_data = NULL,
         pxl_data_processed = .seurat_parity_structure(legacy$pxl_data_processed)
       )
     )

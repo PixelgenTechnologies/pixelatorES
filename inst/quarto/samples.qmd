@@ -4,8 +4,12 @@
 ```{r}
 #| label: samples
 #| results: 'asis'
-if ("pool" %in% names(sample_sheet)) {
-  sample_sheet <- add_pct_of_pool_to_samplesheet(sample_sheet, pg_data)
+display_samplesheet <- es_data$samplesheet
+if ("pool" %in% names(display_samplesheet)) {
+  display_samplesheet <- add_pct_of_pool_to_samplesheet(
+    display_samplesheet,
+    es_data$pxl_data_processed
+  )
 }
-print_metadata_table(sample_sheet)
+print_metadata_table(display_samplesheet)
 ```

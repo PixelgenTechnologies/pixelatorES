@@ -435,7 +435,7 @@ add_pct_of_pool_to_samplesheet <-
       ) %>%
       group_by(pool) %>%
       mutate(
-        pool_fraction = round((n / sum(n)) * 100, 2)
+        pool_fraction = round((n / sum(n, na.rm = TRUE)) * 100, 2)
       ) %>%
       select(-n) %>%
       ungroup()

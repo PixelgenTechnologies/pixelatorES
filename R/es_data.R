@@ -584,7 +584,8 @@ add_es_data_diagnostic <- function(object, type, target, message) {
 #' An extractor may return an `es_data_extractor_result` to provide a partial
 #' value with diagnostics. An unhandled extractor failure records a diagnostic
 #' with `type = "extractor"` and leaves its destination slot `NULL` without
-#' stopping the remaining extractors.
+#' stopping the remaining extractors. Once `pxl_data_processed` is populated,
+#' the raw `pxl_data` slot is cleared to release memory.
 #'
 #' @param object An `es_data` object.
 #' @param extractors Nested named list of functions. Defaults to
@@ -642,6 +643,13 @@ run_es_data_extractors <- function(
     }
 
     object <- .set_es_data_slot(object, node_path, result$value)
+
+    if (
+      identical(target, "pxl_data_processed") &&
+        !is.null(result$value)
+    ) {
+      object["pxl_data"] <- list(NULL)
+    }
   }
 
   return(object)

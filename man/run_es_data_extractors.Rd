@@ -32,6 +32,7 @@ slot. Nested lists (e.g. under \code{qc}) fill nested slots such as
 An extractor may return an \code{es_data_extractor_result} to provide a partial
 value with diagnostics. An unhandled extractor failure records a diagnostic
 with \code{type = "extractor"} and leaves its destination slot \code{NULL} without
-stopping the remaining extractors.
+stopping the remaining extractors. Once \code{pxl_data_processed} is populated,
+the raw \code{pxl_data} slot is cleared to release memory.
 }
 \keyword{internal}
