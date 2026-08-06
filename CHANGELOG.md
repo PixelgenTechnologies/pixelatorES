@@ -19,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Experiment Summary ingestion is now resilient. Individual samples or QC files that fail to load no longer abort preprocessing; the report is built from whatever loaded successfully, and only an unreadable samplesheet stops the build. Samples with ambiguous duplicate PXL matches are omitted and recorded in diagnostics.
 - The Quarto report is driven entirely by `es_data`. `preprocessing.qmd` now only calls `build_es_data(params)` and derives presentation locals (palettes); the child documents read `es_data$...` directly.
 - All `component_*()` functions, `key_metric_table()`, and the `print_*()` report helpers now take `es_data` as their primary argument and extract the slots they need internally, instead of receiving pre-extracted Seurat objects, QC lists, or sample-level vectors.
-- `process_data()` runs the Seurat pipeline (`NormalizeData`, `ScaleData`, `RunPCA`, `RunUMAP`, `FindNeighbors`, `FindClusters`) with a new `verbose` argument. It defaults to the current knitr chunk's `message` option, so report chunk settings control whether Seurat progress and the Louvain optimizer banner appear, and to `FALSE` outside of knitr.
 
 ## [0.11.5] 2026-07-29
 
