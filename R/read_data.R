@@ -238,7 +238,8 @@ load_pxl_data_list <-
 #'
 #' Merges data from list of multiple samples into a single Seurat object, adding metadata and ranks based on UMI counts.
 #'
-#' @param pg_data A list of Seurat objects, each representing a sample.
+#' @param pg_data A list of Seurat objects, each representing a sample. The list must be
+#'   named by sample alias, since the names are used to prefix component IDs.
 #' @param sample_sheet A data frame containing sample metadata, including `sample_alias` and
 #'   `condition`, and optionally `pool` for hashed experiments.
 #'
@@ -249,6 +250,11 @@ load_pxl_data_list <-
 merge_data <-
   function(pg_data,
            sample_sheet) {
+    sample_aliases <- names(pg_data)
+    if (is.null(sample_aliases) || !all(nzchar(sample_aliases))) {
+      cli_abort("{.arg pg_data} must be named by sample alias.")
+    }
+
     pg_data <-
       pg_data %>%
       map(. %>%
@@ -259,15 +265,15 @@ merge_data <-
 
 
     if (length(pg_data) == 1) {
-      sample_alias <- names(pg_data)
       pg_data <- pg_data[[1]]
-      colnames(pg_data) <- paste(sample_alias, colnames(pg_data), sep = "_")
+      colnames(pg_data) <-
+        paste(sample_aliases[[1]], colnames(pg_data), sep = "_")
     } else {
       pg_data <-
         merge(
           pg_data[[1]],
           y = pg_data[-1],
-          add.cell.ids = names(pg_data)
+          add.cell.ids = sample_aliases
         ) %>%
         JoinLayers()
     }

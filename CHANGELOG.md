@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Quarto report is driven entirely by `es_data`. `preprocessing.qmd` now only calls `build_es_data(params)` and derives presentation locals (palettes); the child documents read `es_data$...` directly.
 - All `component_*()` functions, `key_metric_table()`, and the `print_*()` report helpers now take `es_data` as their primary argument and extract the slots they need internally, instead of receiving pre-extracted Seurat objects, QC lists, or sample-level vectors.
 - The report now identifies sample-hashing experiments from the samplesheet's `pool` column and skips missing sample or pool key-metric tables instead of passing `NULL` to the rendering helpers.
+- `merge_data()` requires `pg_data` to be named by sample alias and fails with a clear error otherwise, instead of silently producing unusable component IDs.
 
 ## [0.11.5] 2026-07-29
 
