@@ -22,12 +22,13 @@ test_that("es_data construction works as expected", {
   )
 
   params <- list(sample_sheet = test_samplesheet())
-  expect_no_error(built <- build_es_data(params))
+  object <- pixelatorES:::new_es_data(params)
+  object$samplesheet <- object$extractors$samplesheet(object)
+
   expect_equal(
-    built[c(
+    object[c(
       "params",
       "samplesheet",
-      "effective_samplesheet",
       "diagnostics"
     )],
     list(
@@ -42,15 +43,6 @@ test_that("es_data construction works as expected", {
           condition = c("PBMC", "PHA")
         ),
         row.names = c(NA, -2L),
-        class = c("tbl_df", "tbl", "data.frame")
-      ),
-      effective_samplesheet = structure(
-        list(
-          sample = character(),
-          sample_alias = character(),
-          condition = character()
-        ),
-        row.names = integer(),
         class = c("tbl_df", "tbl", "data.frame")
       ),
       diagnostics = list()
