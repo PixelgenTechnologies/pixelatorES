@@ -15,6 +15,6 @@
 \code{x}, invisibly.
 }
 \description{
-Prints the workflow, how many data slots are populated, and the number of
-recorded diagnostics.
+Prints the workflow and a concise description of the contents of every
+\code{es_data} slot.
 }

@@ -71,6 +71,87 @@ test_that("es_data construction works as expected", {
   )
 })
 
+test_that("es_data printing works as expected", {
+  object <- pixelatorES:::new_es_data(list())
+  object$samplesheet <- tibble(
+    sample = c("sample_1", "sample_2"),
+    sample_alias = c("S1", "S2"),
+    condition = c("A", "B")
+  )
+  object$sample_aliases <- c(sample_1 = "S1", sample_2 = "S2")
+  object$effective_samplesheet <- object$samplesheet[1, ]
+  object$file_paths <- list(
+    data_files = tibble(
+      sample_alias = c("S1", "S2"),
+      filename = c("sample_1.pxl", "sample_2.pxl")
+    ),
+    qc_files = tibble(
+      sample_alias = c("S1", "S2"),
+      filename = c("sample_1.report.json", "sample_2.report.json")
+    ),
+    pool_qc_files = NULL
+  )
+  object$pxl_data <- suppressWarnings(
+    SeuratObject::CreateSeuratObject(
+      counts = matrix(
+        1,
+        nrow = 2,
+        ncol = 3,
+        dimnames = list(
+          c("marker-1", "marker-2"),
+          c("cell-1", "cell-2", "cell-3")
+        )
+      )
+    )
+  )
+  object$qc_raw <- list(
+    qc_files = list(S1 = list(), S2 = list()),
+    pool_qc_files = NULL
+  )
+  object$qc <- list(
+    read_stats = tibble(sample_alias = c("S1", "S2")),
+    seq_saturation = tibble(sample_alias = c("S1", "S2")),
+    denoising = NULL
+  )
+  object$pxl_data_processed <- object$pxl_data
+  object$proximity <- tibble(
+    sample_alias = rep(c("S1", "S2"), each = 2),
+    score = seq_len(4)
+  )
+  object <- add_es_data_diagnostic(
+    object,
+    type = "qc_load",
+    target = "S2",
+    message = "No QC files were found."
+  )
+  print_output <- local({
+    old_options <- options(cli.width = 80, cli.unicode = FALSE)
+    on.exit(options(old_options))
+    return(capture.output(print(object), type = "message"))
+  })
+
+  expect_equal(
+    print_output,
+    c(
+      "",
+      "-- es_data ---------------------------------------------------------------------",
+      'Workflow: "amplicon_demux"',
+      "* params: 1 parameter",
+      "* diagnostics: 1 diagnostic",
+      "* samplesheet: tibble with 2 samples and 3 columns",
+      "* sample_aliases: named character vector with 2 aliases",
+      "* effective_samplesheet: tibble with 1 sample and 3 columns",
+      "* file_paths: list with 4 discovered files",
+      "* pxl_data: Seurat object with 3 cells and 2 features",
+      "* qc_raw: raw QC data for 2 samples and 0 pools",
+      "* qc: list with 2 formatted metrics",
+      "* pxl_data_processed: Seurat object with 3 cells and 2 features",
+      "* proximity: tibble with 4 proximity scores",
+      "* extractors: workflow registry with 15 extractors"
+    )
+  )
+})
+
 test_that("Sample aliases work as expected", {
   expect_equal(
     pixelatorES:::.sample_aliases_from_samplesheet(

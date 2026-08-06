@@ -761,10 +761,137 @@ build_es_data <- function(params) {
   return(object)
 }
 
+#' Summarize an `es_data` slot
+#'
+#' Creates a compact, human-readable description of the contents of one
+#' `es_data` slot for [print.es_data()].
+#'
+#' @param slot Name of the `es_data` slot.
+#' @param value Value stored in the slot.
+#'
+#' @return A single character string describing `value`.
+#'
+#' @noRd
+.summarize_es_data_slot <- function(slot, value) {
+  if (slot == "diagnostics") {
+    n_diagnostics <- length(value)
+    return(paste(
+      n_diagnostics,
+      if (n_diagnostics == 1) "diagnostic" else "diagnostics"
+    ))
+  }
+
+  if (is.null(value) || (is.list(value) && length(value) == 0)) {
+    return("not filled")
+  }
+
+  if (slot == "params") {
+    n_params <- length(value)
+    return(paste(n_params, if (n_params == 1) "parameter" else "parameters"))
+  }
+
+  if (slot %in% c("samplesheet", "effective_samplesheet")) {
+    n_samples <- nrow(value)
+    n_columns <- ncol(value)
+    return(paste(
+      "tibble with",
+      n_samples,
+      if (n_samples == 1) "sample" else "samples",
+      "and",
+      n_columns,
+      if (n_columns == 1) "column" else "columns"
+    ))
+  }
+
+  if (slot == "sample_aliases") {
+    n_aliases <- length(value)
+    return(paste(
+      "named character vector with",
+      n_aliases,
+      if (n_aliases == 1) "alias" else "aliases"
+    ))
+  }
+
+  if (slot == "file_paths") {
+    n_files <- sum(vapply(
+      value,
+      function(paths) {
+        if (is.data.frame(paths)) {
+          return(nrow(paths))
+        }
+        return(0L)
+      },
+      integer(1)
+    ))
+    return(paste(
+      "list with",
+      n_files,
+      if (n_files == 1) "discovered file" else "discovered files"
+    ))
+  }
+
+  if (inherits(value, "Seurat")) {
+    return(paste(
+      "Seurat object with",
+      ncol(value),
+      if (ncol(value) == 1) "cell" else "cells",
+      "and",
+      nrow(value),
+      if (nrow(value) == 1) "feature" else "features"
+    ))
+  }
+
+  if (slot == "qc_raw") {
+    n_samples <- length(value$qc_files)
+    n_pools <- length(value$pool_qc_files)
+    return(paste(
+      "raw QC data for",
+      n_samples,
+      if (n_samples == 1) "sample" else "samples",
+      "and",
+      n_pools,
+      if (n_pools == 1) "pool" else "pools"
+    ))
+  }
+
+  if (slot == "qc") {
+    n_metrics <- sum(!vapply(value, is.null, logical(1)))
+    return(paste(
+      "list with",
+      n_metrics,
+      if (n_metrics == 1) "formatted metric" else "formatted metrics"
+    ))
+  }
+
+  if (slot == "proximity" && is.data.frame(value)) {
+    n_scores <- nrow(value)
+    return(paste(
+      "tibble with",
+      n_scores,
+      if (n_scores == 1) "proximity score" else "proximity scores"
+    ))
+  }
+
+  if (slot == "extractors") {
+    n_extractors <- sum(vapply(
+      unlist(value, recursive = TRUE),
+      is.function,
+      logical(1)
+    ))
+    return(paste(
+      "workflow registry with",
+      n_extractors,
+      if (n_extractors == 1) "extractor" else "extractors"
+    ))
+  }
+
+  return(paste(class(value), collapse = "/"))
+}
+
 #' Print an `es_data` object
 #'
-#' Prints the workflow, how many data slots are populated, and the number of
-#' recorded diagnostics.
+#' Prints the workflow and a concise description of the contents of every
+#' `es_data` slot.
 #'
 #' @param x An `es_data` object.
 #' @param ... Not used.
@@ -773,14 +900,18 @@ build_es_data <- function(params) {
 #'
 #' @export
 print.es_data <- function(x, ...) {
-  data_slots <- setdiff(
-    names(x),
-    c("params", "diagnostics", "extractors", "file_paths")
-  )
-  populated <- vapply(x[data_slots], Negate(is.null), logical(1))
+  cli::cli_h1("es_data")
+  cli::cli_text("Workflow: {.val {x$params$workflow}}")
+  cli::cli_ul()
+  for (slot in names(x)) {
+    summary <- .summarize_es_data_slot(slot, x[[slot]])
+    if (summary == "not filled") {
+      cli::cli_li("{.field {slot}}: {.emph {summary}}")
+    } else {
+      cli::cli_li("{.field {slot}}: {summary}")
+    }
+  }
+  cli::cli_end()
 
-  cat("<es_data:", x$params$workflow, ">\n", sep = "")
-  cat("Populated slots:", sum(populated), "of", length(populated), "\n")
-  cat("Diagnostics:", length(x$diagnostics), "\n")
   return(invisible(x))
 }
