@@ -36,6 +36,9 @@ options(pixelatorES.dev_mode = isTRUE(params$test_mode) || isTRUE(params$debug_m
 
 ```{r}
 #| label: build_es_data
+#| include: false
+#| message: false
+#| warning: false
 
 es_data <- build_es_data(params)
 ```

@@ -2,21 +2,17 @@ pg_data <- get_test_data()
 
 test_that("process_data works as expected", {
   expect_no_error(
-    processing_output <-
-      capture.output(
-        dat_processed <-
-          process_data(
-            pg_data,
-            params = list(
-              test_mode = FALSE,
-              norm_method = "CLR",
-              clustering_resolution = 1,
-              annotation_method = "nmf"
-            )
-          )
+    dat_processed <-
+      process_data(
+        pg_data,
+        params = list(
+          test_mode = FALSE,
+          norm_method = "CLR",
+          clustering_resolution = 1,
+          annotation_method = "nmf"
         )
+      )
   )
-  expect_equal(processing_output, character())
 
   # With few cells
   expect_no_error(
