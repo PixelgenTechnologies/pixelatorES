@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] 2026-08-06
+
+### Added
+
+- `build_es_data()` creates a workflow-aware `es_data` object containing the samplesheet, discovered files, loaded and processed PXL data, QC metrics, proximity scores, sample aliases, and structured diagnostics.
+- Workflow extractors can be registered with `register_es_data_workflow()`.
+
+### Changed
+
+- Experiment Summary ingestion now preserves usable samples and QC results when individual PXL or QC files cannot be loaded. Only an unreadable samplesheet stops the build.
+- The Quarto report and all `component_*()` functions now use `es_data` as their primary data input.
+- Input files are discovered once and reused by extractors. Samples with ambiguous duplicate PXL matches are omitted and recorded in diagnostics.
+
 ## [0.11.5] 2026-07-29
 
 ### Fixed
