@@ -4,21 +4,13 @@
 \alias{component_sequencing_saturation_curve}
 \title{Create the component sequencing saturation curve}
 \usage{
-component_sequencing_saturation_curve(
-  object,
-  data_files,
-  seqsat_comps = 100L,
-  sample_levels = NULL
-)
+component_sequencing_saturation_curve(es_data, seqsat_comps = 100L)
 }
 \arguments{
-\item{object}{A Seurat object containing the sample data.}
-
-\item{data_files}{A data frame containing the sample aliases and corresponding file names.}
+\item{es_data}{An \code{es_data} object containing processed PXL data, discovered
+data files, the effective samplesheet, and sample aliases.}
 
 \item{seqsat_comps}{The number of components to consider for sequencing saturation.}
-
-\item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
 }
 \value{
 A list containing plots showing the sequencing saturation curve for

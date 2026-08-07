@@ -4,14 +4,10 @@
 \alias{component_clustering_summary}
 \title{Create a clustering summary component}
 \usage{
-component_clustering_summary(
-  proximity_scores,
-  heatmap_gradient,
-  test_mode = FALSE
-)
+component_clustering_summary(es_data, heatmap_gradient, test_mode = FALSE)
 }
 \arguments{
-\item{proximity_scores}{A data frame containing proximity scores.}
+\item{es_data}{An \code{es_data} object containing proximity scores.}
 
 \item{heatmap_gradient}{A color gradient for the heatmap.}
 

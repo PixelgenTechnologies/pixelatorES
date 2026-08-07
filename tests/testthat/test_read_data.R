@@ -201,6 +201,9 @@ test_that("File reading works as expected", {
   expect_s4_class(seur_comb, "Seurat")
   expect_equal(dim(seur_comb), dim(seur_list[[1]]) * c(1, 2))
 
+  expect_error(merge_data(unname(seur_list), sample_sheet))
+  expect_error(merge_data(unname(seur_list[1]), sample_sheet))
+
   # Data downsampling
   expect_no_error(seur_down <- downsample_data(seur_comb,
     control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),

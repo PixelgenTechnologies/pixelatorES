@@ -4,6 +4,7 @@
 #'
 default_params <-
   list(
+    workflow = "amplicon_demux",
     control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
     norm_method = "CLR",
     clustering_resolution = 1,
@@ -18,14 +19,17 @@ default_params <-
 #'
 #' Print the analysis parameters in a table format, comparing them to the default parameters.
 #'
-#' @param params A list of parameters used in the analysis.
+#' @param es_data An `es_data` object containing analysis parameters.
 #'
 #' @return A printed table of parameters with their values and defaults.
 #'
 #' @export
 #'
 print_params <-
-  function(params) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    params <- es_data$params
+
     params[!names(params) %in% c("metadata", "sample_aliases", "sample_sheet", "data_folder")] %>%
       enframe("Parameter", "Value") %>%
       left_join(
@@ -50,14 +54,24 @@ print_params <-
 #'
 #' Print the experiment meta data in a table format.
 #'
-#' @param sample_sheet A sample sheet.
+#' @param es_data An `es_data` object containing the samplesheet and processed
+#'   PXL data.
 #'
 #' @return A printed table of sample metadata.
 #'
 #' @export
 #'
 print_metadata_table <-
-  function(sample_sheet) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    sample_sheet <- es_data$samplesheet
+    if ("pool" %in% names(sample_sheet)) {
+      sample_sheet <- add_pct_of_pool_to_samplesheet(
+        sample_sheet,
+        es_data$pxl_data_processed
+      )
+    }
+
     sample_sheet %>%
       select(
         "Pool" = any_of("pool"),
@@ -90,14 +104,18 @@ print_session_info <- function() {
 #'
 #' Print the Pixelator version information from the pxl files.
 #'
-#' @param object A Seurat object.
-#' @param sample_sheet A sample sheet.
+#' @param es_data An `es_data` object containing processed PXL data and the
+#'   effective samplesheet.
 #'
 #' @return A printed table of Pixelator version information.
 #' @export
 #'
 print_pixelator_version <-
-  function(object, sample_sheet) {
+  function(es_data) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    object <- es_data$pxl_data_processed
+    sample_sheet <- es_data$effective_samplesheet
+
     save_fields <-
       tibble::tribble(
         ~var, ~display_name,

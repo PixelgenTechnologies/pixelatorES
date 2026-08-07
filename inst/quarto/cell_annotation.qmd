@@ -7,8 +7,7 @@
 #| fig-height: 5
 component <-
   component_dimred_plots(
-    pg_data_processed,
-    plot_reductions = preferred_dimred_order(Reductions(pg_data_processed)),
+    es_data,
     sample_palette = sample_palette,
     cluster_palette = cluster_palette,
     sample_plots = TRUE,
@@ -38,7 +37,7 @@ downstream analysis to ensure accurate and context-appropriate results.
 #| label: annotation_dimred
 #| results: 'asis'
 component <-
-  component_annotation(pg_data_processed,
+  component_annotation(es_data,
     heatmap_gradient = cherry_gradient
   )
 ```

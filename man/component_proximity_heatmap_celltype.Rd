@@ -5,8 +5,7 @@
 \title{Create the component for proximity heatmaps per celltype and condition}
 \usage{
 component_proximity_heatmap_celltype(
-  proximity_scores,
-  pg_data_processed,
+  es_data,
   heatmap_gradient,
   n_markers = 40,
   min_pct_detected = 0.25,
@@ -15,9 +14,8 @@ component_proximity_heatmap_celltype(
 )
 }
 \arguments{
-\item{proximity_scores}{A data frame containing proximity scores for different markers.}
-
-\item{pg_data_processed}{A processed data object.}
+\item{es_data}{An \code{es_data} object containing proximity scores and processed
+PXL data.}
 
 \item{heatmap_gradient}{A color palette for the heatmaps.}
 

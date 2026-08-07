@@ -4,10 +4,10 @@
 \alias{component_hashing}
 \title{Create the component hashing}
 \usage{
-component_hashing(qc_metrics_tables, colors)
+component_hashing(es_data, colors)
 }
 \arguments{
-\item{qc_metrics_tables}{QC metrics from \code{\link[=get_qc_metrics]{get_qc_metrics()}} including \code{sample_hash_stats}.}
+\item{es_data}{An \code{es_data} object containing sample hashing QC metrics.}
 
 \item{colors}{A gradient color palette to use.}
 }

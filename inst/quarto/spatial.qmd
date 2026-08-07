@@ -20,9 +20,8 @@ Learn more at [PNA Proximity Scores](https://software.pixelgen.com/pixelator/alg
 #| fig-height: 8
 #| results: 'asis'
 
-plots <- component_proximity_per_marker(proximity_scores,
+plots <- component_proximity_per_marker(es_data,
   sample_palette = sample_palette,
-  sample_levels = sample_aliases,
   test_mode = params$test_mode
 )
 tabset_plotlist(plots, level = 5)
@@ -44,8 +43,7 @@ variance were chosen.
 #| results: 'asis'
 #| fig-height: 8
 plots <- component_proximity_heatmap_sample(
-  proximity_scores,
-  pg_data_processed,
+  es_data,
   heatmap_gradient,
   test_mode = params$test_mode
 )
@@ -59,8 +57,7 @@ tabset_plotlist(plots, level = 6)
 #| results: 'asis'
 #| fig-height: 8
 plots <- component_proximity_heatmap_celltype(
-  proximity_scores,
-  pg_data_processed,
+  es_data,
   heatmap_gradient,
   test_mode = params$test_mode
 )

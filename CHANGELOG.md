@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] 2026-08-06
+
+### Added
+
+- `build_es_data()` and an `es_data` object as the Experiment Summary ingestion entry point. Extension packages can register additional workflows with `register_es_data_workflow()`.
+
+### Changed
+
+- Ingestion is resilient: failed sample or QC loads no longer abort the whole report. Only an unreadable samplesheet stops the build.
+- Breaking: `component_*()`, `key_metric_table()`, and `print_*()` helpers now take `es_data` as their first argument.
+
 ## [0.11.5] 2026-07-29
 
 ### Fixed

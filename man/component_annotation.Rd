@@ -4,10 +4,10 @@
 \alias{component_annotation}
 \title{Create the component annotation summary}
 \usage{
-component_annotation(object, heatmap_gradient, reduction = NULL)
+component_annotation(es_data, heatmap_gradient, reduction = NULL)
 }
 \arguments{
-\item{object}{A Seurat object containing the processed data.}
+\item{es_data}{An \code{es_data} object containing processed PXL data.}
 
 \item{heatmap_gradient}{A color gradient for the heatmap.}
 

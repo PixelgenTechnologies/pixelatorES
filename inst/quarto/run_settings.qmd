@@ -5,7 +5,7 @@
 #| label: run_settings_version
 
 # Print Pixelator version
-print_pixelator_version(pg_data_processed, sample_sheet)
+print_pixelator_version(es_data)
 ```
 
 ### Run parameters
@@ -13,7 +13,7 @@ print_pixelator_version(pg_data_processed, sample_sheet)
 ```{r}
 #| label: run_settings_params
 # Print parameters
-print_params(params)
+print_params(es_data)
 ```
 
 ### Session info

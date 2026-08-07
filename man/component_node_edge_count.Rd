@@ -4,12 +4,10 @@
 \alias{component_node_edge_count}
 \title{Create the component node and edge count}
 \usage{
-component_node_edge_count(sample_qc_metrics, sample_levels = NULL)
+component_node_edge_count(es_data)
 }
 \arguments{
-\item{sample_qc_metrics}{A list of sample QC metrics.}
-
-\item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
+\item{es_data}{An \code{es_data} object containing raw QC metrics and sample aliases.}
 }
 \value{
 A list containing two plots and a table summarizing the node and edge counts.

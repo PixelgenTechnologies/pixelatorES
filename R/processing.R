@@ -27,12 +27,29 @@ process_data <-
 
     object <-
       object %>%
-      NormalizeData(normalization.method = params$norm_method, margin = 2) %>%
-      ScaleData() %>%
-      RunPCA(npcs = npcs) %>%
-      RunUMAP(reduction = "pca", dims = 1:max_dims, n.neighbors = n_neighbors) %>%
-      FindNeighbors(reduction = "pca", dims = 1:max_dims) %>%
-      FindClusters(random.seed = 1, resolution = params$clustering_resolution)
+      NormalizeData(
+        normalization.method = params$norm_method,
+        margin = 2,
+        verbose = FALSE
+      ) %>%
+      ScaleData(verbose = FALSE) %>%
+      RunPCA(npcs = npcs, verbose = FALSE) %>%
+      RunUMAP(
+        reduction = "pca",
+        dims = 1:max_dims,
+        n.neighbors = n_neighbors,
+        verbose = FALSE
+      ) %>%
+      FindNeighbors(
+        reduction = "pca",
+        dims = 1:max_dims,
+        verbose = FALSE
+      ) %>%
+      FindClusters(
+        random.seed = 1,
+        resolution = params$clustering_resolution,
+        verbose = FALSE
+      )
 
     if (annotate_cells) {
       reference <- pixelatorR::read_pbmc_reference()

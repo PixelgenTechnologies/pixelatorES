@@ -637,6 +637,90 @@ get_hash_stats <- function(object, sample_qc_metrics) {
 }
 
 
+#' Format a quality control metric
+#'
+#' Applies samplesheet aliases and factor ordering to one quality control
+#' metric table or a nested list of metric tables.
+#'
+#' @param metric A data frame, nested list of data frames, or `NULL`.
+#' @param sample_sheet A samplesheet containing sample and optional pool
+#'   metadata.
+#'
+#' @return The formatted metric, or `NULL` when the input is empty.
+#'
+#' @noRd
+.format_qc_metric <- function(metric, sample_sheet) {
+  if (is.null(metric)) {
+    return(NULL)
+  }
+
+  if (inherits(metric, "list")) {
+    metric <- lapply(
+      metric,
+      .format_qc_metric,
+      sample_sheet = sample_sheet
+    )
+  } else if (nrow(metric) == 0) {
+    return(NULL)
+  }
+
+  if ("sample" %in% names(metric) && !"sample_alias" %in% names(metric)) {
+    metric <-
+      metric %>%
+      left_join(
+        select(sample_sheet, sample_alias, sample),
+        by = "sample"
+      ) %>%
+      mutate(
+        sample_alias = ifelse(
+          sample == "undetermined",
+          "undetermined",
+          sample_alias
+        )
+      ) %>%
+      filter(!is.na(sample_alias)) %>%
+      select(-sample)
+  }
+
+  if ("sample_alias" %in% names(metric)) {
+    sample_levels <-
+      sample_sheet$sample_alias[
+        sample_sheet$sample_alias %in% unique(metric$sample_alias)
+      ]
+
+    if (length(sample_levels) == 0) {
+      cli_abort(
+        "None of the sample_alias values in the table are present in the sample sheet."
+      )
+    }
+
+    if ("undetermined" %in% metric$sample_alias) {
+      sample_levels <- c(sample_levels, "undetermined")
+    }
+    metric <- order_sample_alias_factors(metric, levels = sample_levels)
+  }
+
+  if ("pool" %in% names(metric)) {
+    pool_levels <-
+      unique(sample_sheet$pool[!is.na(sample_sheet$pool)])
+    pool_levels <- pool_levels[pool_levels %in% unique(metric$pool)]
+
+    if (length(pool_levels) == 0) {
+      cli_abort(
+        "None of the pool values in the table are present in the sample sheet."
+      )
+    }
+
+    metric <- order_sample_alias_factors(
+      metric,
+      levels = pool_levels,
+      column_name = "pool"
+    )
+  }
+
+  return(metric)
+}
+
 #' Get quality control metrics for samples
 #'
 #' This function retrieves quality control metrics for samples from the provided sample QC metrics and sample sheet.
@@ -651,65 +735,6 @@ get_hash_stats <- function(object, sample_qc_metrics) {
 #'
 get_qc_metrics <-
   function(object, sample_qc_metrics, sample_sheet) {
-    .format <-
-      function(tb) {
-        # If NULL return NULL
-        if (is.null(tb)) {
-          return(NULL)
-        }
-
-        # If tb is a list of tables, apply formatting to each element in the list instead
-        if (inherits(tb, "list")) {
-          tb <- lapply(tb, .format)
-        } else if (nrow(tb) == 0) {
-          # If the table is empty, return NULL
-          return(NULL)
-        }
-
-        # If the table contains a "sample" column but not a "sample_alias" column, add it from samplesheet
-        if ("sample" %in% names(tb) && !"sample_alias" %in% names(tb)) {
-          tb <- tb %>%
-            left_join(
-              select(sample_sheet, sample_alias, sample),
-              by = c("sample")
-            ) %>%
-            mutate(sample_alias = ifelse(sample == "undetermined", "undetermined", sample_alias)) %>%
-            filter(!is.na(sample_alias)) %>%
-            select(-sample)
-        }
-
-        # If the table contains a "sample_alias" column, order factors based on those
-        if ("sample_alias" %in% names(tb)) {
-          sample_levels <-
-            sample_sheet$sample_alias[sample_sheet$sample_alias %in% unique(tb$sample_alias)]
-
-          if (length(sample_levels) == 0) {
-            cli_abort("None of the sample_alias values in the table are present in the sample sheet.")
-          }
-
-          if ("undetermined" %in% tb$sample_alias) sample_levels <- c(sample_levels, "undetermined")
-          tb <- order_sample_alias_factors(tb, levels = sample_levels)
-        }
-
-        # If the table contains a "pool" column, order factors based on those
-        if ("pool" %in% names(tb)) {
-          pool_levels <-
-            unique(sample_sheet$pool[!is.na(sample_sheet$pool)])
-          pool_levels <- pool_levels[pool_levels %in% unique(tb$pool)]
-
-          if (length(pool_levels) == 0) {
-            cli_abort("None of the pool values in the table are present in the sample sheet.")
-          }
-
-          tb <- order_sample_alias_factors(tb,
-            levels = pool_levels,
-            column_name = "pool"
-          )
-        }
-
-        return(tb)
-      }
-
     outdata <-
       list(
         read_stats = get_read_stats(object),
@@ -725,14 +750,14 @@ get_qc_metrics <-
         )
       )
 
-    outdata %>%
+    formatted_data <-
+      outdata %>%
       names() %>%
       set_names() %>%
       lapply(function(nm) {
-        # Attempt to format the data
-        tryCatch(
+        metric <- tryCatch(
           expr = {
-            .format(outdata[[nm]])
+            .format_qc_metric(outdata[[nm]], sample_sheet)
           },
           error = function(e) {
             cli_abort(c(
@@ -741,7 +766,11 @@ get_qc_metrics <-
             ))
           }
         )
+
+        return(metric)
       })
+
+    return(formatted_data)
   }
 
 #' Process metrics table content
@@ -753,14 +782,25 @@ get_qc_metrics <-
 #'
 .process_metrics_table_content <-
   function(table_content_list, detailed = TRUE) {
-    join_by <- ifelse("sample_alias" %in% names(table_content_list[[1]]),
-      "sample_alias", "pool"
+    table_content_list <-
+      table_content_list %>%
+      keep(function(table) {
+        return(!is.null(table) && nrow(table) > 0)
+      })
+
+    if (length(table_content_list) == 0) {
+      return(NULL)
+    }
+
+    join_by <- ifelse(
+      "sample_alias" %in% names(table_content_list[[1]]),
+      "sample_alias",
+      "pool"
     )
 
     table_content <-
       table_content_list %>%
-      keep(~ !is.null(.x)) %>%
-      reduce(left_join, by = join_by) %>%
+      reduce(dplyr::full_join, by = join_by) %>%
       select(1, any_of(key_metric_definitions$var))
 
     if (!detailed) {
@@ -782,19 +822,27 @@ get_qc_metrics <-
         )))
     }
 
-    for (i in seq(from = 2, to = ncol(table_content))) {
-      definitions_i <- which(key_metric_definitions$var == colnames(table_content)[i])
+    if (ncol(table_content) > 1) {
+      for (i in seq(from = 2, to = ncol(table_content))) {
+        definitions_i <- which(
+          key_metric_definitions$var == colnames(table_content)[i]
+        )
 
-      if (is.numeric(table_content[[i]])) {
-        table_content[, i] <- table_content[, i] / key_metric_definitions$scale[definitions_i]
+        if (is.numeric(table_content[[i]])) {
+          table_content[, i] <-
+            table_content[, i] / key_metric_definitions$scale[definitions_i]
+        }
+        colnames(table_content)[i] <-
+          key_metric_definitions$display_name[definitions_i]
       }
-      colnames(table_content)[i] <- key_metric_definitions$display_name[definitions_i]
     }
 
-    table_content %>%
-      mutate(across(where(is.numeric), . %>%
-        round(2))) %>%
+    table_content <-
+      table_content %>%
+      mutate(across(where(is.numeric), ~ round(.x, 2))) %>%
       mutate_all(as.character)
+
+    return(table_content)
   }
 
 
@@ -803,8 +851,7 @@ get_qc_metrics <-
 #' This function creates a key metric table for samples by combining various
 #' quality control metrics and formatting them for display.
 #'
-#' @param qc_metrics_tables A list containing quality control metrics tables
-#' for each sample.
+#' @param es_data An `es_data` object containing quality control metrics.
 #' @param detailed A logical value indicating whether to include all metrics.
 #' @param return_data A logical value indicating whether to return the data instead of the formatted table.
 #'
@@ -814,7 +861,28 @@ get_qc_metrics <-
 #' @export
 #'
 key_metric_table <-
-  function(qc_metrics_tables, detailed = TRUE, return_data = FALSE) {
+  function(es_data, detailed = TRUE, return_data = FALSE) {
+    pixelatorR:::assert_class(es_data, "es_data")
+    qc_metrics_tables <- es_data$qc
+
+    crossing_edges <- qc_metrics_tables$crossing_edges
+    if (
+      is.null(crossing_edges) ||
+        !all(c("type", "percent") %in% names(crossing_edges)) ||
+        !any(c("sample_alias", "pool") %in% names(crossing_edges))
+    ) {
+      crossing_edges <- NULL
+    } else {
+      crossing_edges <-
+        crossing_edges %>%
+        select(
+          any_of(c("sample_alias", "pool")),
+          type,
+          percent
+        ) %>%
+        pivot_wider(names_from = "type", values_from = "percent")
+    }
+
     table_content_list <-
       list(
         qc_metrics_tables$read_stats,
@@ -823,38 +891,46 @@ key_metric_table <-
         qc_metrics_tables$sample_hash_stats$pool_stats,
         qc_metrics_tables$coreness$sample_summary,
         qc_metrics_tables$top_markers,
-        qc_metrics_tables$crossing_edges %>%
-          select(
-            any_of(c("sample_alias", "pool")),
-            type,
-            percent
-          ) %>%
-          pivot_wider(names_from = "type", values_from = "percent")
+        crossing_edges
       )
 
     if ("sample_hash_stats" %in% names(qc_metrics_tables) && !is.null(qc_metrics_tables$sample_hash_stats)) {
       table_content_list <- c(table_content_list, list(qc_metrics_tables$sample_hash_stats$sample_stats))
     }
 
-    pool_content <-
-      sapply(table_content_list, function(x) !is.null(x) && "pool" %in% names(x))
+    table_content_list <-
+      table_content_list %>%
+      keep(function(table) {
+        return(!is.null(table) && nrow(table) > 0)
+      })
 
-    sample_content <-
-      !pool_content
+    pool_content <- vapply(
+      table_content_list,
+      function(table) {
+        return("pool" %in% names(table))
+      },
+      logical(1)
+    )
 
     table_content <-
       list(
-        sample = table_content_list[sample_content],
-        pool = table_content_list[pool_content]
+        sample = .process_metrics_table_content(
+          table_content_list[!pool_content],
+          detailed = detailed
+        ),
+        pool = .process_metrics_table_content(
+          table_content_list[pool_content],
+          detailed = detailed
+        )
       )
-    table_content <- table_content[which(sapply(table_content, function(x) length(x) != 0))]
-    table_content <- lapply(table_content, .process_metrics_table_content, detailed = detailed)
 
-    table_content$sample <-
-      table_content$sample %>%
-      rename(
-        `Sample ID` = sample_alias
-      )
+    if (!is.null(table_content$sample)) {
+      table_content$sample <-
+        table_content$sample %>%
+        rename(
+          `Sample ID` = sample_alias
+        )
+    }
 
     if (!is.null(table_content$pool)) {
       table_content$pool <-
@@ -883,7 +959,7 @@ key_metric_table <-
         },
         character(1)
       )
-      tb
+      return(tb)
     }
 
     if (!is.null(table_content$pool)) {
@@ -898,18 +974,24 @@ key_metric_table <-
       pool_table <- NULL
     }
 
-    sample_table <-
-      table_content$sample %>%
-      .add_tooltips_to_colnames() %>%
-      style_table(
-        escape = FALSE,
-        tooltips = TRUE
-      )
+    if (!is.null(table_content$sample)) {
+      sample_table <-
+        table_content$sample %>%
+        .add_tooltips_to_colnames() %>%
+        style_table(
+          escape = FALSE,
+          tooltips = TRUE
+        )
+    } else {
+      sample_table <- NULL
+    }
 
-    list(
+    result <- list(
       pool = pool_table,
       sample = sample_table
     )
+
+    return(result)
   }
 
 

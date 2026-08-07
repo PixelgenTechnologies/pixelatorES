@@ -4,12 +4,10 @@
 \alias{component_sequencing_saturation}
 \title{Create the component sequencing saturation}
 \usage{
-component_sequencing_saturation(qc_metrics_tables, sample_levels = NULL)
+component_sequencing_saturation(es_data)
 }
 \arguments{
-\item{qc_metrics_tables}{A list of QC metrics tables.}
-
-\item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
+\item{es_data}{An \code{es_data} object containing QC metrics and sample aliases.}
 }
 \value{
 A list containing plots and a table summarizing the sequencing saturation.

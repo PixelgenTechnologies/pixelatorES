@@ -4,10 +4,10 @@
 \alias{component_coreness}
 \title{Create the component coreness}
 \usage{
-component_coreness(qc_metrics_tables)
+component_coreness(es_data)
 }
 \arguments{
-\item{qc_metrics_tables}{A list of QC metrics tables containing coreness data.}
+\item{es_data}{An \code{es_data} object containing QC metrics.}
 }
 \value{
 A list containing three plots and a table summarizing the coreness metrics.

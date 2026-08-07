@@ -4,12 +4,10 @@
 \alias{component_crossing_edges}
 \title{Create the component crossing edges}
 \usage{
-component_crossing_edges(qc_metrics_tables, sample_levels = NULL)
+component_crossing_edges(es_data)
 }
 \arguments{
-\item{qc_metrics_tables}{A list of QC metrics tables.}
-
-\item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
+\item{es_data}{An \code{es_data} object containing QC metrics and sample aliases.}
 }
 \value{
 A list containing a plot and a table summarizing the crossing edges.

@@ -4,10 +4,10 @@
 \alias{component_control_markers}
 \title{Create the component for control markers}
 \usage{
-component_control_markers(pg_data)
+component_control_markers(es_data)
 }
 \arguments{
-\item{pg_data}{A Seurat object containing the data to be plotted.}
+\item{es_data}{An \code{es_data} object containing processed PXL data.}
 }
 \value{
 A list containing two violin plots and a summary table.
