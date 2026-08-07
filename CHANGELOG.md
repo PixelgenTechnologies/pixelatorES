@@ -9,18 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `es_data`, a single object that carries all preprocessing state through the report. It is a plain list with an `es_data` S3 class and fixed slots: `params`, `diagnostics`, `samplesheet`, `sample_aliases`, `effective_samplesheet`, `file_paths`, `pxl_data`, `qc_raw`, `qc` (a nested list of formatted QC tables), `pxl_data_processed`, and `proximity`.
-- `build_es_data(params)`, the entry point that assembles an `es_data` object. It reads the samplesheet (the only hard requirement), derives `sample_aliases` (the named sample and pool ordering used across the report), discovers input files once with `get_file_paths()`, then runs the workflow's extractors to fill the remaining slots. The raw `pxl_data` slot is released after `pxl_data_processed` is created to save memory.
-- A pluggable workflow system. Each workflow maps to a nested list of extractor functions; top-level names map to `es_data` slots and names nested under `qc` map to `es_data$qc$...`. The `amplicon_demux` workflow is registered on load, and extension packages can add their own with `register_es_data_workflow()` (see `list_es_data_workflows()`). `params$workflow` selects the workflow and defaults to `"amplicon_demux"`.
-- Structured, non-fatal diagnostics. Extractors either return a slot value directly or an internal result carrying a partial value plus diagnostics. `run_es_data_extractors()` records any extractor error as a diagnostic (`type = "extractor"`) and leaves that slot `NULL` without aborting the rest of the build. Per-sample PXL and QC load problems are recorded as `pxl_load` / `qc_load` diagnostics. Each diagnostic stores a `type`, a `target` (sample alias, pool id, or slot path such as `"qc$crossing_edges"`), and a human-readable `message`, available in `es_data$diagnostics`.
+- `build_es_data()` and an `es_data` object as the Experiment Summary ingestion entry point. Extension packages can register additional workflows with `register_es_data_workflow()`.
 
 ### Changed
 
-- Experiment Summary ingestion is now resilient. Individual samples or QC files that fail to load no longer abort preprocessing; the report is built from whatever loaded successfully, and only an unreadable samplesheet stops the build. Samples with ambiguous duplicate PXL matches are omitted and recorded in diagnostics.
-- The Quarto report is driven entirely by `es_data`. `preprocessing.qmd` now only calls `build_es_data(params)` and derives presentation locals (palettes); the child documents read `es_data$...` directly.
-- All `component_*()` functions, `key_metric_table()`, and the `print_*()` report helpers now take `es_data` as their primary argument and extract the slots they need internally, instead of receiving pre-extracted Seurat objects, QC lists, or sample-level vectors.
-- The report now identifies sample-hashing experiments from the samplesheet's `pool` column and skips missing sample or pool key-metric tables instead of passing `NULL` to the rendering helpers.
-- `merge_data()` requires `pg_data` to be named by sample alias and fails with a clear error otherwise, instead of silently producing unusable component IDs.
+- Ingestion is resilient: failed sample or QC loads no longer abort the whole report. Only an unreadable samplesheet stops the build.
+- Breaking: `component_*()`, `key_metric_table()`, and `print_*()` helpers now take `es_data` as their first argument.
 
 ## [0.11.5] 2026-07-29
 
