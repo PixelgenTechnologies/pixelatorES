@@ -17,42 +17,34 @@ params:
   test_mode: FALSE
 ---
 
-```{r, child="shared/preprocessing.qmd"}
+```{r}
+#| label: setup_report
+#| include: false
+
+library(pixelatorES)
+report <- get_es_workflow_report(params$workflow)
 ```
 
-# 
+```{r}
+#| label: preamble
+#| results: asis
+#| echo: false
 
-::: {.panel-tabset .nav-pills}
-  
-## Samples 
-
-```{r, child="shared/samples.qmd"}
+for (child in report$preamble) {
+  cat(knitr::knit_child(child, quiet = TRUE))
+}
 ```
 
-## Quality metrics
+```{r}
+#| label: sections
+#| results: asis
+#| echo: false
 
-```{r, child="workflows/amplicon_demux/quality_metrics.qmd"}
+cat("\n# \n\n")
+cat("::: {.panel-tabset .nav-pills}\n\n")
+for (section in report$sections) {
+  cat("\n## ", section$title, "\n\n", sep = "")
+  cat(knitr::knit_child(section$child, quiet = TRUE))
+}
+cat("\n:::\n")
 ```
-
-## Cell annotation
-
-```{r, child="workflows/amplicon_demux/cell_annotation.qmd"}
-```
-
-## Abundance 
-
-```{r, child="workflows/amplicon_demux/abundance.qmd"}
-```
-
-## Spatial metrics
-
-```{r, child="workflows/amplicon_demux/spatial.qmd"}
-```
-
-## Run settings
-
-```{r, child="shared/run_settings.qmd"}
-```
-
-
-:::
