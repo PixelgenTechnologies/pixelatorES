@@ -309,9 +309,9 @@ test_that("es_data diagnostics work as expected", {
 
 test_that("es_data workflow registration works as expected", {
   report <- list(
-    preamble = c("preprocessing.qmd"),
+    preamble = c("shared/preprocessing.qmd"),
     sections = list(
-      list(id = "samples", title = "Samples", child = "samples.qmd")
+      list(id = "samples", title = "Samples", child = "shared/samples.qmd")
     )
   )
 
@@ -433,6 +433,26 @@ test_that("Workflow report recipes work as expected", {
 
   expect_error(
     register_es_data_workflow(
+      "missing_path_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(
+          preamble = "shared/preprocessing.qmd",
+          sections = list(
+            list(
+              id = "samples",
+              title = "Samples",
+              child = "shared/does_not_exist.qmd"
+            )
+          )
+        ))
+      },
+      overwrite = TRUE
+    )
+  )
+
+  expect_error(
+    register_es_data_workflow(
       "bad_report_workflow",
       function() return(list()),
       report = function() {
@@ -492,7 +512,7 @@ test_that("Workflow report recipes work as expected", {
       function() return(list()),
       report = function() {
         return(list(
-          preamble = "preprocessing.qmd",
+          preamble = "shared/preprocessing.qmd",
           sections = list(
             list(
               id = "samples",
