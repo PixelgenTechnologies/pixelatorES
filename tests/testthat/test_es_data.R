@@ -360,7 +360,51 @@ test_that("Workflow report recipes work as expected", {
   )
   expect_equal(
     get_es_workflow_report("amplicon_demux"),
-    pixelatorES:::.amplicon_demux_report()
+    list(
+      preamble = c("shared/preprocessing.qmd"),
+      sections = list(
+        list(id = "samples", title = "Samples", child = "shared/samples.qmd"),
+        list(
+          id = "quality_metrics",
+          title = "Quality metrics",
+          child = "workflows/amplicon_demux/quality_metrics.qmd"
+        ),
+        list(
+          id = "cell_annotation",
+          title = "Cell annotation",
+          child = "workflows/amplicon_demux/cell_annotation.qmd"
+        ),
+        list(
+          id = "abundance",
+          title = "Abundance",
+          child = "workflows/amplicon_demux/abundance.qmd"
+        ),
+        list(
+          id = "spatial",
+          title = "Spatial metrics",
+          child = "workflows/amplicon_demux/spatial.qmd"
+        ),
+        list(
+          id = "run_settings",
+          title = "Run settings",
+          child = "shared/run_settings.qmd"
+        )
+      )
+    )
+  )
+
+  amplicon_report <- get_es_workflow_report("amplicon_demux")
+  amplicon_paths <- c(
+    amplicon_report$preamble,
+    vapply(amplicon_report$sections, function(section) {
+      return(section$child)
+    }, character(1))
+  )
+  quarto_root <- system.file("quarto", package = "pixelatorES")
+  expect_true(nzchar(quarto_root))
+  expect_equal(
+    file.exists(file.path(quarto_root, amplicon_paths)),
+    rep(TRUE, length(amplicon_paths))
   )
 
   expect_error(
