@@ -90,8 +90,7 @@ new_es_data <- function(params) {
 #' Extractor registry for the amplicon_demux workflow
 #'
 #' Nested named list of functions. Top-level names map to `es_data` slots;
-#' nested names under `qc` map to `es_data$qc$...`. Phase 1b replaces stubs
-#' with adapters around existing loaders and getters.
+#' nested names under `qc` map to `es_data$qc$...`.
 #'
 #' @return A nested named list of functions.
 #'
@@ -118,6 +117,47 @@ new_es_data <- function(params) {
   )
 
   return(extractors)
+}
+
+#' Report recipe for the amplicon_demux workflow
+#'
+#' Paths are relative to `inst/quarto/`.
+#'
+#' @return A report recipe list.
+#'
+#' @noRd
+.amplicon_demux_report <- function() {
+  return(list(
+    preamble = c("shared/preprocessing.qmd"),
+    sections = list(
+      list(id = "samples", title = "Samples", child = "shared/samples.qmd"),
+      list(
+        id = "quality_metrics",
+        title = "Quality metrics",
+        child = "workflows/amplicon_demux/quality_metrics.qmd"
+      ),
+      list(
+        id = "cell_annotation",
+        title = "Cell annotation",
+        child = "workflows/amplicon_demux/cell_annotation.qmd"
+      ),
+      list(
+        id = "abundance",
+        title = "Abundance",
+        child = "workflows/amplicon_demux/abundance.qmd"
+      ),
+      list(
+        id = "spatial",
+        title = "Spatial metrics",
+        child = "workflows/amplicon_demux/spatial.qmd"
+      ),
+      list(
+        id = "run_settings",
+        title = "Run settings",
+        child = "shared/run_settings.qmd"
+      )
+    )
+  ))
 }
 
 #' Extract the experiment samplesheet
