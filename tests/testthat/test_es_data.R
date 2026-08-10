@@ -284,9 +284,17 @@ test_that("es_data diagnostics work as expected", {
 })
 
 test_that("es_data workflow registration works as expected", {
+  report <- list(
+    preamble = c("preprocessing.qmd"),
+    sections = list(
+      list(id = "samples", title = "Samples", child = "samples.qmd")
+    )
+  )
+
   register_es_data_workflow(
     "test_workflow",
     function() return(list(pxl_data = identity)),
+    report = function() return(report),
     overwrite = TRUE
   )
 
@@ -300,16 +308,19 @@ test_that("es_data workflow registration works as expected", {
     )$extractors,
     list(pxl_data = identity)
   )
+  expect_equal(get_es_workflow_report("test_workflow"), report)
   expect_error(
     register_es_data_workflow(
       "test_workflow",
-      function() return(list())
+      function() return(list()),
+      report = function() return(report)
     )
   )
 
   register_es_data_workflow(
     "test_workflow",
     function() return(list(proximity = identity)),
+    report = function() return(report),
     overwrite = TRUE
   )
   expect_equal(
@@ -318,6 +329,136 @@ test_that("es_data workflow registration works as expected", {
     )$extractors,
     list(proximity = identity)
   )
+})
+
+test_that("Workflow report recipes work as expected", {
+  report <- list(
+    preamble = c("shared/preprocessing.qmd"),
+    sections = list(
+      list(
+        id = "samples",
+        title = "Samples",
+        child = "shared/samples.qmd"
+      ),
+      list(
+        id = "quality_metrics",
+        title = "Quality metrics",
+        child = "workflows/amplicon_demux/quality_metrics.qmd"
+      )
+    )
+  )
+
+  register_es_data_workflow(
+    "test_report_workflow",
+    function() return(list(pxl_data = identity)),
+    report = function() return(report),
+    overwrite = TRUE
+  )
+  expect_equal(
+    get_es_workflow_report("test_report_workflow"),
+    report
+  )
+  expect_equal(
+    get_es_workflow_report("amplicon_demux"),
+    pixelatorES:::.amplicon_demux_report()
+  )
+
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(sections = list(
+          list(id = "samples", title = "Samples", child = "samples.qmd")
+        )))
+      },
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(
+          preamble = character(),
+          sections = list(
+            list(id = "samples", title = "Samples", child = "samples.qmd")
+          )
+        ))
+      },
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(
+          preamble = "preprocessing.qmd",
+          sections = list()
+        ))
+      },
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(
+          preamble = "preprocessing.qmd",
+          sections = list(
+            list(id = "samples", title = "Samples")
+          )
+        ))
+      },
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(
+          preamble = "preprocessing.qmd",
+          sections = list(
+            list(
+              id = "samples",
+              title = "Samples",
+              child = "shared/samples.qmd"
+            ),
+            list(
+              id = "samples",
+              title = "Again",
+              child = "shared/samples.qmd"
+            )
+          )
+        ))
+      },
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_extractors_workflow",
+      function() return("not a list"),
+      report = function() return(report),
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_factory_workflow",
+      function() return(list()),
+      report = report,
+      overwrite = TRUE
+    )
+  )
+  expect_error(get_es_workflow_report("unknown_workflow"))
 })
 
 test_that("Partial input failures work as expected", {
