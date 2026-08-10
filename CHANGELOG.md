@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Workflows register a Quarto report recipe (`preamble` + `sections`) via `register_es_data_workflow()`, retrieved with `get_es_workflow_report()`.
+- `test_es_data()` helper for building lightweight `es_data` fixtures in tests and downstream packages.
 
 ### Changed
 

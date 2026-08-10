@@ -1,12 +1,5 @@
 library(Seurat)
 
-.as_es_data <- function(qc = list()) {
-  return(structure(
-    list(qc = qc),
-    class = c("es_data", "list")
-  ))
-}
-
 data_types <- c("default", "hashing")
 
 for (data_type in data_types) {
@@ -672,13 +665,13 @@ for (data_type in data_types) {
     }
 
     expect_no_error(
-      tabl <- key_metric_table(.as_es_data(sample_qc_tables))
+      tabl <- key_metric_table(test_es_data(qc = sample_qc_tables))
     )
     expect_s3_class(tabl$sample, "datatables")
 
     expect_no_error(
       tabl <- key_metric_table(
-        .as_es_data(sample_qc_tables),
+        test_es_data(qc = sample_qc_tables),
         return_data = TRUE
       )
     )
@@ -800,7 +793,7 @@ test_that("Key metric tables handle missing metrics as expected", {
   )
 
   expect_equal(
-    key_metric_table(.as_es_data(partial_metrics), return_data = TRUE),
+    key_metric_table(test_es_data(qc = partial_metrics), return_data = TRUE),
     list(
       sample = structure(
         list(
@@ -826,7 +819,7 @@ test_that("Key metric tables handle missing metrics as expected", {
     )
   )
   expect_equal(
-    key_metric_table(.as_es_data(pool_metrics), return_data = TRUE),
+    key_metric_table(test_es_data(qc = pool_metrics), return_data = TRUE),
     list(
       sample = NULL,
       pool = structure(
@@ -842,11 +835,11 @@ test_that("Key metric tables handle missing metrics as expected", {
   )
 
   expect_equal(
-    key_metric_table(.as_es_data(), return_data = TRUE),
+    key_metric_table(test_es_data(), return_data = TRUE),
     list(sample = NULL, pool = NULL)
   )
   expect_equal(
-    key_metric_table(.as_es_data()),
+    key_metric_table(test_es_data()),
     list(pool = NULL, sample = NULL)
   )
 })

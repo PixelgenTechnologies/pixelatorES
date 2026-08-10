@@ -183,6 +183,30 @@ test_that("Sample aliases work as expected", {
   )
 })
 
+test_that("test_es_data fixtures work as expected", {
+  expect_s3_class(test_es_data(), "es_data")
+
+  prox <- data.frame(marker = "CD3")
+  expect_equal(test_es_data(proximity = prox)$proximity, prox)
+
+  qc <- list(read_stats = data.frame(n = 1))
+  expect_equal(test_es_data(qc = qc)$qc, qc)
+
+  samplesheet <- tibble(
+    sample = c("sample_1", "sample_2"),
+    sample_alias = c("S1", "S2"),
+    condition = c("A", "B")
+  )
+  object <- test_es_data(samplesheet = samplesheet)
+  expect_equal(
+    object$sample_aliases,
+    c(sample_1 = "S1", sample_2 = "S2")
+  )
+  expect_equal(object$effective_samplesheet, samplesheet)
+
+  expect_error(test_es_data(not_a_slot = 1))
+})
+
 test_that("Samplesheet extractors work as expected", {
   samplesheet <- tibble(
     sample = c("sample_1", "sample_2"),

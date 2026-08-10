@@ -31,12 +31,9 @@ test_that("Parameter tables work as expected", {
   ), row.names = c(NA, -2L), class = c(
     "tbl_df", "tbl", "data.frame"
   ))
-  es_data <- structure(
-    list(
-      params = params,
-      samplesheet = sample_sheet
-    ),
-    class = c("es_data", "list")
+  es_data <- test_es_data(
+    params = params,
+    samplesheet = sample_sheet
   )
 
   expect_equal(
