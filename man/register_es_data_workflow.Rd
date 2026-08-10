@@ -21,7 +21,8 @@ before the tabset (for example data ingestion).
 \item \code{sections}: non-empty list of tabset sections, each a list with \code{id},
 \code{title}, and \code{child}.
 Built-in workflows use paths relative to \verb{inst/quarto/}. Extension packages
-should register absolute paths from \code{system.file()}.
+should register absolute paths from \code{system.file()}. All referenced child
+paths must exist at registration time.
 }}
 
 \item{overwrite}{If \code{TRUE}, replace an existing registration for \code{name}.
