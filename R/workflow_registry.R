@@ -7,6 +7,59 @@
 #' @noRd
 .es_data_workflow_registry <- new.env(parent = emptyenv())
 
+#' Resolve a report child path for existence checks
+#'
+#' Absolute paths are returned unchanged. Relative paths are resolved against
+#' `inst/quarto/` in pixelatorES (built-in workflow convention).
+#'
+#' @param path A child document path.
+#'
+#' @return The path to check with [file.exists()].
+#'
+#' @noRd
+.resolve_es_workflow_report_path <- function(path) {
+  if (grepl("^(~|/|[A-Za-z]:[/\\\\]|\\\\\\\\)", path)) {
+    return(path)
+  }
+
+  quarto_root <- system.file("quarto", package = "pixelatorES")
+  if (!nzchar(quarto_root)) {
+    cli_abort("Could not locate installed {.pkg pixelatorES} Quarto directory.")
+  }
+
+  return(file.path(quarto_root, path))
+}
+
+#' Validate that report recipe child paths exist
+#'
+#' @param report A structurally valid report recipe.
+#'
+#' @return `report`, invisibly.
+#'
+#' @noRd
+.validate_es_workflow_report_paths <- function(report) {
+  paths <- c(
+    report$preamble,
+    vapply(report$sections, function(section) {
+      return(section$child)
+    }, character(1))
+  )
+  resolved <- vapply(paths, .resolve_es_workflow_report_path, character(1))
+  missing <- paths[!file.exists(resolved)]
+  if (length(missing) > 0) {
+    cli_abort(c(
+      "Report recipe references missing Quarto child documents.",
+      "x" = "Missing: {.val {unique(missing)}}.",
+      "i" = paste(
+        "Built-in workflows use paths relative to {.path inst/quarto/};",
+        "extension packages should register absolute paths from {.fn system.file}."
+      )
+    ))
+  }
+
+  return(invisible(report))
+}
+
 #' Validate an Experiment Summary report recipe
 #'
 #' @param report A report recipe list.
@@ -32,6 +85,7 @@
   if (is.null(report$preamble)) {
     cli_abort("{.arg report} must contain {.field preamble}.")
   }
+  # assert_vector(..., n) requires at least n elements (not exactly n).
   pixelatorR:::assert_vector(report$preamble, "character", n = 1)
   if (any(!nzchar(report$preamble))) {
     cli_abort("{.arg report$preamble} must not contain empty paths.")
@@ -71,6 +125,8 @@
       "x" = "Duplicated: {.val {duplicated_ids}}."
     ))
   }
+
+  .validate_es_workflow_report_paths(report)
 
   return(report)
 }
@@ -124,7 +180,8 @@
 #'   - `sections`: non-empty list of tabset sections, each a list with `id`,
 #'     `title`, and `child`.
 #'   Built-in workflows use paths relative to `inst/quarto/`. Extension packages
-#'   should register absolute paths from `system.file()`.
+#'   should register absolute paths from `system.file()`. All referenced child
+#'   paths must exist at registration time.
 #' @param overwrite If `TRUE`, replace an existing registration for `name`.
 #'   Defaults to `FALSE`.
 #'
