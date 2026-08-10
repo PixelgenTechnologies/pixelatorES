@@ -17,7 +17,7 @@ params:
   test_mode: FALSE
 ---
 
-```{r, child="preprocessing.qmd"}
+```{r, child="shared/preprocessing.qmd"}
 ```
 
 # 
@@ -26,32 +26,32 @@ params:
   
 ## Samples 
 
-```{r, child="samples.qmd"}
+```{r, child="shared/samples.qmd"}
 ```
 
 ## Quality metrics
 
-```{r, child="quality_metrics.qmd"}
+```{r, child="workflows/amplicon_demux/quality_metrics.qmd"}
 ```
 
 ## Cell annotation
 
-```{r, child="cell_annotation.qmd"}
+```{r, child="workflows/amplicon_demux/cell_annotation.qmd"}
 ```
 
 ## Abundance 
 
-```{r, child="abundance.qmd"}
+```{r, child="workflows/amplicon_demux/abundance.qmd"}
 ```
 
 ## Spatial metrics
 
-```{r, child="spatial.qmd"}
+```{r, child="workflows/amplicon_demux/spatial.qmd"}
 ```
 
 ## Run settings
 
-```{r, child="run_settings.qmd"}
+```{r, child="shared/run_settings.qmd"}
 ```
 
 
