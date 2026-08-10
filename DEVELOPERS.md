@@ -250,13 +250,27 @@ register_es_data_workflow(
 )
 ```
 
-Built-in workflows use paths relative to `inst/quarto/`. Extension packages should register absolute paths from `system.file()`.
+Built-in workflows use paths relative to `inst/quarto/`. Extension packages should register absolute paths from `system.file()`. All referenced child paths are checked for existence at registration time.
 
 Use `list_es_data_workflows()` to see what is registered and `get_es_workflow_report(name)` to inspect a report recipe.
 
 ### Consuming `es_data`
 
 Report code should treat `es_data` as the single source of truth: `component_*()` functions, `key_metric_table()`, and the `print_*()` helpers all take `es_data` as their first argument and pull the slots they need internally. When adding a new component, accept `es_data` and read from its slots rather than threading individual objects through the `.qmd` files.
+
+### Test fixtures with `test_es_data()`
+
+For unit tests of components and helpers, build lightweight `es_data` objects with [`test_es_data()`](R/es_data.R) instead of hand-rolling `structure(..., class = c("es_data", "list"))`. The helper wraps `new_es_data()` so the class and slot layout stay aligned with the real constructor, then overwrites the slots you pass:
+
+```r
+es <- test_es_data(
+  samplesheet = sample_sheet,
+  qc = qc_metrics_tables,
+  pxl_data_processed = pg_data
+)
+```
+
+Use this for partial or synthetic fixtures. Prefer `build_es_data(params)` when the test needs the full ingestion pipeline.
 
 ---
 
