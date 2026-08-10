@@ -4,25 +4,13 @@
 \alias{register_es_data_workflow}
 \title{Register an Experiment Summary workflow}
 \usage{
-register_es_data_workflow(name, extractors, report, overwrite = FALSE)
+register_es_data_workflow(name, extractors, overwrite = FALSE)
 }
 \arguments{
 \item{name}{A unique workflow identifier.}
 
 \item{extractors}{A zero-argument function returning a nested named list of
-extractor functions. The factory is called at registration time to verify
-that it returns a list.}
-
-\item{report}{A zero-argument function returning the report recipe used by
-the Quarto shell. The recipe is a named list with:
-\itemize{
-\item \code{preamble}: non-empty character vector of child document paths knitted
-before the tabset (for example data ingestion).
-\item \code{sections}: non-empty list of tabset sections, each a list with \code{id},
-\code{title}, and \code{child}.
-Built-in workflows use paths relative to \verb{inst/quarto/}. Extension packages
-should register absolute paths from \code{system.file()}.
-}}
+extractor functions.}
 
 \item{overwrite}{If \code{TRUE}, replace an existing registration for \code{name}.
 Defaults to \code{FALSE}.}
@@ -31,8 +19,7 @@ Defaults to \code{FALSE}.}
 \code{name}, invisibly.
 }
 \description{
-Registers a workflow identifier with its extractor factory and Quarto report
-recipe. Extension packages should call this from their \code{.onLoad()} hook.
-Workflows are the only supported way to build Experiment Summary data and
-render the report.
+Registers a workflow identifier with a zero-argument function that returns
+the nested extractor list used to build an \code{es_data} object. Extension
+packages should call this function from their \code{.onLoad()} hook.
 }

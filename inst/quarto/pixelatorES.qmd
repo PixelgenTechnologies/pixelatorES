@@ -1,6 +1,6 @@
 ---
 title: "PROXIOME EXPERIMENT SUMMARY"
-subtitle: "v0.12.1"
+subtitle: "v0.12.0"
 date: "`r Sys.Date()`"
 editor_options: 
   chunk_output_type: console
@@ -17,34 +17,42 @@ params:
   test_mode: FALSE
 ---
 
-```{r}
-#| label: setup_report
-#| include: false
-
-library(pixelatorES)
-report <- get_es_workflow_report(params$workflow)
+```{r, child="preprocessing.qmd"}
 ```
 
-```{r}
-#| label: preamble
-#| results: asis
-#| echo: false
+# 
 
-for (child in report$preamble) {
-  cat(knitr::knit_child(child, quiet = TRUE))
-}
+::: {.panel-tabset .nav-pills}
+  
+## Samples 
+
+```{r, child="samples.qmd"}
 ```
 
-```{r}
-#| label: sections
-#| results: asis
-#| echo: false
+## Quality metrics
 
-cat("\n# \n\n")
-cat("::: {.panel-tabset .nav-pills}\n\n")
-for (section in report$sections) {
-  cat("\n## ", section$title, "\n\n", sep = "")
-  cat(knitr::knit_child(section$child, quiet = TRUE))
-}
-cat("\n:::\n")
+```{r, child="quality_metrics.qmd"}
 ```
+
+## Cell annotation
+
+```{r, child="cell_annotation.qmd"}
+```
+
+## Abundance 
+
+```{r, child="abundance.qmd"}
+```
+
+## Spatial metrics
+
+```{r, child="spatial.qmd"}
+```
+
+## Run settings
+
+```{r, child="run_settings.qmd"}
+```
+
+
+:::

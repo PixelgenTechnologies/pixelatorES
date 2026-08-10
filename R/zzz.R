@@ -10,7 +10,6 @@
   register_es_data_workflow(
     name = "amplicon_demux",
     extractors = .amplicon_demux_extractors,
-    report = .amplicon_demux_report,
     overwrite = TRUE
   )
 
