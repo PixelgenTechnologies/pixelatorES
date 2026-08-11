@@ -26,6 +26,26 @@ diagnostics_to_tibble <- function(es_data) {
   return(diagnostics)
 }
 
+#' Label a diagnostic type
+#'
+#' Translates the internal diagnostic types to labels shown in the report.
+#'
+#' @param type A character vector of diagnostic types.
+#'
+#' @return A character vector of labels.
+#'
+#' @noRd
+#'
+.diagnostic_type_label <- function(type) {
+  labels <- c(
+    pxl_load = "PXL loading",
+    qc_load = "QC loading",
+    extractor = "Analysis step"
+  )
+
+  return(unname(labels[type]))
+}
+
 #' Find samples affected by diagnostics
 #'
 #' Finds sample aliases targeted by PXL or QC loading diagnostics. Diagnostics
@@ -124,15 +144,11 @@ format_sample_diagnostics_summary <- function(es_data) {
     return(NULL)
   }
 
-  type_labels <- c(
-    pxl_load = "PXL loading",
-    qc_load = "QC loading"
-  )
   lines <- paste0(
     "- **",
     diagnostics$target,
     "** (",
-    unname(type_labels[diagnostics$type]),
+    .diagnostic_type_label(diagnostics$type),
     "): ",
     diagnostics$message
   )
@@ -153,15 +169,13 @@ format_sample_diagnostics_summary <- function(es_data) {
 #'
 print_diagnostics_table <- function(es_data) {
   diagnostics <- diagnostics_to_tibble(es_data) %>%
+    mutate(type = .diagnostic_type_label(type)) %>%
     rename(
       "Type" = type,
       "Target" = target,
       "Message" = message
     ) %>%
-    style_table(
-      caption = "Build diagnostics",
-      interactive = FALSE
-    )
+    style_table(interactive = FALSE, escape = TRUE)
 
   return(diagnostics)
 }

@@ -251,9 +251,9 @@ test_es_data <- function(
         child = "workflows/amplicon_demux/spatial.qmd"
       ),
       list(
-        id = "run_settings",
-        title = "Run settings",
-        child = "shared/run_settings.qmd"
+        id = "run_info",
+        title = "Run info",
+        child = "shared/run_info.qmd"
       )
     )
   ))
