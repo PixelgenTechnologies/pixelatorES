@@ -65,7 +65,10 @@ print_metadata_table <-
   function(es_data) {
     pixelatorR:::assert_class(es_data, "es_data")
     sample_sheet <- es_data$samplesheet
-    if ("pool" %in% names(sample_sheet)) {
+    if (
+      "pool" %in% names(sample_sheet) &&
+        !is.null(es_data$pxl_data_processed)
+    ) {
       sample_sheet <- add_pct_of_pool_to_samplesheet(
         sample_sheet,
         es_data$pxl_data_processed
