@@ -508,7 +508,58 @@ test_es_data <- function(
     values[[alias]] <- parsed$value
   }
 
+  diagnostics <- append(
+    diagnostics,
+    .qc_stage_completeness_diagnostics(values, target_label)
+  )
+
   return(.new_es_data_extractor_result(values, diagnostics))
+}
+
+#' Flag QC stages missing relative to peers
+#'
+#' Compares the QC stages present for successfully loaded samples or pools. If
+#' any peer has a stage that another loaded entity lacks, a `qc_load`
+#' diagnostic is recorded for that entity. Entities with no QC files are
+#' excluded from the comparison.
+#'
+#' @param values Named list of successfully loaded QC groups, each keyed by
+#'   stage.
+#' @param target_label Label used in warning and diagnostic messages
+#'   (`"sample"` or `"pool"`).
+#'
+#' @return A list of `qc_load` diagnostics, one per incomplete entity.
+#'
+#' @noRd
+.qc_stage_completeness_diagnostics <- function(values, target_label) {
+  if (length(values) < 2) {
+    return(list())
+  }
+
+  peer_stages <- sort(unique(unlist(lapply(values, names), use.names = FALSE)))
+  diagnostics <- list()
+
+  for (alias in names(values)) {
+    missing_stages <- setdiff(peer_stages, names(values[[alias]]))
+    if (length(missing_stages) == 0) {
+      next
+    }
+
+    message <- paste0(
+      "Missing QC stages: ",
+      paste(missing_stages, collapse = ", "),
+      "."
+    )
+    cli::cli_warn(
+      "Incomplete QC data for {target_label} {.val {alias}}: {message}"
+    )
+    diagnostics <- append(
+      diagnostics,
+      list(.new_es_data_diagnostic("qc_load", alias, message))
+    )
+  }
+
+  return(diagnostics)
 }
 
 #' Extract formatted read statistics
