@@ -1,0 +1,53 @@
+
+```{r}
+#| label: run_info_diagnostics_setup
+eval_diagnostics <- length(es_data$diagnostics) > 0
+```
+
+```{r}
+#| label: run_info_diagnostics_intro
+#| eval: !expr eval_diagnostics
+#| results: 'asis'
+section_intro(
+  "Diagnostics",
+  paste(
+    "The report was generated with incomplete data. Each entry below describes",
+    "a sample, pool, or analysis step that could not be loaded or computed."
+  ),
+  3
+)
+```
+
+```{r}
+#| label: run_info_diagnostics_table
+#| eval: !expr eval_diagnostics
+
+# Print diagnostics recorded while building the report data
+print_diagnostics_table(es_data)
+```
+
+### Pixelator version
+
+```{r}
+#| label: run_info_version
+
+# Print Pixelator version
+print_pixelator_version(es_data)
+```
+
+### Run parameters
+
+```{r}
+#| label: run_info_params
+# Print parameters
+print_params(es_data)
+```
+
+### Session info
+
+```{r}
+#| label: run_info_session_info
+
+# Print session info
+print_session_info()
+```

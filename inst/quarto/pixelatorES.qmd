@@ -43,7 +43,9 @@ for (child in report$preamble) {
 cat("\n# \n\n")
 cat("::: {.panel-tabset .nav-pills}\n\n")
 for (section in report$sections) {
-  cat("\n## ", section$title, "\n\n", sep = "")
+  # Two newlines so the heading starts a new block even when the preceding
+  # child ends with a list or paragraph
+  cat("\n\n## ", section$title, "\n\n", sep = "")
   cat(knitr::knit_child(section$child, quiet = TRUE))
 }
 cat("\n:::\n")

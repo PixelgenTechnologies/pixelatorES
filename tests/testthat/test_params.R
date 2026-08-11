@@ -58,4 +58,24 @@ test_that("Parameter tables work as expected", {
   expect_no_error(print_metadata_table(es_data))
 
   expect_no_error(print_session_info())
+
+  hashed_sheet <- read_samplesheet(test_samplesheet(type = "hashing"))
+  hashed_es_data <- test_es_data(
+    samplesheet = hashed_sheet,
+    pxl_data_processed = NULL,
+    diagnostics = list(list(
+      type = "pxl_load",
+      target = "S1",
+      message = "No PXL file was found."
+    ))
+  )
+  hashed_table <- print_metadata_table(hashed_es_data)
+  expect_equal(
+    names(hashed_table$x$data),
+    c("Issues", "Pool", "Sample Alias", "Sample name", "Condition")
+  )
+  expect_equal(
+    hashed_table$x$data$Issues,
+    c("\u26A0", "", "", "")
+  )
 })
