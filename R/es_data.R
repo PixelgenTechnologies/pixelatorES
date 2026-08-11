@@ -87,11 +87,109 @@ new_es_data <- function(params) {
   return(object)
 }
 
+#' Build a lightweight `es_data` fixture for tests
+#'
+#' Creates an `es_data` object via [new_es_data()], then overwrites selected
+#' slots. Use this in package and downstream tests instead of hand-rolling
+#' `structure(..., class = c("es_data", "list"))`, so fixtures keep the real
+#' constructor's slots and class as `es_data` evolves.
+#'
+#' When `sample_aliases` is `NULL` and `samplesheet` has a `sample_alias`
+#' column, aliases are derived with the same helper used in production. When
+#' `effective_samplesheet` is `NULL` and `samplesheet` is provided, it defaults
+#' to `samplesheet`.
+#'
+#' @param samplesheet An Experiment Summary samplesheet, or `NULL`.
+#' @param sample_aliases A named character vector of sample (and pool) aliases,
+#'   or `NULL` to derive from `samplesheet` when possible.
+#' @param effective_samplesheet Samplesheet reduced to samples that loaded, or
+#'   `NULL` to default to `samplesheet` when provided.
+#' @param qc Nested list of formatted QC tables. Defaults to an empty list.
+#' @param qc_raw Raw QC data, or `NULL`.
+#' @param pxl_data Merged raw PXL data, or `NULL`.
+#' @param pxl_data_processed Processed Seurat object, or `NULL`.
+#' @param proximity Proximity scores, or `NULL`.
+#' @param file_paths Discovered input file paths, or `NULL`.
+#' @param params Experiment Summary parameters passed to [new_es_data()].
+#'   Defaults to an empty list (`workflow` defaults to `"amplicon_demux"`).
+#' @param diagnostics List of diagnostics. Defaults to an empty list.
+#' @param ... Named overrides for any other existing `es_data` slot (for
+#'   example `extractors`). Unknown names are an error.
+#'
+#' @return An `es_data` object suitable for unit tests.
+#'
+#' @examples
+#' es <- test_es_data()
+#' inherits(es, "es_data")
+#' prox <- data.frame(marker = "CD3")
+#' identical(test_es_data(proximity = prox)$proximity, prox)
+#'
+#' @export
+test_es_data <- function(
+  samplesheet = NULL,
+  sample_aliases = NULL,
+  effective_samplesheet = NULL,
+  qc = list(),
+  qc_raw = NULL,
+  pxl_data = NULL,
+  pxl_data_processed = NULL,
+  proximity = NULL,
+  file_paths = NULL,
+  params = list(),
+  diagnostics = list(),
+  ...
+) {
+  object <- new_es_data(params)
+
+  dots <- list(...)
+  if (length(dots) > 0) {
+    if (is.null(names(dots)) || any(!nzchar(names(dots)))) {
+      cli_abort("All {.arg ...} arguments must be named.")
+    }
+    unknown <- setdiff(names(dots), names(object))
+    if (length(unknown) > 0) {
+      cli_abort(c(
+        "{.arg ...} contains unknown {.cls es_data} slots.",
+        "x" = "Unknown: {.val {unknown}}.",
+        "i" = "Allowed slots: {.val {names(object)}}."
+      ))
+    }
+  }
+
+  object$samplesheet <- samplesheet
+  object$sample_aliases <- sample_aliases
+  object$effective_samplesheet <- effective_samplesheet
+  object$qc <- qc
+  object$qc_raw <- qc_raw
+  object$pxl_data <- pxl_data
+  object$pxl_data_processed <- pxl_data_processed
+  object$proximity <- proximity
+  object$file_paths <- file_paths
+  object$diagnostics <- diagnostics
+
+  for (nm in names(dots)) {
+    object[[nm]] <- dots[[nm]]
+  }
+
+  if (
+    is.null(object$sample_aliases) &&
+      !is.null(object$samplesheet) &&
+      "sample_alias" %in% names(object$samplesheet)
+  ) {
+    object$sample_aliases <- .sample_aliases_from_samplesheet(object$samplesheet)
+  }
+
+  if (is.null(object$effective_samplesheet) && !is.null(object$samplesheet)) {
+    object$effective_samplesheet <- object$samplesheet
+  }
+
+  return(object)
+}
+
 #' Extractor registry for the amplicon_demux workflow
 #'
 #' Nested named list of functions. Top-level names map to `es_data` slots;
-#' nested names under `qc` map to `es_data$qc$...`. Phase 1b replaces stubs
-#' with adapters around existing loaders and getters.
+#' nested names under `qc` map to `es_data$qc$...`.
 #'
 #' @return A nested named list of functions.
 #'
@@ -118,6 +216,47 @@ new_es_data <- function(params) {
   )
 
   return(extractors)
+}
+
+#' Report recipe for the amplicon_demux workflow
+#'
+#' Paths are relative to `inst/quarto/`.
+#'
+#' @return A report recipe list.
+#'
+#' @noRd
+.amplicon_demux_report <- function() {
+  return(list(
+    preamble = c("shared/preprocessing.qmd"),
+    sections = list(
+      list(id = "samples", title = "Samples", child = "shared/samples.qmd"),
+      list(
+        id = "quality_metrics",
+        title = "Quality metrics",
+        child = "workflows/amplicon_demux/quality_metrics.qmd"
+      ),
+      list(
+        id = "cell_annotation",
+        title = "Cell annotation",
+        child = "workflows/amplicon_demux/cell_annotation.qmd"
+      ),
+      list(
+        id = "abundance",
+        title = "Abundance",
+        child = "workflows/amplicon_demux/abundance.qmd"
+      ),
+      list(
+        id = "spatial",
+        title = "Spatial metrics",
+        child = "workflows/amplicon_demux/spatial.qmd"
+      ),
+      list(
+        id = "run_info",
+        title = "Run info",
+        child = "shared/run_info.qmd"
+      )
+    )
+  ))
 }
 
 #' Extract the experiment samplesheet
@@ -369,7 +508,58 @@ new_es_data <- function(params) {
     values[[alias]] <- parsed$value
   }
 
+  diagnostics <- append(
+    diagnostics,
+    .qc_stage_completeness_diagnostics(values, target_label)
+  )
+
   return(.new_es_data_extractor_result(values, diagnostics))
+}
+
+#' Flag QC stages missing relative to peers
+#'
+#' Compares the QC stages present for successfully loaded samples or pools. If
+#' any peer has a stage that another loaded entity lacks, a `qc_load`
+#' diagnostic is recorded for that entity. Entities with no QC files are
+#' excluded from the comparison.
+#'
+#' @param values Named list of successfully loaded QC groups, each keyed by
+#'   stage.
+#' @param target_label Label used in warning and diagnostic messages
+#'   (`"sample"` or `"pool"`).
+#'
+#' @return A list of `qc_load` diagnostics, one per incomplete entity.
+#'
+#' @noRd
+.qc_stage_completeness_diagnostics <- function(values, target_label) {
+  if (length(values) < 2) {
+    return(list())
+  }
+
+  peer_stages <- sort(unique(unlist(lapply(values, names), use.names = FALSE)))
+  diagnostics <- list()
+
+  for (alias in names(values)) {
+    missing_stages <- setdiff(peer_stages, names(values[[alias]]))
+    if (length(missing_stages) == 0) {
+      next
+    }
+
+    message <- paste0(
+      "Missing QC stages: ",
+      paste(missing_stages, collapse = ", "),
+      "."
+    )
+    cli::cli_warn(
+      "Incomplete QC data for {target_label} {.val {alias}}: {message}"
+    )
+    diagnostics <- append(
+      diagnostics,
+      list(.new_es_data_diagnostic("qc_load", alias, message))
+    )
+  }
+
+  return(diagnostics)
 }
 
 #' Extract formatted read statistics

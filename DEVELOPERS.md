@@ -204,37 +204,104 @@ Ingestion is resilient: a broken sample or missing QC file should not lose the w
 
 - An extractor can return an `es_data_extractor_result` (via the internal `.new_es_data_extractor_result(value, diagnostics)`) to hand back a **partial** value together with diagnostics — for example, PXL loading returns the samples that loaded plus `pxl_load` diagnostics for those that did not.
 - If an extractor throws instead, `run_es_data_extractors()` catches the error, records an `extractor` diagnostic, and leaves that slot `NULL` while continuing with the rest.
+- After QC groups load, relative stage completeness is checked within samples and within pools. If peers have a stage that another loaded entity lacks, a `qc_load` diagnostic is recorded for that entity while keeping its partial QC data.
 
 Each diagnostic (`.new_es_data_diagnostic()`) has a `type` (`"pxl_load"`, `"qc_load"`, or `"extractor"`), a `target` (a sample alias, pool id, or slot path such as `"qc$crossing_edges"`), and a human-readable `message`. Inspect them via `es_data$diagnostics`.
 
+On the report, diagnostics surface in two places:
+
+- **Samples**: a red callout lists sample/pool loading issues and analysis-step failures. Sample- or pool-targeted loading issues also add a warning marker in the metadata table.
+- **Run info**: the Diagnostics section lists every recorded diagnostic when any exist.
+
 ### Registering a workflow
 
-Workflows are stored in a package-local registry (`R/workflow_registry.R`). `params$workflow` selects one and defaults to `"amplicon_demux"`, which is registered when the package loads. An extension package can add its own from its `.onLoad()` hook:
+Workflows are stored in a package-local registry ([`R/workflow_registry.R`](R/workflow_registry.R)). `params$workflow` selects one and defaults to `"amplicon_demux"`, which is registered when the package loads. Each workflow registers:
+
+- `extractors`: a zero-argument factory returning the nested extractor list
+- `report`: a zero-argument factory returning the Quarto report recipe (`preamble` + `sections`)
+
+Extension packages should call `register_es_data_workflow()` from their `.onLoad()` hook:
 
 ```r
+.register_child <- function(...) {
+  system.file("quarto", ..., package = "myPackage", mustWork = TRUE)
+}
+
 register_es_data_workflow(
-  "my_workflow",
-  function() {
+  name = "my_workflow",
+  extractors = function() {
     list(
       samplesheet = my_extract_samplesheet,
-      pxl_data    = my_extract_pxl_data,
+      pxl_data = my_extract_pxl_data
       # ...
+    )
+  },
+  report = function() {
+    list(
+      preamble = .register_child("shared", "preprocessing.qmd"),
+      sections = list(
+        list(
+          id = "samples",
+          title = "Samples",
+          child = .register_child("shared", "samples.qmd")
+        ),
+        list(
+          id = "quality_metrics",
+          title = "Quality metrics",
+          child = .register_child("workflows", "my_workflow", "quality_metrics.qmd")
+        )
+      )
     )
   }
 )
 ```
 
-Use `list_es_data_workflows()` to see what is registered.
+Built-in workflows use paths relative to `inst/quarto/`. Extension packages should register absolute paths from `system.file()`. All referenced child paths are checked for existence at registration time.
+
+Use `list_es_data_workflows()` to see what is registered and `get_es_workflow_report(name)` to inspect a report recipe.
 
 ### Consuming `es_data`
 
 Report code should treat `es_data` as the single source of truth: `component_*()` functions, `key_metric_table()`, and the `print_*()` helpers all take `es_data` as their first argument and pull the slots they need internally. When adding a new component, accept `es_data` and read from its slots rather than threading individual objects through the `.qmd` files.
 
+### Test fixtures with `test_es_data()`
+
+For unit tests of components and helpers, build lightweight `es_data` objects with [`test_es_data()`](R/es_data.R) instead of hand-rolling `structure(..., class = c("es_data", "list"))`. The helper wraps `new_es_data()` so the class and slot layout stay aligned with the real constructor, then overwrites the slots you pass:
+
+```r
+es <- test_es_data(
+  samplesheet = sample_sheet,
+  qc = qc_metrics_tables,
+  pxl_data_processed = pg_data
+)
+```
+
+Use this for partial or synthetic fixtures. Prefer `build_es_data(params)` when the test needs the full ingestion pipeline.
+
 ---
 
 ## Quarto report rendering
 
-The ES report is built with Quarto (see `inst/quarto/`). Components return `ggplot` objects and/or `DT::datatables` objects from [`style_table()`](R/tables.R). To place them in the HTML report, `.qmd` chunks call helper functions that emit Quarto markdown via `cat()`.
+The ES report is built with Quarto (see `inst/quarto/`). `pixelatorES.qmd` is a thin dispatcher: it loads the registered report recipe for `params$workflow`, knits the preamble children, then emits the panel tabset from the recipe sections.
+
+### Quarto layout
+
+```text
+inst/quarto/
+  pixelatorES.qmd                 # dispatcher shell
+  shared/                         # reused across workflows
+    preprocessing.qmd
+    samples.qmd
+    run_info.qmd
+  workflows/
+    amplicon_demux/               # workflow-owned sections
+      quality_metrics.qmd
+      cell_annotation.qmd
+      abundance.qmd
+      spatial.qmd
+```
+
+Components return `ggplot` objects and/or `DT::datatables` objects from [`style_table()`](R/tables.R). To place them in the HTML report, `.qmd` chunks call helper functions that emit Quarto markdown via `cat()`.
 
 **Requirement:** any chunk that uses these helpers must set `#| results: 'asis'` so printed output is passed through as raw markdown/HTML rather than wrapped in a code block.
 
@@ -267,8 +334,6 @@ tabset_plotlist(plots, level = 5)
 - **`close`:** defaults to `TRUE`; the function opens and closes the tabset div.
 - **Use when:** a component returns multiple plots with no paired summary table, or tables are rendered separately.
 
-See `inst/quarto/quality_metrics.qmd` (sequencing saturation curves) and `inst/quarto/abundance.qmd`.
-
 ### `tabset_nested_plotlist()`
 
 Like `tabset_plotlist()`, but each list element may itself be a `list` of plots, producing nested tabsets.
@@ -285,8 +350,6 @@ close_tabset()
 ```
 
 - **Use when:** one table accompanies several plots that should be grouped in sub-tabs (e.g. cell recovery molecule-rank plots).
-
-See `inst/quarto/quality_metrics.qmd` (`qc_metrics_molrank_plot`) and `inst/quarto/spatial.qmd`.
 
 ### `tabset_figure_table()`
 
@@ -346,13 +409,14 @@ Formats a data frame as a non-interactive (or interactive) DT table for report e
 ### Adding a new component to the report
 
 1. Implement `component_*()` in [`R/components.R`](R/components.R) returning `ggplot` objects and/or `style_table()` output.
-2. In the appropriate `inst/quarto/*.qmd` file, add a chunk with `results: 'asis'`.
+2. In the appropriate section `.qmd` under `inst/quarto/shared/` or `inst/quarto/workflows/<id>/`, add a chunk with `results: 'asis'`.
 3. Choose a layout helper:
    - **One plot + one table** → `tabset_figure_table()` + `close_tabset()`
    - **Several plots, no table** → `tabset_plotlist()`
    - **Several plots + one table** → `tabset_figure_table(..., mode = "tabset_nested")` + `close_tabset()`
    - **Table or intro only** → `section_table()` / `section_intro()`
-4. Guard the chunk with `#| eval: !expr ...` when data may be absent (e.g. `!is.null(qc_metrics_tables$denoising)`).
+4. Guard the chunk with `#| eval: !expr ...` when data may be absent (e.g. `!is.null(es_data$qc$denoising)`).
+5. If the section is new for a workflow, add it to that workflow's registered report recipe.
 
 ---
 

@@ -1,8 +1,0 @@
-
-### Sample description
-
-```{r}
-#| label: samples
-#| results: 'asis'
-print_metadata_table(es_data)
-```

@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [0.13.0] 2026-08-10
+
+### Added
+
+- Workflows register a Quarto report recipe (`preamble` + `sections`) via `register_es_data_workflow()`, retrieved with `get_es_workflow_report()`. Child paths are validated for existence at registration.
+- `test_es_data()` helper for building lightweight `es_data` fixtures in tests and downstream packages.
+- Relative QC stage completeness diagnostics: samples or pools missing stages that peers have receive a `qc_load` diagnostic while keeping their partial QC data.
+- Samples page report-data callout listing loading and analysis-step diagnostics, with warning markers on samples affected by loading issues.
+- Run info tab (renamed from Run settings) with a conditional Diagnostics section.
+
+### Changed
+
+- Breaking: `register_es_data_workflow()` now requires a `report` factory. Callers that only registered extractors in 0.12.0 must supply a valid report recipe (`preamble` + `sections`).
+- The Quarto shell dispatches report sections from the registered workflow recipe. Shared children live under `inst/quarto/shared/`; workflow-owned children live under `inst/quarto/workflows/<id>/`.
+
+### Fixed
+
+- `print_metadata_table()` no longer requires `pxl_data_processed` for hashed experiments; `% of pool` is omitted when processed data is unavailable.
+
 ## [0.12.0] 2026-08-06
 
 ### Added

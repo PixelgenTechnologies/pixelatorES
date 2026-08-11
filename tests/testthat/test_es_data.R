@@ -183,6 +183,30 @@ test_that("Sample aliases work as expected", {
   )
 })
 
+test_that("test_es_data fixtures work as expected", {
+  expect_s3_class(test_es_data(), "es_data")
+
+  prox <- data.frame(marker = "CD3")
+  expect_equal(test_es_data(proximity = prox)$proximity, prox)
+
+  qc <- list(read_stats = data.frame(n = 1))
+  expect_equal(test_es_data(qc = qc)$qc, qc)
+
+  samplesheet <- tibble(
+    sample = c("sample_1", "sample_2"),
+    sample_alias = c("S1", "S2"),
+    condition = c("A", "B")
+  )
+  object <- test_es_data(samplesheet = samplesheet)
+  expect_equal(
+    object$sample_aliases,
+    c(sample_1 = "S1", sample_2 = "S2")
+  )
+  expect_equal(object$effective_samplesheet, samplesheet)
+
+  expect_error(test_es_data(not_a_slot = 1))
+})
+
 test_that("Samplesheet extractors work as expected", {
   samplesheet <- tibble(
     sample = c("sample_1", "sample_2"),
@@ -284,9 +308,17 @@ test_that("es_data diagnostics work as expected", {
 })
 
 test_that("es_data workflow registration works as expected", {
+  report <- list(
+    preamble = c("shared/preprocessing.qmd"),
+    sections = list(
+      list(id = "samples", title = "Samples", child = "shared/samples.qmd")
+    )
+  )
+
   register_es_data_workflow(
     "test_workflow",
     function() return(list(pxl_data = identity)),
+    report = function() return(report),
     overwrite = TRUE
   )
 
@@ -300,16 +332,19 @@ test_that("es_data workflow registration works as expected", {
     )$extractors,
     list(pxl_data = identity)
   )
+  expect_equal(get_es_workflow_report("test_workflow"), report)
   expect_error(
     register_es_data_workflow(
       "test_workflow",
-      function() return(list())
+      function() return(list()),
+      report = function() return(report)
     )
   )
 
   register_es_data_workflow(
     "test_workflow",
     function() return(list(proximity = identity)),
+    report = function() return(report),
     overwrite = TRUE
   )
   expect_equal(
@@ -318,6 +353,200 @@ test_that("es_data workflow registration works as expected", {
     )$extractors,
     list(proximity = identity)
   )
+})
+
+test_that("Workflow report recipes work as expected", {
+  report <- list(
+    preamble = c("shared/preprocessing.qmd"),
+    sections = list(
+      list(
+        id = "samples",
+        title = "Samples",
+        child = "shared/samples.qmd"
+      ),
+      list(
+        id = "quality_metrics",
+        title = "Quality metrics",
+        child = "workflows/amplicon_demux/quality_metrics.qmd"
+      )
+    )
+  )
+
+  register_es_data_workflow(
+    "test_report_workflow",
+    function() return(list(pxl_data = identity)),
+    report = function() return(report),
+    overwrite = TRUE
+  )
+  expect_equal(
+    get_es_workflow_report("test_report_workflow"),
+    report
+  )
+  expect_equal(
+    get_es_workflow_report("amplicon_demux"),
+    list(
+      preamble = c("shared/preprocessing.qmd"),
+      sections = list(
+        list(id = "samples", title = "Samples", child = "shared/samples.qmd"),
+        list(
+          id = "quality_metrics",
+          title = "Quality metrics",
+          child = "workflows/amplicon_demux/quality_metrics.qmd"
+        ),
+        list(
+          id = "cell_annotation",
+          title = "Cell annotation",
+          child = "workflows/amplicon_demux/cell_annotation.qmd"
+        ),
+        list(
+          id = "abundance",
+          title = "Abundance",
+          child = "workflows/amplicon_demux/abundance.qmd"
+        ),
+        list(
+          id = "spatial",
+          title = "Spatial metrics",
+          child = "workflows/amplicon_demux/spatial.qmd"
+        ),
+        list(
+          id = "run_info",
+          title = "Run info",
+          child = "shared/run_info.qmd"
+        )
+      )
+    )
+  )
+
+  amplicon_report <- get_es_workflow_report("amplicon_demux")
+  amplicon_paths <- c(
+    amplicon_report$preamble,
+    vapply(amplicon_report$sections, function(section) {
+      return(section$child)
+    }, character(1))
+  )
+  quarto_root <- system.file("quarto", package = "pixelatorES")
+  expect_true(nzchar(quarto_root))
+  expect_equal(
+    file.exists(file.path(quarto_root, amplicon_paths)),
+    rep(TRUE, length(amplicon_paths))
+  )
+
+  expect_error(
+    register_es_data_workflow(
+      "missing_path_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(
+          preamble = "shared/preprocessing.qmd",
+          sections = list(
+            list(
+              id = "samples",
+              title = "Samples",
+              child = "shared/does_not_exist.qmd"
+            )
+          )
+        ))
+      },
+      overwrite = TRUE
+    )
+  )
+
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(sections = list(
+          list(id = "samples", title = "Samples", child = "samples.qmd")
+        )))
+      },
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(
+          preamble = character(),
+          sections = list(
+            list(id = "samples", title = "Samples", child = "samples.qmd")
+          )
+        ))
+      },
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(
+          preamble = "preprocessing.qmd",
+          sections = list()
+        ))
+      },
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(
+          preamble = "preprocessing.qmd",
+          sections = list(
+            list(id = "samples", title = "Samples")
+          )
+        ))
+      },
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_workflow",
+      function() return(list()),
+      report = function() {
+        return(list(
+          preamble = "shared/preprocessing.qmd",
+          sections = list(
+            list(
+              id = "samples",
+              title = "Samples",
+              child = "shared/samples.qmd"
+            ),
+            list(
+              id = "samples",
+              title = "Again",
+              child = "shared/samples.qmd"
+            )
+          )
+        ))
+      },
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_extractors_workflow",
+      function() return("not a list"),
+      report = function() return(report),
+      overwrite = TRUE
+    )
+  )
+  expect_error(
+    register_es_data_workflow(
+      "bad_report_factory_workflow",
+      function() return(list()),
+      report = report,
+      overwrite = TRUE
+    )
+  )
+  expect_error(get_es_workflow_report("unknown_workflow"))
 })
 
 test_that("Partial input failures work as expected", {

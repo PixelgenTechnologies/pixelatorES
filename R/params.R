@@ -52,10 +52,11 @@ print_params <-
 
 #' Print metadata table
 #'
-#' Print the experiment meta data in a table format.
+#' Print the experiment meta data in a table format. For hashed experiments,
+#' `% of pool` is included only when processed PXL data is available.
 #'
-#' @param es_data An `es_data` object containing the samplesheet and processed
-#'   PXL data.
+#' @param es_data An `es_data` object containing the samplesheet. Processed
+#'   PXL data is used when present to compute pool fractions.
 #'
 #' @return A printed table of sample metadata.
 #'
@@ -65,15 +66,31 @@ print_metadata_table <-
   function(es_data) {
     pixelatorR:::assert_class(es_data, "es_data")
     sample_sheet <- es_data$samplesheet
-    if ("pool" %in% names(sample_sheet)) {
+    if (
+      "pool" %in% names(sample_sheet) &&
+        !is.null(es_data$pxl_data_processed)
+    ) {
       sample_sheet <- add_pct_of_pool_to_samplesheet(
         sample_sheet,
         es_data$pxl_data_processed
       )
     }
 
+    if (has_sample_diagnostics(es_data)) {
+      flagged_aliases <- sample_diagnostic_targets(es_data)
+      sample_sheet <- sample_sheet %>%
+        mutate(
+          Issues = ifelse(
+            sample_alias %in% flagged_aliases,
+            "\u26A0",
+            ""
+          )
+        )
+    }
+
     sample_sheet %>%
       select(
+        any_of("Issues"),
         "Pool" = any_of("pool"),
         "Sample Alias" = sample_alias,
         "Sample name" = sample,
