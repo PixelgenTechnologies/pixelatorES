@@ -7,8 +7,6 @@ on:
       - "v*.*.*"
   pull_request:
     branches: ["main", "dev"]
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -16,6 +14,13 @@ permissions:
   actions: write
   contents: read
   packages: write
+
+# A merge to main followed by a version tag triggers two runs for the same
+# commit. Pushing overlapping image tags to the same registry from parallel
+# runs makes ghcr.io reject blob requests with 403, so queue them instead.
+concurrency:
+  group: build-docker-image-${{ github.sha }}
+  cancel-in-progress: false
 
 jobs:
   build-and-push-container:
@@ -51,7 +56,7 @@ jobs:
 
       # Build base image
       - name: Build base Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: build
@@ -77,7 +82,7 @@ jobs:
 
       # Push base image
       - name: Push base Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: build
