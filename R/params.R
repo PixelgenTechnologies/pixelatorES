@@ -72,8 +72,21 @@ print_metadata_table <-
       )
     }
 
+    if (has_sample_diagnostics(es_data)) {
+      flagged_aliases <- sample_diagnostic_targets(es_data)
+      sample_sheet <- sample_sheet %>%
+        mutate(
+          Issues = ifelse(
+            sample_alias %in% flagged_aliases,
+            "\u26A0",
+            ""
+          )
+        )
+    }
+
     sample_sheet %>%
       select(
+        any_of("Issues"),
         "Pool" = any_of("pool"),
         "Sample Alias" = sample_alias,
         "Sample name" = sample,
