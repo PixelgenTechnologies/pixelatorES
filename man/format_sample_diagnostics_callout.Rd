@@ -2,7 +2,7 @@
 % Please edit documentation in R/diagnostics.R
 \name{format_sample_diagnostics_callout}
 \alias{format_sample_diagnostics_callout}
-\title{Format a sample diagnostics callout for an Experiment Summary}
+\title{Format a report diagnostics callout for an Experiment Summary}
 \usage{
 format_sample_diagnostics_callout(es_data)
 }
@@ -10,11 +10,10 @@ format_sample_diagnostics_callout(es_data)
 \item{es_data}{An \code{es_data} object.}
 }
 \value{
-A single Markdown string holding the callout, or \code{NULL} when no
-samples are affected.
+A single Markdown string holding the callout, or \code{NULL} when there
+is nothing to show.
 }
 \description{
-Formats the sample- and pool-targeted loading diagnostics as a red Quarto
-callout listing every affected sample, so that a partially loaded experiment
-is immediately visible on the Samples page.
+Formats loading and analysis-step diagnostics as a red Quarto callout so
+incomplete report data is immediately visible on the Samples page.
 }

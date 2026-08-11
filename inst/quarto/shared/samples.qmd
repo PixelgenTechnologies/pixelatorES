@@ -1,7 +1,7 @@
 
 ```{r}
 #| label: samples_diagnostics_callout
-#| eval: !expr has_sample_diagnostics(es_data)
+#| eval: !expr length(es_data$diagnostics) > 0
 #| results: 'asis'
 cat(format_sample_diagnostics_callout(es_data))
 ```

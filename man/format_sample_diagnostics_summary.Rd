@@ -2,7 +2,7 @@
 % Please edit documentation in R/diagnostics.R
 \name{format_sample_diagnostics_summary}
 \alias{format_sample_diagnostics_summary}
-\title{Format sample diagnostics for an Experiment Summary}
+\title{Format report diagnostics for an Experiment Summary}
 \usage{
 format_sample_diagnostics_summary(es_data)
 }
@@ -10,9 +10,10 @@ format_sample_diagnostics_summary(es_data)
 \item{es_data}{An \code{es_data} object.}
 }
 \value{
-A single Markdown string, or \code{NULL} when no samples are affected.
+A single Markdown string, or \code{NULL} when there is nothing to show.
 }
 \description{
-Formats sample- and pool-targeted loading diagnostics as Markdown lines for
-display on the Samples page.
+Formats sample- and pool-targeted loading diagnostics together with
+analysis-step (\code{extractor}) diagnostics as Markdown lines for the Samples
+page callout.
 }

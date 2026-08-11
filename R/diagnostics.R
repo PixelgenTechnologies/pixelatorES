@@ -106,29 +106,30 @@ has_sample_diagnostics <- function(es_data) {
   return(length(sample_diagnostic_targets(es_data)) > 0)
 }
 
-#' Format sample diagnostics for an Experiment Summary
+#' Format report diagnostics for an Experiment Summary
 #'
-#' Formats sample- and pool-targeted loading diagnostics as Markdown lines for
-#' display on the Samples page.
+#' Formats sample- and pool-targeted loading diagnostics together with
+#' analysis-step (`extractor`) diagnostics as Markdown lines for the Samples
+#' page callout.
 #'
 #' @param es_data An `es_data` object.
 #'
-#' @return A single Markdown string, or `NULL` when no samples are affected.
+#' @return A single Markdown string, or `NULL` when there is nothing to show.
 #'
 #' @export
 #'
 format_sample_diagnostics_summary <- function(es_data) {
   pixelatorR:::assert_class(es_data, "es_data")
 
-  sample_sheet <- es_data$samplesheet
-  if (is.null(sample_sheet) || nrow(sample_sheet) == 0) {
+  diagnostics <- diagnostics_to_tibble(es_data)
+  if (nrow(diagnostics) == 0) {
     return(NULL)
   }
 
-  diagnostics <- diagnostics_to_tibble(es_data) %>%
-    filter(type %in% c("pxl_load", "qc_load"))
-
-  if ("pool" %in% names(sample_sheet)) {
+  sample_sheet <- es_data$samplesheet
+  if (is.null(sample_sheet) || nrow(sample_sheet) == 0) {
+    valid_targets <- character()
+  } else if ("pool" %in% names(sample_sheet)) {
     valid_targets <- c(
       as.character(sample_sheet$sample_alias),
       as.character(sample_sheet$pool)
@@ -138,7 +139,13 @@ format_sample_diagnostics_summary <- function(es_data) {
   }
 
   diagnostics <- diagnostics %>%
-    filter(target %in% valid_targets)
+    filter(
+      type == "extractor" |
+        (
+          type %in% c("pxl_load", "qc_load") &
+            target %in% valid_targets
+        )
+    )
 
   if (nrow(diagnostics) == 0) {
     return(NULL)
@@ -146,26 +153,25 @@ format_sample_diagnostics_summary <- function(es_data) {
 
   lines <- paste0(
     "- **",
-    diagnostics$target,
+    htmltools::htmlEscape(diagnostics$target),
     "** (",
     .diagnostic_type_label(diagnostics$type),
     "): ",
-    diagnostics$message
+    htmltools::htmlEscape(diagnostics$message)
   )
 
   return(paste(lines, collapse = "\n"))
 }
 
-#' Format a sample diagnostics callout for an Experiment Summary
+#' Format a report diagnostics callout for an Experiment Summary
 #'
-#' Formats the sample- and pool-targeted loading diagnostics as a red Quarto
-#' callout listing every affected sample, so that a partially loaded experiment
-#' is immediately visible on the Samples page.
+#' Formats loading and analysis-step diagnostics as a red Quarto callout so
+#' incomplete report data is immediately visible on the Samples page.
 #'
 #' @param es_data An `es_data` object.
 #'
-#' @return A single Markdown string holding the callout, or `NULL` when no
-#'   samples are affected.
+#' @return A single Markdown string holding the callout, or `NULL` when there
+#'   is nothing to show.
 #'
 #' @export
 #'
@@ -176,11 +182,21 @@ format_sample_diagnostics_callout <- function(es_data) {
     return(NULL)
   }
 
+  body <- paste(
+    "Some input data could not be loaded or some analyses could not be",
+    "completed, and the metrics in this report are therefore incomplete."
+  )
+  if (has_sample_diagnostics(es_data)) {
+    body <- paste(
+      body,
+      "Affected samples are marked with a warning symbol in the table below."
+    )
+  }
+
   callout <- paste0(
-    '::: {.callout-important title="Sample loading issues"}\n',
-    "Some samples could not be fully loaded, and the metrics in this report ",
-    "are therefore incomplete. Affected samples are marked with a warning ",
-    "symbol in the table below.\n\n",
+    '::: {.callout-important title="Report data issues"}\n',
+    body,
+    "\n\n",
     summary_lines,
     "\n\nSee the Diagnostics section under Run info for the complete list.\n",
     ":::\n"
