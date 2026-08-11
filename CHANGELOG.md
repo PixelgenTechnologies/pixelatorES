@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Relative QC stage completeness diagnostics: samples or pools missing stages that peers have receive a `qc_load` diagnostic while keeping their partial QC data.
+- Samples page report-data callout listing loading and analysis-step diagnostics, with warning markers on samples affected by loading issues.
+- Run info tab (renamed from Run settings) with a conditional Diagnostics section.
+
+### Fixed
+
+- `print_metadata_table()` no longer requires `pxl_data_processed` for hashed experiments; `% of pool` is omitted when processed data is unavailable.
+
 ## [0.13.0] 2026-08-10
 
 ### Added

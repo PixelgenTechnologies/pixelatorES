@@ -7,12 +7,13 @@
 print_metadata_table(es_data)
 }
 \arguments{
-\item{es_data}{An \code{es_data} object containing the samplesheet and processed
-PXL data.}
+\item{es_data}{An \code{es_data} object containing the samplesheet. Processed
+PXL data is used when present to compute pool fractions.}
 }
 \value{
 A printed table of sample metadata.
 }
 \description{
-Print the experiment meta data in a table format.
+Print the experiment meta data in a table format. For hashed experiments,
+\verb{\% of pool} is included only when processed PXL data is available.
 }

@@ -52,10 +52,11 @@ print_params <-
 
 #' Print metadata table
 #'
-#' Print the experiment meta data in a table format.
+#' Print the experiment meta data in a table format. For hashed experiments,
+#' `% of pool` is included only when processed PXL data is available.
 #'
-#' @param es_data An `es_data` object containing the samplesheet and processed
-#'   PXL data.
+#' @param es_data An `es_data` object containing the samplesheet. Processed
+#'   PXL data is used when present to compute pool fractions.
 #'
 #' @return A printed table of sample metadata.
 #'

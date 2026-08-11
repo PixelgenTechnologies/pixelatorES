@@ -204,8 +204,14 @@ Ingestion is resilient: a broken sample or missing QC file should not lose the w
 
 - An extractor can return an `es_data_extractor_result` (via the internal `.new_es_data_extractor_result(value, diagnostics)`) to hand back a **partial** value together with diagnostics — for example, PXL loading returns the samples that loaded plus `pxl_load` diagnostics for those that did not.
 - If an extractor throws instead, `run_es_data_extractors()` catches the error, records an `extractor` diagnostic, and leaves that slot `NULL` while continuing with the rest.
+- After QC groups load, relative stage completeness is checked within samples and within pools. If peers have a stage that another loaded entity lacks, a `qc_load` diagnostic is recorded for that entity while keeping its partial QC data.
 
 Each diagnostic (`.new_es_data_diagnostic()`) has a `type` (`"pxl_load"`, `"qc_load"`, or `"extractor"`), a `target` (a sample alias, pool id, or slot path such as `"qc$crossing_edges"`), and a human-readable `message`. Inspect them via `es_data$diagnostics`.
+
+On the report, diagnostics surface in two places:
+
+- **Samples**: a red callout lists sample/pool loading issues and analysis-step failures. Sample- or pool-targeted loading issues also add a warning marker in the metadata table.
+- **Run info**: the Diagnostics section lists every recorded diagnostic when any exist.
 
 ### Registering a workflow
 
@@ -286,7 +292,7 @@ inst/quarto/
   shared/                         # reused across workflows
     preprocessing.qmd
     samples.qmd
-    run_settings.qmd
+    run_info.qmd
   workflows/
     amplicon_demux/               # workflow-owned sections
       quality_metrics.qmd
