@@ -1,23 +1,9 @@
 
 ```{r}
-#| label: samples_diagnostics_setup
-eval_sample_diagnostics <- has_sample_diagnostics(es_data)
-sample_diagnostics_summary <- format_sample_diagnostics_summary(es_data)
-```
-
-```{r}
-#| label: samples_diagnostics_banner
-#| eval: !expr eval_sample_diagnostics
+#| label: samples_diagnostics_callout
+#| eval: !expr has_sample_diagnostics(es_data)
 #| results: 'asis'
-section_intro(
-  "Sample loading issues",
-  paste(
-    "Some samples could not be fully loaded. Affected samples are marked",
-    "with a warning symbol in the table below. See the Diagnostics section",
-    "under Run info for the complete list."
-  ),
-  3
-)
+cat(format_sample_diagnostics_callout(es_data))
 ```
 
 ### Sample description
@@ -26,15 +12,4 @@ section_intro(
 #| label: samples
 #| results: 'asis'
 print_metadata_table(es_data)
-```
-
-```{r}
-#| label: samples_diagnostics_summary
-#| eval: !expr eval_sample_diagnostics
-#| results: 'asis'
-section_intro(
-  "Issue details",
-  sample_diagnostics_summary,
-  3
-)
 ```

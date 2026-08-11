@@ -156,6 +156,39 @@ format_sample_diagnostics_summary <- function(es_data) {
   return(paste(lines, collapse = "\n"))
 }
 
+#' Format a sample diagnostics callout for an Experiment Summary
+#'
+#' Formats the sample- and pool-targeted loading diagnostics as a red Quarto
+#' callout listing every affected sample, so that a partially loaded experiment
+#' is immediately visible on the Samples page.
+#'
+#' @param es_data An `es_data` object.
+#'
+#' @return A single Markdown string holding the callout, or `NULL` when no
+#'   samples are affected.
+#'
+#' @export
+#'
+format_sample_diagnostics_callout <- function(es_data) {
+  summary_lines <- format_sample_diagnostics_summary(es_data)
+
+  if (is.null(summary_lines)) {
+    return(NULL)
+  }
+
+  callout <- paste0(
+    '::: {.callout-important title="Sample loading issues"}\n',
+    "Some samples could not be fully loaded, and the metrics in this report ",
+    "are therefore incomplete. Affected samples are marked with a warning ",
+    "symbol in the table below.\n\n",
+    summary_lines,
+    "\n\nSee the Diagnostics section under Run info for the complete list.\n",
+    ":::\n"
+  )
+
+  return(callout)
+}
+
 #' Print Experiment Summary diagnostics
 #'
 #' Prints all diagnostics recorded while building an `es_data` object as a
