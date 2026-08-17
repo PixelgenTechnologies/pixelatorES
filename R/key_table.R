@@ -355,7 +355,7 @@ get_coreness_data <-
       summarise(
         mean_coreness = weighted.mean(coreness, nodes),
         percent_dangling_nodes = percent_nodes[coreness == 1],
-        percent_well_connected_nodes = sum(percent_nodes[coreness %in% 3:5])
+        percent_well_connected_nodes = sum(percent_nodes[coreness >= 3])
       )
 
     k_coreness_summary_sample <-
@@ -1077,7 +1077,7 @@ key_metric_definitions <-
     indicating the proportion of nodes that have a coreness of 1.",
     "median_percent_well_connected_nodes", "Median % well connected nodes", 1,
     "Median percentage of well-connected nodes in the sample,
-    indicating the proportion of nodes that have a coreness of 3-5.",
+    indicating the proportion of nodes that have a coreness of 3 or higher.",
     "top3_fraction", "Top 3 % counts", 1e-2,
     "Percentage of counts attributed to the top 3 abundant markers in the sample.",
     "top5_fraction", "Top 5 % counts", 1e-2,

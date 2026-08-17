@@ -1223,14 +1223,14 @@ component_coreness <-
         y_label = "Dangling nodes [%]", round = 2
       )
 
-    # Well-connected nodes - % coreness 3-5
+    # Well-connected nodes - % coreness >= 3
     p3 <-
       qc_metrics_tables$coreness$component_summary %>%
       plot_violin(
         x = "sample_alias",
         y = "percent_well_connected_nodes",
         title = "Percent well-connected nodes",
-        subtitle = "The percentage of nodes with coreness 3-5",
+        subtitle = "The percentage of nodes with coreness 3 or higher",
         y_label = "Well-connected nodes [%]",
         round = 2
       )
