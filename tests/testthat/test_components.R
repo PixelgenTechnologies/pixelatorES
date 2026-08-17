@@ -106,7 +106,19 @@ for (data_type in data_types) {
     expect_no_error(
       ggplot2::ggplot_build(component$plot)
     )
+    expect_s3_class(component$degree_distribution_plot, "ggplot")
+    expect_no_error(
+      ggplot2::ggplot_build(component$degree_distribution_plot)
+    )
     expect_s3_class(component$table, "datatables")
+
+    # component_node_degree without degree distribution data
+    no_degree_es_data <- es_data
+    no_degree_es_data$qc$degree_distribution <- NULL
+    expect_no_error(
+      component <- component_node_degree(no_degree_es_data)
+    )
+    expect_null(component$degree_distribution_plot)
 
     # component_node_edge_count
     expect_no_error(
@@ -511,3 +523,65 @@ for (data_type in data_types) {
     }
   })
 }
+
+test_that("The degree distribution plot caps the degree axis", {
+  degree_distribution <-
+    tibble::tibble(
+      sample_alias = "S1",
+      umi_type = "umi1",
+      degree = c(1:40, 137L),
+      n = c(rep(100, 40), 7)
+    ) %>%
+    mutate(percent_nodes = 100 * n / sum(n))
+
+  plot_labels <- function(plot) {
+    built <- ggplot2::ggplot_build(plot)
+
+    return(unlist(lapply(built$data, function(layer_data) layer_data$label)))
+  }
+
+  p <- pixelatorES:::.plot_degree_distribution(degree_distribution)
+
+  expect_s3_class(p, "ggplot")
+
+  built <- ggplot2::ggplot_build(p)
+  expect_lt(max(built$layout$panel_params[[1]]$x.range), 45)
+
+  labels <- plot_labels(p)
+  expect_length(labels, 1)
+  expect_match(labels, "7 UMIs")
+  expect_match(labels, "max degree 137")
+
+  # Without outliers, no text box is added
+  p_no_outliers <-
+    degree_distribution %>%
+    filter(degree <= 40) %>%
+    pixelatorES:::.plot_degree_distribution()
+
+  expect_length(plot_labels(p_no_outliers), 0)
+
+  # The cap is configurable
+  labels_low_cap <-
+    degree_distribution %>%
+    pixelatorES:::.plot_degree_distribution(degree_cap = 20) %>%
+    plot_labels()
+
+  expect_match(labels_low_cap, "Degree > 20")
+  expect_match(labels_low_cap, "2,007 UMIs")
+})
+
+test_that("The degree distribution plot accepts pooled data", {
+  degree_distribution <-
+    tibble::tibble(
+      pool = "pool1",
+      umi_type = c(rep("umi1", 3), rep("umi2", 3)),
+      degree = rep(1:3, 2),
+      n = c(300, 200, 100, 250, 150, 50)
+    ) %>%
+    mutate(percent_nodes = 100 * n / sum(n))
+
+  p <- pixelatorES:::.plot_degree_distribution(degree_distribution)
+
+  expect_s3_class(p, "ggplot")
+  expect_no_error(ggplot2::ggplot_build(p))
+})

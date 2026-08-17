@@ -4,15 +4,20 @@
 \alias{component_node_degree}
 \title{Create the component node degree}
 \usage{
-component_node_degree(es_data)
+component_node_degree(es_data, degree_cap = 40)
 }
 \arguments{
 \item{es_data}{An \code{es_data} object containing processed PXL data and sample aliases.}
+
+\item{degree_cap}{The highest degree shown in the degree distribution plot. UMIs
+with a higher degree are summarized in a text box instead.}
 }
 \value{
-A list containing a plot and a table summarizing the mean node degree.
+A list containing a plot of the mean node degree, a plot of the degree
+distribution, and a table summarizing the mean node degree. The degree
+distribution plot is \code{NULL} when no degree distribution data is available.
 }
 \description{
 This function creates a component that visualizes the mean node degree for A and B nodes
-for each sample.
+for each sample, together with the distribution of UMI degrees.
 }

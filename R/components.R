@@ -1007,20 +1007,132 @@ component_node_edge_count <-
     ))
   }
 
+#' Plot the UMI degree distribution
+#'
+#' The degree distribution is strongly skewed towards low degrees, and a few
+#' extreme outliers are enough to make the bulk of the distribution
+#' unreadable. The degree axis is therefore capped at `degree_cap`, and UMIs
+#' above the cap are instead summarized in a text box per sample.
+#'
+#' @param degree_distribution A degree distribution table with `umi_type`,
+#'   `degree`, `n`, and `percent_nodes` columns, grouped by either
+#'   `sample_alias` or `pool`.
+#' @param sample_levels A named character vector of sample and pool aliases.
+#' @param degree_cap The highest degree shown on the degree axis.
+#'
+#' @return A ggplot object showing the degree distribution for each sample.
+#'
+#' @noRd
+#'
+.plot_degree_distribution <-
+  function(
+    degree_distribution,
+    sample_levels = NULL,
+    degree_cap = 40
+  ) {
+    pixelatorR:::assert_class(degree_distribution, "data.frame")
+    pixelatorR:::assert_vector(sample_levels, "character", n = 1, allow_null = TRUE)
+    pixelatorR:::assert_single_value(degree_cap, type = "numeric")
+
+    if ("pool" %in% names(degree_distribution)) {
+      degree_distribution <-
+        degree_distribution %>%
+        rename(sample_alias = pool)
+    }
+
+    plot_data <-
+      degree_distribution %>%
+      set_sample_levels(sample_levels) %>%
+      mutate(umi_type = str_to_upper(umi_type))
+
+    p <-
+      plot_data %>%
+      ggplot(aes(degree, percent_nodes, color = umi_type)) +
+      geom_line() +
+      geom_point(size = 0.5) +
+      facet_wrap(~sample_alias) +
+      coord_cartesian(xlim = c(0, degree_cap)) +
+      scale_x_continuous(breaks = seq(0, degree_cap, 10)) +
+      scale_color_manual(values = c("#496389", "#C86584")) +
+      theme_bw() +
+      theme(panel.grid = element_blank()) +
+      labs(
+        x = "UMI degree",
+        y = "UMIs [%]",
+        color = "UMI type",
+        title = "UMI degree distribution",
+        subtitle = paste0("Degrees above ", degree_cap, " are not shown")
+      )
+
+    outlier_data <-
+      plot_data %>%
+      group_by(sample_alias, umi_type) %>%
+      summarise(
+        n_outliers = sum(n[degree > degree_cap]),
+        max_degree = max(degree),
+        .groups = "drop"
+      ) %>%
+      filter(max_degree > degree_cap)
+
+    if (nrow(outlier_data) == 0) {
+      return(p)
+    }
+
+    outlier_labels <-
+      outlier_data %>%
+      mutate(
+        outlier_label = paste0(
+          umi_type, ": ", scales::comma(n_outliers, accuracy = 1),
+          " UMI", ifelse(n_outliers == 1, "", "s"),
+          ", max degree ", max_degree
+        )
+      ) %>%
+      group_by(sample_alias) %>%
+      summarise(
+        outlier_label = paste(
+          c(paste0("Degree > ", degree_cap, ":"), outlier_label),
+          collapse = "\n"
+        ),
+        .groups = "drop"
+      )
+
+    p <-
+      p +
+      geom_label(
+        data = outlier_labels,
+        aes(x = Inf, y = Inf, label = outlier_label),
+        inherit.aes = FALSE,
+        hjust = 1,
+        vjust = 1,
+        size = 2.5,
+        lineheight = 1.1,
+        fill = "white"
+      ) +
+      # Leave room for the text box above the distribution
+      scale_y_continuous(expand = expansion(mult = c(0.05, 0.2)))
+
+    return(p)
+  }
+
 #' Create the component node degree
 #'
 #' This function creates a component that visualizes the mean node degree for A and B nodes
-#' for each sample.
+#' for each sample, together with the distribution of UMI degrees.
 #'
 #' @param es_data An `es_data` object containing processed PXL data and sample aliases.
+#' @param degree_cap The highest degree shown in the degree distribution plot. UMIs
+#' with a higher degree are summarized in a text box instead.
 #'
-#' @return A list containing a plot and a table summarizing the mean node degree.
+#' @return A list containing a plot of the mean node degree, a plot of the degree
+#' distribution, and a table summarizing the mean node degree. The degree
+#' distribution plot is `NULL` when no degree distribution data is available.
 #'
 #' @export
 #'
 component_node_degree <-
-  function(es_data) {
+  function(es_data, degree_cap = 40) {
     pixelatorR:::assert_class(es_data, "es_data")
+    pixelatorR:::assert_single_value(degree_cap, type = "numeric")
     object <- es_data$pxl_data_processed
     sample_levels <- es_data$sample_aliases
 
@@ -1054,6 +1166,19 @@ component_node_degree <-
         palette = yes_no_palette
       )
 
+    degree_distribution <- es_data$qc$degree_distribution
+
+    p_degree_distribution <-
+      if (is.null(degree_distribution)) {
+        NULL
+      } else {
+        .plot_degree_distribution(
+          degree_distribution,
+          sample_levels = sample_levels,
+          degree_cap = degree_cap
+        )
+      }
+
     tabl <-
       plot_data %>%
       group_by(sample_alias, type) %>%
@@ -1072,6 +1197,7 @@ component_node_degree <-
 
     return(list(
       plot = p,
+      degree_distribution_plot = p_degree_distribution,
       table = tabl
     ))
   }

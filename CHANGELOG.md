@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `component_node_degree()` returns a `degree_distribution_plot` with the UMI degree distribution per sample. The degree axis is capped at `degree_cap` (40 by default), and samples with degrees above the cap get a text box stating the number of UMIs above the cap and the maximum degree.
 
 ## [0.13.0] 2026-08-10
 
