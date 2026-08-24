@@ -4,7 +4,7 @@
 \alias{extract_sample_qc_metrics}
 \title{Extract sample QC metrics from a list of sample QC data}
 \usage{
-extract_sample_qc_metrics(sample_qc_metrics, vars, stage = "graph")
+extract_sample_qc_metrics(sample_qc_metrics, vars, stage = "graph", stages)
 }
 \arguments{
 \item{sample_qc_metrics}{A list of sample QC data, where each element is a named list
@@ -13,6 +13,10 @@ containing QC metrics for a sample.}
 \item{vars}{A character vector of variable names to extract from the sample QC data.}
 
 \item{stage}{A character string specifying the stage from which to extract the metrics.}
+
+\item{stages}{A stage vocabulary list with \code{all}, \code{pool}, and \code{pxl_preference}, as returned by
+\code{\link[=get_es_workflow_stages]{get_es_workflow_stages()}}, required. \code{all} decides which stages are legal, and \code{pool} decides
+whether \code{stage} is read from pool-level QC. Inside a build pass \code{es_data$stages}.}
 }
 \value{
 A tibble with the sample alias and the specified metrics.

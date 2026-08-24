@@ -701,7 +701,8 @@ component_cell_recovery <-
           max_size_theshold =
             "component_size_max_filtering_threshold"
         ),
-        "graph"
+        "graph",
+        stages = es_data$stages
       )
 
     plot_data1 <- set_sample_levels(plot_data1, sample_levels)
@@ -754,7 +755,8 @@ component_cell_recovery <-
           max_size_theshold =
             "component_size_max_filtering_threshold"
         ),
-        "graph"
+        "graph",
+        stages = es_data$stages
       )
 
     plot_data <-
@@ -920,7 +922,8 @@ component_node_edge_count <-
           edge_count_pre_recovery = "edge_count_pre_recovery",
           edge_count_post_recovery = "edge_count_post_recovery"
         ),
-        "graph"
+        "graph",
+        stages = es_data$stages
       )
 
     plot_data <- set_sample_levels(plot_data, sample_levels)

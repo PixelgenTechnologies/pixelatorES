@@ -11,9 +11,10 @@ new_es_data(params)
 absent, it defaults to \code{"amplicon_demux"}.}
 }
 \value{
-An \code{es_data} object with extractors attached but data slots unfilled.
-\code{sample_aliases}, \code{effective_samplesheet}, and \code{file_paths} start as \code{NULL}
-and are set during loading once the samplesheet is known.
+An \code{es_data} object with the workflow's stage vocabulary and
+extractors attached but data slots unfilled. \code{sample_aliases},
+\code{effective_samplesheet}, and \code{file_paths} start as \code{NULL} and are set
+during loading once the samplesheet is known.
 }
 \description{
 \code{es_data} is the single data object passed through Experiment Summary

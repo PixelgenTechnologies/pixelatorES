@@ -170,8 +170,9 @@ All Experiment Summary preprocessing flows through a single `es_data` object. Th
 | `qc` | Nested list of formatted QC tables (`qc$read_stats`, `qc$crossing_edges`, ...). |
 | `pxl_data_processed` | The processed Seurat object (normalized, clustered, annotated). |
 | `proximity` | Proximity scores. |
+| `stages` | The workflow's pipeline stage vocabulary (`all`, `pool`, `pxl_preference`), used for input file discovery. |
 
-`new_es_data(params)` builds the empty shell and attaches the workflow's extractors; the data slots start `NULL`/empty and are filled during the build.
+`new_es_data(params)` builds the empty shell and attaches the workflow's extractors and stage vocabulary; the data slots start `NULL`/empty and are filled during the build.
 
 ### Extractors and the build
 
@@ -195,7 +196,7 @@ list(
 
 1. `new_es_data(params)` creates the shell and looks up the workflow extractors.
 2. The samplesheet is read first — this is the **only** hard requirement, and a failure here stops the build.
-3. `sample_aliases` is derived from the samplesheet with `.sample_aliases_from_samplesheet()`, and input files are discovered once with `get_file_paths()`.
+3. `sample_aliases` is derived from the samplesheet with `.sample_aliases_from_samplesheet()`, and input files are discovered once with `get_file_paths()`, using the object's stage vocabulary.
 4. `run_es_data_extractors()` walks the extractor tree depth-first and fills the remaining slots. Once `pxl_data_processed` is set, the raw `pxl_data` slot is cleared to release memory.
 
 ### Soft-fail diagnostics
@@ -219,6 +220,7 @@ Workflows are stored in a package-local registry ([`R/workflow_registry.R`](R/wo
 
 - `extractors`: a zero-argument factory returning the nested extractor list
 - `report`: a zero-argument factory returning the Quarto report recipe (`preamble` + `sections`)
+- `stages`: a zero-argument factory returning the pipeline stage vocabulary (`all` + `pool` + `pxl_preference`)
 
 Extension packages should call `register_es_data_workflow()` from their `.onLoad()` hook:
 
@@ -252,13 +254,24 @@ register_es_data_workflow(
         )
       )
     )
+  },
+  stages = function() {
+    list(
+      all = c("amplicon", "demux", "graph", "analysis"),
+      pool = c("amplicon", "demux"),
+      pxl_preference = c("graph", "analysis")
+    )
   }
 )
 ```
 
 Built-in workflows use paths relative to `inst/quarto/`. Extension packages should register absolute paths from `system.file()`. All referenced child paths are checked for existence at registration time.
 
-Use `list_es_data_workflows()` to see what is registered and `get_es_workflow_report(name)` to inspect a report recipe.
+The stage vocabulary is the source of truth for file discovery: `all` lists every stage the pipeline can emit, `pool` marks the stages whose QC files are pool-level, and `pxl_preference` orders the stages when several produce a PXL file for the same sample. `pool` may be empty, but both it and `pxl_preference` must be subsets of `all`.
+
+`find_stage()`, `get_file_paths()`, and `extract_sample_qc_metrics()` all take a **required** `stages` argument — there is no package-level default, so no caller can silently inherit another workflow's vocabulary. Inside a build, pass `es_data$stages` (`find_stage()` takes just `es_data$stages$all`); elsewhere, ask the registry with `get_es_workflow_stages(workflow)`.
+
+Use `list_es_data_workflows()` to see what is registered, `get_es_workflow_report(name)` to inspect a report recipe, and `get_es_workflow_stages(name)` to inspect a stage vocabulary.
 
 ### Consuming `es_data`
 

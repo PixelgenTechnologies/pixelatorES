@@ -51,9 +51,10 @@
 #' @param params A list of Experiment Summary parameters. If `workflow` is
 #'   absent, it defaults to `"amplicon_demux"`.
 #'
-#' @return An `es_data` object with extractors attached but data slots unfilled.
-#'   `sample_aliases`, `effective_samplesheet`, and `file_paths` start as `NULL`
-#'   and are set during loading once the samplesheet is known.
+#' @return An `es_data` object with the workflow's stage vocabulary and
+#'   extractors attached but data slots unfilled. `sample_aliases`,
+#'   `effective_samplesheet`, and `file_paths` start as `NULL` and are set
+#'   during loading once the samplesheet is known.
 #'
 #' @keywords internal
 new_es_data <- function(params) {
@@ -79,6 +80,7 @@ new_es_data <- function(params) {
       qc = list(),
       pxl_data_processed = NULL,
       proximity = NULL,
+      stages = get_es_workflow_stages(workflow),
       extractors = .get_es_data_extractors(workflow)
     ),
     class = c("es_data", "list")
@@ -114,7 +116,7 @@ new_es_data <- function(params) {
 #'   Defaults to an empty list (`workflow` defaults to `"amplicon_demux"`).
 #' @param diagnostics List of diagnostics. Defaults to an empty list.
 #' @param ... Named overrides for any other existing `es_data` slot (for
-#'   example `extractors`). Unknown names are an error.
+#'   example `stages` or `extractors`). Unknown names are an error.
 #'
 #' @return An `es_data` object suitable for unit tests.
 #'
@@ -256,6 +258,32 @@ test_es_data <- function(
         child = "shared/run_info.qmd"
       )
     )
+  ))
+}
+
+#' Pipeline stage vocabulary for the amplicon_demux workflow
+#'
+#' Stage names emitted by nf-core/pixelator, the subset whose QC files are
+#' pool-level, and the order in which stages are preferred when several
+#' produce a PXL file for the same sample.
+#'
+#' @return A stage vocabulary list.
+#'
+#' @noRd
+.amplicon_demux_stages <- function() {
+  return(list(
+    all = c(
+      "amplicon", "collapse",
+      "demux", "denoise",
+      "graph", "analysis",
+      "sample_calling",
+      "post_analysis", "layout"
+    ),
+    pool = c(
+      "amplicon", "collapse",
+      "demux", "graph"
+    ),
+    pxl_preference = c("graph", "analysis", "post_analysis", "layout")
   ))
 }
 
@@ -881,8 +909,9 @@ build_es_data <- function(params) {
 
 #' Discover and store input file paths for an `es_data` object
 #'
-#' Calls [get_file_paths()] once after the samplesheet is available. Duplicate
-#' PXL matches are omitted for the affected sample and recorded as diagnostics.
+#' Calls [get_file_paths()] once after the samplesheet is available, using the
+#' workflow's stage vocabulary. Duplicate PXL matches are omitted for the
+#' affected sample and recorded as diagnostics.
 #'
 #' @param object An `es_data` object with `samplesheet` filled.
 #'
@@ -893,7 +922,8 @@ build_es_data <- function(params) {
   file_paths <- get_file_paths(
     data_folder = object$params$data_folder,
     sample_sheet = object$samplesheet,
-    on_duplicate_samples = "omit"
+    on_duplicate_samples = "omit",
+    stages = object$stages
   )
 
   duplicate_samples <- attr(file_paths, "duplicate_data_samples")
@@ -1059,6 +1089,15 @@ build_es_data <- function(params) {
       "tibble with",
       n_scores,
       if (n_scores == 1) "proximity score" else "proximity scores"
+    ))
+  }
+
+  if (slot == "stages") {
+    n_stages <- length(value$all)
+    return(paste(
+      "workflow vocabulary with",
+      n_stages,
+      if (n_stages == 1) "stage" else "stages"
     ))
   }
 

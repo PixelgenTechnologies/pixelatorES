@@ -4,7 +4,7 @@
 \alias{register_es_data_workflow}
 \title{Register an Experiment Summary workflow}
 \usage{
-register_es_data_workflow(name, extractors, report, overwrite = FALSE)
+register_es_data_workflow(name, extractors, report, stages, overwrite = FALSE)
 }
 \arguments{
 \item{name}{A unique workflow identifier.}
@@ -25,6 +25,18 @@ should register absolute paths from \code{system.file()}. All referenced child
 paths must exist at registration time.
 }}
 
+\item{stages}{A zero-argument function returning the pipeline stage
+vocabulary used for input file discovery. The vocabulary is a named list
+with:
+\itemize{
+\item \code{all}: non-empty character vector of every stage the pipeline can emit.
+\item \code{pool}: character vector of stages whose QC files are pool-level. May be
+empty for pipelines without pool-level QC.
+\item \code{pxl_preference}: non-empty character vector of stages ordered by
+preference when several stages produce a PXL file for a sample.
+\code{pool} and \code{pxl_preference} must be subsets of \code{all}.
+}}
+
 \item{overwrite}{If \code{TRUE}, replace an existing registration for \code{name}.
 Defaults to \code{FALSE}.}
 }
@@ -32,8 +44,8 @@ Defaults to \code{FALSE}.}
 \code{name}, invisibly.
 }
 \description{
-Registers a workflow identifier with its extractor factory and Quarto report
-recipe. Extension packages should call this from their \code{.onLoad()} hook.
-Workflows are the only supported way to build Experiment Summary data and
-render the report.
+Registers a workflow identifier with its extractor factory, Quarto report
+recipe, and pipeline stage vocabulary. Extension packages should call this
+from their \code{.onLoad()} hook. Workflows are the only supported way to build
+Experiment Summary data and render the report.
 }

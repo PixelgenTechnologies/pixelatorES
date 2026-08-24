@@ -4,12 +4,16 @@
 \alias{find_stage}
 \title{Find pixelator stage of file}
 \usage{
-find_stage(filepath, allow_unknown = FALSE)
+find_stage(filepath, allow_unknown = FALSE, stages)
 }
 \arguments{
 \item{filepath}{A file path}
 
 \item{allow_unknown}{Whether to allow unknown stages (default: FALSE)}
+
+\item{stages}{A character vector of legal stage names, required. Inside a
+build pass \code{es_data$stages$all}; elsewhere use
+\code{get_es_workflow_stages(workflow)$all}.}
 }
 \value{
 The name of the stage it comes from

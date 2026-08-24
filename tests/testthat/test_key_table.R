@@ -12,7 +12,8 @@ for (data_type in data_types) {
     data_paths <-
       get_file_paths(
         data_folder = test_data_folder(type = data_type),
-        sample_sheet = sample_sheet
+        sample_sheet = sample_sheet,
+        stages = amplicon_stages()
       )
 
     sample_qc_metrics <-

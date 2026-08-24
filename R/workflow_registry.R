@@ -2,10 +2,15 @@
 #'
 #' Mutable package-local registry mapping workflow identifiers to workflow
 #' definitions. Each definition contains zero-argument factory functions for
-#' extractors and the report recipe.
+#' extractors, the report recipe, and the pipeline stage vocabulary.
 #'
 #' @noRd
 .es_data_workflow_registry <- new.env(parent = emptyenv())
+
+#' Required elements of a workflow stage vocabulary
+#'
+#' @noRd
+.es_workflow_stage_fields <- c("all", "pool", "pxl_preference")
 
 #' Resolve a report child path for existence checks
 #'
@@ -162,12 +167,91 @@
   return(invisible(extractors))
 }
 
+#' Validate an Experiment Summary workflow stage vocabulary
+#'
+#' @param stages A stage vocabulary list.
+#'
+#' @return The validated `stages`.
+#'
+#' @noRd
+.validate_es_workflow_stages <- function(stages) {
+  pixelatorR:::assert_class(stages, "list")
+  if (is.null(names(stages)) || any(!nzchar(names(stages)))) {
+    cli_abort("{.arg stages} must be a named list.")
+  }
+
+  missing <- setdiff(.es_workflow_stage_fields, names(stages))
+  if (length(missing) > 0) {
+    cli_abort(c(
+      "{.arg stages} is missing required elements.",
+      "x" = "Missing: {.val {missing}}.",
+      "i" = "Required elements: {.val {.es_workflow_stage_fields}}."
+    ))
+  }
+
+  unexpected <- setdiff(names(stages), .es_workflow_stage_fields)
+  if (length(unexpected) > 0) {
+    cli_abort(c(
+      "{.arg stages} contains unexpected elements.",
+      "x" = "Unexpected: {.val {unexpected}}.",
+      "i" = "Allowed elements: {.val {.es_workflow_stage_fields}}."
+    ))
+  }
+
+  # assert_vector(..., n) requires at least n elements (not exactly n), so
+  # n = 0 admits an empty `pool` for pipelines without pool-level QC.
+  pixelatorR:::assert_vector(stages$all, "character", n = 1)
+  pixelatorR:::assert_vector(stages$pool, "character", n = 0)
+  pixelatorR:::assert_vector(stages$pxl_preference, "character", n = 1)
+
+  for (field in .es_workflow_stage_fields) {
+    field_label <- paste0("stages$", field)
+    if (any(!nzchar(stages[[field]]))) {
+      cli_abort("{.arg {field_label}} must not contain empty stage names.")
+    }
+    if (anyDuplicated(stages[[field]]) > 0) {
+      duplicated_stages <- unique(stages[[field]][duplicated(stages[[field]])])
+      cli_abort(c(
+        "{.arg {field_label}} contains duplicated stages.",
+        "x" = "Duplicated: {.val {duplicated_stages}}."
+      ))
+    }
+  }
+
+  for (field in c("pool", "pxl_preference")) {
+    field_label <- paste0("stages$", field)
+    unknown <- setdiff(stages[[field]], stages$all)
+    if (length(unknown) > 0) {
+      cli_abort(c(
+        "{.arg {field_label}} contains stages missing from {.field all}.",
+        "x" = "Unknown: {.val {unknown}}."
+      ))
+    }
+  }
+
+  return(stages)
+}
+
+#' Validate a workflow stage factory
+#'
+#' @param stages A zero-argument function returning a stage vocabulary.
+#'
+#' @return `stages`, invisibly.
+#'
+#' @noRd
+.validate_es_workflow_stages_factory <- function(stages) {
+  pixelatorR:::assert_class(stages, "function")
+  .validate_es_workflow_stages(stages())
+
+  return(invisible(stages))
+}
+
 #' Register an Experiment Summary workflow
 #'
-#' Registers a workflow identifier with its extractor factory and Quarto report
-#' recipe. Extension packages should call this from their `.onLoad()` hook.
-#' Workflows are the only supported way to build Experiment Summary data and
-#' render the report.
+#' Registers a workflow identifier with its extractor factory, Quarto report
+#' recipe, and pipeline stage vocabulary. Extension packages should call this
+#' from their `.onLoad()` hook. Workflows are the only supported way to build
+#' Experiment Summary data and render the report.
 #'
 #' @param name A unique workflow identifier.
 #' @param extractors A zero-argument function returning a nested named list of
@@ -182,6 +266,15 @@
 #'   Built-in workflows use paths relative to `inst/quarto/`. Extension packages
 #'   should register absolute paths from `system.file()`. All referenced child
 #'   paths must exist at registration time.
+#' @param stages A zero-argument function returning the pipeline stage
+#'   vocabulary used for input file discovery. The vocabulary is a named list
+#'   with:
+#'   - `all`: non-empty character vector of every stage the pipeline can emit.
+#'   - `pool`: character vector of stages whose QC files are pool-level. May be
+#'     empty for pipelines without pool-level QC.
+#'   - `pxl_preference`: non-empty character vector of stages ordered by
+#'     preference when several stages produce a PXL file for a sample.
+#'   `pool` and `pxl_preference` must be subsets of `all`.
 #' @param overwrite If `TRUE`, replace an existing registration for `name`.
 #'   Defaults to `FALSE`.
 #'
@@ -192,12 +285,14 @@ register_es_data_workflow <- function(
   name,
   extractors,
   report,
+  stages,
   overwrite = FALSE
 ) {
   pixelatorR:::assert_single_value(name, "string")
   pixelatorR:::assert_single_value(overwrite, "bool")
   .validate_es_workflow_extractors(extractors)
   .validate_es_workflow_report_factory(report)
+  .validate_es_workflow_stages_factory(stages)
 
   if (
     !overwrite &&
@@ -208,7 +303,7 @@ register_es_data_workflow <- function(
 
   assign(
     name,
-    list(extractors = extractors, report = report),
+    list(extractors = extractors, report = report, stages = stages),
     envir = .es_data_workflow_registry
   )
 
@@ -228,7 +323,7 @@ list_es_data_workflows <- function() {
 #'
 #' @param name A workflow identifier.
 #'
-#' @return A list with `extractors` and `report`.
+#' @return A list with `extractors`, `report`, and `stages`.
 #'
 #' @noRd
 .get_es_workflow_definition <- function(name) {
@@ -272,4 +367,19 @@ list_es_data_workflows <- function() {
 #' @export
 get_es_workflow_report <- function(name) {
   return(.get_es_workflow_definition(name)$report())
+}
+
+#' Get the pipeline stage vocabulary for a registered workflow
+#'
+#' Returns the stage vocabulary registered for `name`. It drives input file
+#' discovery: which stage names are legal, which stages carry pool-level QC,
+#' and how PXL files are preferred when several stages produce one.
+#'
+#' @param name A workflow identifier.
+#'
+#' @return A stage vocabulary list with `all`, `pool`, and `pxl_preference`.
+#'
+#' @export
+get_es_workflow_stages <- function(name) {
+  return(.get_es_workflow_definition(name)$stages())
 }

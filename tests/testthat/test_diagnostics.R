@@ -181,7 +181,8 @@ test_that("Relative QC stage completeness diagnostics work as expected", {
   file.remove(file.path(data_folder, "graph", "pool2.report.json"))
   file_paths <- get_file_paths(
     data_folder = data_folder,
-    sample_sheet = sample_sheet
+    sample_sheet = sample_sheet,
+    stages = amplicon_stages()
   )
 
   expect_warning(
@@ -270,7 +271,8 @@ test_that("Relative QC stage completeness diagnostics work as expected", {
   default_sheet <- read_samplesheet(test_samplesheet(type = "default"))
   default_paths <- get_file_paths(
     data_folder = test_data_folder(type = "default"),
-    sample_sheet = default_sheet
+    sample_sheet = default_sheet,
+    stages = amplicon_stages()
   )
   default_result <- pixelatorES:::.read_qc_groups_soft(
     files = default_paths$qc_files,
