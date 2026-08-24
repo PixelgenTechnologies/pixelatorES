@@ -151,7 +151,7 @@ devtools::test(filter = "component|key_table")
 
 ## The `es_data` ingestion system
 
-All Experiment Summary preprocessing flows through a single `es_data` object. The report calls `build_es_data(params)` once, and every child `.qmd` and every `component_*()` function reads what it needs from that object. The code lives in [`R/es_data.R`](R/es_data.R) and [`R/workflow_registry.R`](R/workflow_registry.R).
+All Experiment Summary preprocessing flows through a single `es_data` object. The report calls `build_es_data(params)` once, and every child `.qmd` and every `component_*()` function reads what it needs from that object. The code lives in [`R/es_data.R`](R/es_data.R) (the object and its extractor implementations), [`R/workflow_registry.R`](R/workflow_registry.R) (the registry), and [`R/workflow_amplicon_demux.R`](R/workflow_amplicon_demux.R) (the built-in workflow's three factories).
 
 ### The `es_data` object
 
@@ -216,7 +216,7 @@ On the report, diagnostics surface in two places:
 
 ### Registering a workflow
 
-Workflows are stored in a package-local registry ([`R/workflow_registry.R`](R/workflow_registry.R)). `params$workflow` selects one and defaults to `"amplicon_demux"`, which is registered when the package loads. Each workflow registers:
+Workflows are stored in a package-local registry ([`R/workflow_registry.R`](R/workflow_registry.R)). `params$workflow` selects one and defaults to `"amplicon_demux"`, which is registered from `.onLoad()` in [`R/zzz.R`](R/zzz.R) with the factories from [`R/workflow_amplicon_demux.R`](R/workflow_amplicon_demux.R). Keep one `R/workflow_<id>.R` file per workflow; R does not allow subdirectories under `R/`. Each workflow registers:
 
 - `extractors`: a zero-argument factory returning the nested extractor list
 - `report`: a zero-argument factory returning the Quarto report recipe (`preamble` + `sections`)
