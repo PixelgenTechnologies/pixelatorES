@@ -8,16 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Workflows register a pipeline stage vocabulary (`all` + `pool` + `pxl_preference`) via `register_es_data_workflow()`, retrieved with `get_es_workflow_stages()`.
-- `es_data$stages` slot holding the registering workflow's stage vocabulary, attached by `new_es_data()`.
-
 ### Changed
 
-- Breaking: `register_es_data_workflow()` now requires a `stages` factory. Callers registering a workflow in 0.13.0 must supply a stage vocabulary whose `pool` and `pxl_preference` are subsets of `all`.
-- Breaking: `find_stage()`, `get_file_paths()`, and `extract_sample_qc_metrics()` take a required `stages` argument. File discovery during a build follows `es_data$stages`, so a workflow's PXL stage preference and pool-level stages are no longer hardcoded. Callers outside a build should pass `get_es_workflow_stages(workflow)` (or its `$all` element for `find_stage()`).
-- Breaking: removed the internal `pipeline_stages` and `pipeline_pool_stages` constants. There is no package-level stage vocabulary any more; stages belong to the registering workflow.
+- Breaking: stage vocabularies are workflow-owned — `register_es_data_workflow()` and discovery helpers require `stages`, read via `get_es_workflow_stages()`.
 
 ## [0.13.0] 2026-08-10
 
