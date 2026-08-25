@@ -46,7 +46,7 @@ Defaults to an empty list (\code{workflow} defaults to \code{"amplicon_demux"}).
 \item{diagnostics}{List of diagnostics. Defaults to an empty list.}
 
 \item{...}{Named overrides for any other existing \code{es_data} slot (for
-example \code{extractors}). Unknown names are an error.}
+example \code{stages} or \code{extractors}). Unknown names are an error.}
 }
 \value{
 An \code{es_data} object suitable for unit tests.

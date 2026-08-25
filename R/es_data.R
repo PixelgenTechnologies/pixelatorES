@@ -51,9 +51,10 @@
 #' @param params A list of Experiment Summary parameters. If `workflow` is
 #'   absent, it defaults to `"amplicon_demux"`.
 #'
-#' @return An `es_data` object with extractors attached but data slots unfilled.
-#'   `sample_aliases`, `effective_samplesheet`, and `file_paths` start as `NULL`
-#'   and are set during loading once the samplesheet is known.
+#' @return An `es_data` object with the workflow's stage vocabulary and
+#'   extractors attached but data slots unfilled. `sample_aliases`,
+#'   `effective_samplesheet`, and `file_paths` start as `NULL` and are set
+#'   during loading once the samplesheet is known.
 #'
 #' @keywords internal
 new_es_data <- function(params) {
@@ -79,6 +80,7 @@ new_es_data <- function(params) {
       qc = list(),
       pxl_data_processed = NULL,
       proximity = NULL,
+      stages = get_es_workflow_stages(workflow),
       extractors = .get_es_data_extractors(workflow)
     ),
     class = c("es_data", "list")
@@ -114,7 +116,7 @@ new_es_data <- function(params) {
 #'   Defaults to an empty list (`workflow` defaults to `"amplicon_demux"`).
 #' @param diagnostics List of diagnostics. Defaults to an empty list.
 #' @param ... Named overrides for any other existing `es_data` slot (for
-#'   example `extractors`). Unknown names are an error.
+#'   example `stages` or `extractors`). Unknown names are an error.
 #'
 #' @return An `es_data` object suitable for unit tests.
 #'
@@ -184,79 +186,6 @@ test_es_data <- function(
   }
 
   return(object)
-}
-
-#' Extractor registry for the amplicon_demux workflow
-#'
-#' Nested named list of functions. Top-level names map to `es_data` slots;
-#' nested names under `qc` map to `es_data$qc$...`.
-#'
-#' @return A nested named list of functions.
-#'
-#' @noRd
-.amplicon_demux_extractors <- function() {
-  extractors <- list(
-    samplesheet = .extract_samplesheet,
-    pxl_data = .extract_pxl_data,
-    effective_samplesheet = .extract_effective_samplesheet,
-    qc_raw = .extract_qc_raw,
-    qc = list(
-      read_stats = .extract_read_stats,
-      sample_hash_stats = .extract_sample_hash_stats,
-      seq_saturation = .extract_seq_saturation,
-      crossing_edges = .extract_crossing_edges,
-      degree_distribution = .extract_degree_distribution,
-      denoising = .extract_denoising,
-      denoising_detail = .extract_denoising_detail,
-      coreness = .extract_coreness,
-      top_markers = .extract_top_markers
-    ),
-    pxl_data_processed = .extract_pxl_data_processed,
-    proximity = .extract_proximity
-  )
-
-  return(extractors)
-}
-
-#' Report recipe for the amplicon_demux workflow
-#'
-#' Paths are relative to `inst/quarto/`.
-#'
-#' @return A report recipe list.
-#'
-#' @noRd
-.amplicon_demux_report <- function() {
-  return(list(
-    preamble = c("shared/preprocessing.qmd"),
-    sections = list(
-      list(id = "samples", title = "Samples", child = "shared/samples.qmd"),
-      list(
-        id = "quality_metrics",
-        title = "Quality metrics",
-        child = "workflows/amplicon_demux/quality_metrics.qmd"
-      ),
-      list(
-        id = "cell_annotation",
-        title = "Cell annotation",
-        child = "workflows/amplicon_demux/cell_annotation.qmd"
-      ),
-      list(
-        id = "abundance",
-        title = "Abundance",
-        child = "workflows/amplicon_demux/abundance.qmd"
-      ),
-      list(
-        id = "spatial",
-        title = "Spatial metrics",
-        child = "workflows/amplicon_demux/spatial.qmd"
-      ),
-      list(
-        id = "run_info",
-        title = "Run info",
-        child = "shared/run_info.qmd"
-      )
-    )
-  ))
 }
 
 #' Extract the experiment samplesheet
@@ -881,8 +810,9 @@ build_es_data <- function(params) {
 
 #' Discover and store input file paths for an `es_data` object
 #'
-#' Calls [get_file_paths()] once after the samplesheet is available. Duplicate
-#' PXL matches are omitted for the affected sample and recorded as diagnostics.
+#' Calls [get_file_paths()] once after the samplesheet is available, using the
+#' workflow's stage vocabulary. Duplicate PXL matches are omitted for the
+#' affected sample and recorded as diagnostics.
 #'
 #' @param object An `es_data` object with `samplesheet` filled.
 #'
@@ -893,7 +823,8 @@ build_es_data <- function(params) {
   file_paths <- get_file_paths(
     data_folder = object$params$data_folder,
     sample_sheet = object$samplesheet,
-    on_duplicate_samples = "omit"
+    on_duplicate_samples = "omit",
+    stages = object$stages
   )
 
   duplicate_samples <- attr(file_paths, "duplicate_data_samples")
@@ -1059,6 +990,15 @@ build_es_data <- function(params) {
       "tibble with",
       n_scores,
       if (n_scores == 1) "proximity score" else "proximity scores"
+    ))
+  }
+
+  if (slot == "stages") {
+    n_stages <- length(value$all)
+    return(paste(
+      "workflow vocabulary with",
+      n_stages,
+      if (n_stages == 1) "stage" else "stages"
     ))
   }
 

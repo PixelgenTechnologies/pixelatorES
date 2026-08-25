@@ -18,7 +18,8 @@ for (data_type in data_types) {
   file_paths <-
     get_file_paths(
       data_folder = data_folder,
-      sample_sheet = sample_sheet
+      sample_sheet = sample_sheet,
+      stages = get_es_workflow_stages("amplicon_demux")
     )
 
   sample_qc_metrics <- read_qc_files(file_paths, sample_sheet)

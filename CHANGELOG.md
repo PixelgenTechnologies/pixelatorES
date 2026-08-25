@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.14.0] 2026-08-25
+
+### Changed
+
+- Breaking: stage vocabularies are workflow-owned — `register_es_data_workflow()` and discovery helpers require `stages`, read via `get_es_workflow_stages()`.
+
 ## [0.13.0] 2026-08-10
 
 ### Added

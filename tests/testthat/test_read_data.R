@@ -44,7 +44,7 @@ test_that("File location works as expected", {
     "run_folder/pixelator/A_sample_S1.post_analysis.pxl",
     "run_folder/pixelator/A_sample_S1.layout.pxl"
   ) %>%
-    sapply(find_stage) %>%
+    sapply(find_stage, stages = get_es_workflow_stages("amplicon_demux")$all) %>%
     expect_equal(c(
       "run_folder/pixelator/A_sample_S1.amplicon.pxl" = "amplicon",
       "run_folder/pixelator/A_sample_S1.demux.pxl" = "demux",
@@ -55,11 +55,16 @@ test_that("File location works as expected", {
       "run_folder/pixelator/A_sample_S1.layout.pxl" = "layout"
     ))
 
-  expect_error(find_stage("run_folder/pixelator/A_sample_S1.notastage.pxl"))
+  expect_error(find_stage(
+    "run_folder/pixelator/A_sample_S1.notastage.pxl",
+    stages = get_es_workflow_stages("amplicon_demux")$all
+  ))
+  expect_error(find_stage("run_folder/pixelator/A_sample_S1.graph.pxl"))
 
   expect_no_error(res <- get_file_paths(
     file_paths = file_paths,
-    sample_sheet = sample_sheet
+    sample_sheet = sample_sheet,
+    stages = get_es_workflow_stages("amplicon_demux")
   ))
 
   expect_equal(
@@ -150,6 +155,147 @@ test_that("File location works as expected", {
       pool_qc_files = NULL
     )
   )
+})
+
+test_that("Custom stage vocabularies drive file discovery as expected", {
+  custom_stages <- list(
+    all = c("amplicon", "demux", "graph", "analysis"),
+    pool = "amplicon",
+    pxl_preference = c("analysis", "graph")
+  )
+
+  expect_equal(
+    find_stage("run/A_sample_S1.graph.pxl", stages = custom_stages$all),
+    "graph"
+  )
+  expect_error(
+    find_stage("run/A_sample_S1.layout.pxl", stages = custom_stages$all)
+  )
+  expect_equal(
+    find_stage("run/A_sample_S1.layout.pxl", stages = get_es_workflow_stages("amplicon_demux")$all),
+    "layout"
+  )
+
+  file_paths <- c(
+    "run/amplicon/A_sample_S1.report.json",
+    "run/graph/A_sample_S1.report.json",
+    "run/analysis/A_sample_S1.report.json",
+    "run/A_sample_S1.graph.pxl",
+    "run/A_sample_S1.analysis.pxl"
+  )
+  sample_sheet <- tibble(
+    sample = "A_sample_S1",
+    sample_alias = "S1",
+    condition = "PBMC"
+  )
+
+  # pxl_preference decides the winner: the custom vocabulary ranks graph last.
+  expect_equal(
+    get_file_paths(
+      file_paths = file_paths,
+      sample_sheet = sample_sheet,
+      stages = custom_stages
+    )$data_files$filename,
+    "run/A_sample_S1.graph.pxl"
+  )
+  expect_equal(
+    get_file_paths(
+      file_paths = file_paths,
+      sample_sheet = sample_sheet,
+      stages = get_es_workflow_stages("amplicon_demux")
+    )$data_files$filename,
+    "run/A_sample_S1.analysis.pxl"
+  )
+
+  expect_error(
+    get_file_paths(
+      file_paths = file_paths,
+      sample_sheet = sample_sheet,
+      stages = list(all = "graph")
+    )
+  )
+
+  # The collapse shard filter only applies to vocabularies that have the stage.
+  shard_paths <- c(
+    "run/collapse/A_sample_S1.collapse.m1.part_000.report.json",
+    "run/collapse/A_sample_S1.report.json",
+    "run/graph/A_sample_S1.report.json",
+    "run/A_sample_S1.graph.pxl"
+  )
+
+  expect_equal(
+    nrow(get_file_paths(
+      file_paths = shard_paths,
+      sample_sheet = sample_sheet,
+      stages = get_es_workflow_stages("amplicon_demux")
+    )$qc_files),
+    2
+  )
+  expect_equal(
+    nrow(get_file_paths(
+      file_paths = shard_paths,
+      sample_sheet = sample_sheet,
+      allow_unknown = TRUE,
+      stages = custom_stages
+    )$qc_files),
+    3
+  )
+})
+
+test_that("Custom stage vocabularies drive QC extraction as expected", {
+  qc_metrics <- list(
+    qc_files = list(
+      S1 = list(build = list(n = 1L), tally = list(n = 2L)),
+      S2 = list(build = list(n = 3L), tally = list(n = 4L))
+    ),
+    pool_qc_files = list(
+      P1 = list(build = list(n = 98L), tally = list(n = 99L))
+    )
+  )
+  custom_stages <- list(
+    all = c("build", "tally"),
+    pool = "tally",
+    pxl_preference = "build"
+  )
+
+  expect_equal(
+    extract_sample_qc_metrics(
+      qc_metrics,
+      vars = "n",
+      stage = "build",
+      stages = custom_stages
+    ),
+    tibble(sample_alias = c("S1", "S2"), n = c(1L, 3L))
+  )
+
+  # `pool` routes the stage to pool-level QC instead.
+  expect_equal(
+    extract_sample_qc_metrics(
+      qc_metrics,
+      vars = "n",
+      stage = "tally",
+      stages = custom_stages
+    ),
+    tibble(sample_alias = "P1", n = 99L)
+  )
+
+  expect_error(
+    extract_sample_qc_metrics(
+      qc_metrics,
+      vars = "n",
+      stage = "graph",
+      stages = custom_stages
+    )
+  )
+  expect_error(
+    extract_sample_qc_metrics(
+      qc_metrics,
+      vars = "n",
+      stage = "build",
+      stages = get_es_workflow_stages("amplicon_demux")
+    )
+  )
+  expect_error(extract_sample_qc_metrics(qc_metrics, vars = "n", stage = "build"))
 })
 
 
@@ -261,7 +407,8 @@ test_that("File reading works as expected", {
   expect_no_error(data_paths <-
     get_file_paths(
       data_folder = test_data_folder(),
-      sample_sheet = sample_sheet
+      sample_sheet = sample_sheet,
+      stages = get_es_workflow_stages("amplicon_demux")
     ))
   expect_equal(
     data_paths$data_files %>%
@@ -361,7 +508,8 @@ test_that("File reading works as expected", {
   expect_no_error(
     extracted_qc_metrics <-
       extract_sample_qc_metrics(qc_metrics, "amplicon",
-        vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads")
+        vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads"),
+        stages = get_es_workflow_stages("amplicon_demux")
       )
   )
 
@@ -384,7 +532,8 @@ test_that("File reading works as expected", {
     )
   )
   expect_error(extract_sample_qc_metrics(qc_metrics, "amplicon",
-    vars = c("q30_statistics")
+    vars = c("q30_statistics"),
+    stages = get_es_workflow_stages("amplicon_demux")
   ))
 
   expect_no_error(
@@ -393,7 +542,8 @@ test_that("File reading works as expected", {
         vars = c(
           "a" = "total_failed_reads",
           "b" = "failed_partial_upi1_umi1_reads"
-        )
+        ),
+        stages = get_es_workflow_stages("amplicon_demux")
       )
   )
   expect_equal(
@@ -432,7 +582,8 @@ test_that("File reading works as expected", {
   expect_no_error(data_paths <-
     get_file_paths(
       data_folder = test_data_folder(type = "hashing"),
-      sample_sheet = sample_sheet_hashing
+      sample_sheet = sample_sheet_hashing,
+      stages = get_es_workflow_stages("amplicon_demux")
     ))
 
   expect_equal(
@@ -529,7 +680,8 @@ test_that("File reading works as expected", {
     extracted_qc_metrics <-
       extract_sample_qc_metrics(qc_metrics,
         stage = "amplicon",
-        vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads")
+        vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads"),
+        stages = get_es_workflow_stages("amplicon_demux")
       )
   )
 
@@ -544,7 +696,8 @@ test_that("File reading works as expected", {
     ), class = c("tbl_df", "tbl", "data.frame"))
   )
   expect_error(extract_sample_qc_metrics(qc_metrics, "amplicon",
-    vars = c("q30_statistics")
+    vars = c("q30_statistics"),
+    stages = get_es_workflow_stages("amplicon_demux")
   ))
 
   expect_no_error(
@@ -553,7 +706,8 @@ test_that("File reading works as expected", {
         vars = c(
           "a" = "total_failed_reads",
           "b" = "failed_partial_upi1_umi1_reads"
-        )
+        ),
+        stages = get_es_workflow_stages("amplicon_demux")
       )
   )
   expect_equal(

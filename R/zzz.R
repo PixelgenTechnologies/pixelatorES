@@ -11,6 +11,7 @@
     name = "amplicon_demux",
     extractors = .amplicon_demux_extractors,
     report = .amplicon_demux_report,
+    stages = .amplicon_demux_stages,
     overwrite = TRUE
   )
 

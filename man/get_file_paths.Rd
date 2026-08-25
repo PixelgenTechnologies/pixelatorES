@@ -9,7 +9,8 @@ get_file_paths(
   file_paths = NULL,
   sample_sheet = NULL,
   allow_unknown = FALSE,
-  on_duplicate_samples = c("error", "omit")
+  on_duplicate_samples = c("error", "omit"),
+  stages
 )
 }
 \arguments{
@@ -25,6 +26,11 @@ optionally \code{pool} for hashed experiments. When supplied, pool-level QC file
 \item{on_duplicate_samples}{How to handle samples that still match multiple PXL files after
 stage selection: \code{"error"} aborts (default), \code{"omit"} drops those samples and records them
 in attribute \code{duplicate_data_samples} on the returned list.}
+
+\item{stages}{A stage vocabulary list with \code{all}, \code{pool}, and \code{pxl_preference}, as returned by
+\code{\link[=get_es_workflow_stages]{get_es_workflow_stages()}}, required. \code{all} decides which stages are recognised, and
+\code{pxl_preference} picks the PXL file when a sample has several. Inside a build pass
+\code{es_data$stages}.}
 }
 \value{
 A list with \code{data_files}, \code{qc_files}, and \code{pool_qc_files} (the last is \code{NULL} when absent).

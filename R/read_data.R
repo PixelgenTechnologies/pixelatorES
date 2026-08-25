@@ -1,35 +1,22 @@
-#' nf-core/pixelator stages
-#'
-pipeline_stages <- c(
-  "amplicon", "collapse",
-  "demux", "denoise",
-  "graph", "analysis",
-  "sample_calling",
-  "post_analysis", "layout"
-)
-
-#' nf-core/pixelator pool stages
-#'
-pipeline_pool_stages <- c(
-  "amplicon", "collapse",
-  "demux", "graph"
-)
-
 #' Find pixelator stage of file
 #'
 #' Determine which pixelator stage a file comes from
 #'
 #' @param filepath A file path
 #' @param allow_unknown Whether to allow unknown stages (default: FALSE)
+#' @param stages A character vector of legal stage names, required. Inside a
+#'   build pass `es_data$stages$all`; elsewhere use
+#'   `get_es_workflow_stages(workflow)$all`.
 #'
 #' @return The name of the stage it comes from
 #'
 #' @export
 #'
 find_stage <-
-  function(filepath, allow_unknown = FALSE) {
+  function(filepath, allow_unknown = FALSE, stages) {
     pixelatorR:::assert_single_value(filepath, type = "string")
     pixelatorR:::assert_single_value(allow_unknown, type = "bool")
+    pixelatorR:::assert_vector(stages, "character", n = 1)
 
     suffix <-
       basename(filepath) %>%
@@ -41,9 +28,9 @@ find_stage <-
       dirname(filepath) %>%
       str_remove(".*/")
 
-    if (suffix %in% pipeline_stages) {
+    if (suffix %in% stages) {
       return(suffix)
-    } else if (filedir %in% pipeline_stages) {
+    } else if (filedir %in% stages) {
       return(filedir)
     } else if (allow_unknown) {
       return(filedir)
@@ -68,6 +55,10 @@ find_stage <-
 #' @param on_duplicate_samples How to handle samples that still match multiple PXL files after
 #'   stage selection: `"error"` aborts (default), `"omit"` drops those samples and records them
 #'   in attribute `duplicate_data_samples` on the returned list.
+#' @param stages A stage vocabulary list with `all`, `pool`, and `pxl_preference`, as returned by
+#'   [get_es_workflow_stages()], required. `all` decides which stages are recognised, and
+#'   `pxl_preference` picks the PXL file when a sample has several. Inside a build pass
+#'   `es_data$stages`.
 #'
 #' @return A list with `data_files`, `qc_files`, and `pool_qc_files` (the last is `NULL` when absent).
 #'   When `on_duplicate_samples = "omit"`, attribute `duplicate_data_samples` is a character
@@ -81,12 +72,14 @@ get_file_paths <-
     file_paths = NULL,
     sample_sheet = NULL,
     allow_unknown = FALSE,
-    on_duplicate_samples = c("error", "omit")
+    on_duplicate_samples = c("error", "omit"),
+    stages
   ) {
     pixelatorR:::assert_single_value(data_folder, type = "string", allow_null = TRUE)
     pixelatorR:::assert_vector(file_paths, "character", allow_null = TRUE)
     pixelatorR:::assert_single_value(allow_unknown, type = "bool")
     on_duplicate_samples <- match.arg(on_duplicate_samples)
+    .validate_es_workflow_stages(stages)
 
     if (is.null(file_paths)) {
       file_paths <- list.files(data_folder, recursive = TRUE, full.names = TRUE)
@@ -102,7 +95,12 @@ get_file_paths <-
       filter(!str_detect(filename, "pipeline_info")) %>%
       mutate(
         file_basename = basename(filename),
-        stage = sapply(filename, find_stage, allow_unknown),
+        stage = sapply(
+          filename,
+          find_stage,
+          allow_unknown = allow_unknown,
+          stages = stages$all
+        ),
         file_alias = str_remove(file_basename, "\\..*")
       )
 
@@ -125,9 +123,9 @@ get_file_paths <-
       filter(!is_pool) %>%
       filter(
         str_detect(file_basename, "\\.pxl$"),
-        stage %in% c("graph", "analysis", "post_analysis", "layout")
+        stage %in% stages$pxl_preference
       ) %>%
-      mutate(stage_i = unclass(factor(stage, c("graph", "analysis", "post_analysis", "layout")))) %>%
+      mutate(stage_i = unclass(factor(stage, stages$pxl_preference))) %>%
       group_by(sample_alias) %>%
       top_n(1, stage_i) %>%
       ungroup() %>%
@@ -153,8 +151,13 @@ get_file_paths <-
 
     all_qc_files <-
       all_files %>%
-      filter(str_detect(file_basename, "\\.report.json$")) %>%
-      filter(!(str_detect(filename, "\\.part_\\d{3}\\.") & stage == "collapse"))
+      filter(str_detect(file_basename, "\\.report.json$"))
+
+    if ("collapse" %in% stages$all) {
+      all_qc_files <-
+        all_qc_files %>%
+        filter(!(str_detect(filename, "\\.part_\\d{3}\\.") & stage == "collapse"))
+    }
 
     qc_files <-
       all_qc_files %>%
@@ -561,22 +564,26 @@ read_qc_files <-
 #' containing QC metrics for a sample.
 #' @param vars A character vector of variable names to extract from the sample QC data.
 #' @param stage A character string specifying the stage from which to extract the metrics.
+#' @param stages A stage vocabulary list with `all`, `pool`, and `pxl_preference`, as returned by
+#'   [get_es_workflow_stages()], required. `all` decides which stages are legal, and `pool` decides
+#'   whether `stage` is read from pool-level QC. Inside a build pass `es_data$stages`.
 #'
 #' @return A tibble with the sample alias and the specified metrics.
 #'
 #' @export
 #'
 extract_sample_qc_metrics <-
-  function(sample_qc_metrics, vars, stage = "graph") {
+  function(sample_qc_metrics, vars, stage = "graph", stages) {
     pixelatorR:::assert_vector(vars, "character", n = 1)
     pixelatorR:::assert_single_value(stage, type = "string")
     pixelatorR:::assert_class(sample_qc_metrics, "list")
+    .validate_es_workflow_stages(stages)
 
-    stage <- match.arg(stage, pipeline_stages)
+    stage <- match.arg(stage, stages$all)
 
     # Check if the sample_qc_metrics a sample qc list, if so extract the correct sample/pool type
     if ("qc_files" %in% names(sample_qc_metrics)) {
-      if (stage %in% pipeline_pool_stages && !is.null(sample_qc_metrics$pool_qc_files)) {
+      if (stage %in% stages$pool && !is.null(sample_qc_metrics$pool_qc_files)) {
         sample_qc_metrics <- sample_qc_metrics$pool_qc_files
       } else {
         sample_qc_metrics <- sample_qc_metrics$qc_files
@@ -751,7 +758,11 @@ get_test_data <-
 
     data_folder <- test_data_folder(type = type, package = package)
 
-    data_files <- get_file_paths(data_folder, sample_sheet = samplesheet)$data_files
+    data_files <- get_file_paths(
+      data_folder,
+      sample_sheet = samplesheet,
+      stages = get_es_workflow_stages("amplicon_demux")
+    )$data_files
 
     # Copy PXL files to a unique tempdir to avoid duckdb
     # "blocked by another connection" errors when get_test_data() is called
