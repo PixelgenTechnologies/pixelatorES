@@ -798,7 +798,7 @@ test_that("Duplicate PXL matches soft-fail as expected", {
     get_file_paths(
       data_folder = data_folder,
       sample_sheet = sample_sheet,
-      stages = amplicon_stages()
+      stages = get_es_workflow_stages("amplicon_demux")
     )
   )
 
@@ -916,7 +916,7 @@ test_that("es_data parity with legacy preprocessing works as expected", {
     file_paths <- get_file_paths(
       data_folder = params$data_folder,
       sample_sheet = sample_sheet,
-      stages = amplicon_stages()
+      stages = get_es_workflow_stages("amplicon_demux")
     )
 
     pg_data <-

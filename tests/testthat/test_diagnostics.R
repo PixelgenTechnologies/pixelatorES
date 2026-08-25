@@ -182,7 +182,7 @@ test_that("Relative QC stage completeness diagnostics work as expected", {
   file_paths <- get_file_paths(
     data_folder = data_folder,
     sample_sheet = sample_sheet,
-    stages = amplicon_stages()
+    stages = get_es_workflow_stages("amplicon_demux")
   )
 
   expect_warning(
@@ -272,7 +272,7 @@ test_that("Relative QC stage completeness diagnostics work as expected", {
   default_paths <- get_file_paths(
     data_folder = test_data_folder(type = "default"),
     sample_sheet = default_sheet,
-    stages = amplicon_stages()
+    stages = get_es_workflow_stages("amplicon_demux")
   )
   default_result <- pixelatorES:::.read_qc_groups_soft(
     files = default_paths$qc_files,
