@@ -761,7 +761,7 @@ get_test_data <-
     data_files <- get_file_paths(
       data_folder,
       sample_sheet = samplesheet,
-      stages = .amplicon_demux_stages()
+      stages = get_es_workflow_stages("amplicon_demux")
     )$data_files
 
     # Copy PXL files to a unique tempdir to avoid duckdb
