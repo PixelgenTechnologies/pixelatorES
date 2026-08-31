@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Colocalization heatmap text now explains that proteins are selected by mean abundance (up to 40 markers), globally across samples or within each cell type.
 - Experiment Summary labels now use "isotype control markers" consistently.
+- Molecule rank plots highlight components excluded by the component size thresholds in red, using a strong red for the sample in focus and a lighter red for the remaining samples.
 
 ## [0.14.0] 2026-08-25
 

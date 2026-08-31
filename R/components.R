@@ -782,12 +782,46 @@ component_cell_recovery <-
 
     plot_data <- set_sample_levels(plot_data, sample_levels)
 
+    # Components outside the size thresholds are excluded from the report, and are
+    # highlighted in red. The palette order also sets the point drawing order.
+    MRP_palette <-
+      c(
+        "Included, other samples" = "gray80",
+        "Excluded, other samples" = "#E8A3A3",
+        "Included, selected sample" = "black",
+        "Excluded, selected sample" = "#8B0000"
+      )
+
     .plot_MRP <-
       function(plot_data, plot_data_thresholds, selected_sample) {
         thresh <- plot_data_thresholds %>%
           filter(sample_alias == selected_sample)
 
-        ggplot(plot_data, aes(rank, nodes, color = sample_alias == selected_sample)) +
+        plot_data <-
+          plot_data %>%
+          left_join(
+            plot_data_thresholds %>%
+              select(sample_alias, min_size_theshold, max_size_theshold),
+            by = "sample_alias"
+          ) %>%
+          mutate(
+            excluded =
+              (!is.na(min_size_theshold) & nodes < min_size_theshold) |
+                (!is.na(max_size_theshold) & nodes > max_size_theshold),
+            point_group =
+              paste0(
+                ifelse(excluded, "Excluded", "Included"),
+                ", ",
+                ifelse(sample_alias == selected_sample,
+                  "selected sample",
+                  "other samples"
+                )
+              ) %>%
+                factor(levels = names(MRP_palette))
+          ) %>%
+          arrange(point_group)
+
+        ggplot(plot_data, aes(rank, nodes, color = point_group)) +
           geom_point(size = 0.1, show.legend = FALSE) +
           geom_hline(
             data = thresh,
@@ -801,6 +835,7 @@ component_cell_recovery <-
               y = min_size_theshold,
               label = min_size_theshold
             ),
+            inherit.aes = FALSE,
             vjust = -0.5,
             hjust = 0
           ) +
@@ -816,18 +851,20 @@ component_cell_recovery <-
               y = max_size_theshold,
               label = max_size_theshold
             ),
+            inherit.aes = FALSE,
             vjust = -0.5,
             hjust = 0
           ) +
           scale_x_log10() +
           scale_y_log10() +
-          scale_color_manual(values = c("TRUE" = "black", "FALSE" = "gray80")) +
+          scale_color_manual(values = MRP_palette, drop = FALSE) +
           theme_bw() +
           theme(legend.position = "none") +
           labs(
             x = "Component rank (by number of molecules)",
             y = "Number of molecules",
-            title = "Molecule rank plot"
+            title = "Molecule rank plot",
+            subtitle = "Excluded components shown in red"
           )
       }
 
@@ -838,7 +875,6 @@ component_cell_recovery <-
       set_names() %>%
       lapply(function(x) {
         plot_data %>%
-          arrange(sample_alias == x) %>%
           .plot_MRP(plot_data_thresholds, x)
       })
 
@@ -860,7 +896,6 @@ component_cell_recovery <-
         set_names() %>%
         lapply(function(x) {
           plot_data_sample %>%
-            arrange(sample_alias == x) %>%
             .plot_MRP(plot_data_thresholds, x)
         })
 

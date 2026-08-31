@@ -98,6 +98,28 @@ for (data_type in data_types) {
       }
     }
 
+    # Molecule rank plots group components by exclusion and sample in focus
+    MRP_plot <-
+      if (data_type == "hashing") {
+        component$plots[[2]]$Pools[[1]]
+      } else {
+        component$plots[[2]][[1]]
+      }
+
+    expect_equal(
+      levels(MRP_plot$data$point_group),
+      c(
+        "Included, other samples",
+        "Excluded, other samples",
+        "Included, selected sample",
+        "Excluded, selected sample"
+      )
+    )
+    expect_equal(
+      MRP_plot$labels$subtitle,
+      "Excluded components shown in red"
+    )
+
     for (table in component$table) {
       expect_s3_class(table, "datatables")
     }
