@@ -780,19 +780,44 @@ component_cell_recovery <-
       mutate(rank = row_number()) %>%
       ungroup()
 
+    .as_threshold <- function(x) {
+      if (is.list(x)) {
+        x <- vapply(
+          x,
+          function(v) {
+            if (is.null(v) || length(v) == 0) {
+              return(NA_real_)
+            }
+            return(as.numeric(v)[[1]])
+          },
+          numeric(1)
+        )
+      }
+      return(as.numeric(x))
+    }
+
+    MRP_thresholds <-
+      plot_data_thresholds %>%
+      mutate(
+        min_size_theshold = .as_threshold(min_size_theshold),
+        max_size_theshold = .as_threshold(max_size_theshold)
+      ) %>%
+      select(sample_alias, min_size_theshold, max_size_theshold)
+
+    .add_MRP_exclusions <- function(plot_data, thresholds, by) {
+      plot_data %>%
+        left_join(thresholds, by = by) %>%
+        mutate(
+          excluded =
+            (!is.na(min_size_theshold) & nodes < min_size_theshold) |
+              (!is.na(max_size_theshold) & nodes > max_size_theshold)
+        )
+    }
+
     plot_data <-
       plot_data %>%
       set_sample_levels(sample_levels) %>%
-      left_join(
-        plot_data_thresholds %>%
-          select(sample_alias, min_size_theshold, max_size_theshold),
-        by = "sample_alias"
-      ) %>%
-      mutate(
-        excluded =
-          (!is.na(min_size_theshold) & nodes < min_size_theshold) |
-            (!is.na(max_size_theshold) & nodes > max_size_theshold)
-      )
+      .add_MRP_exclusions(MRP_thresholds, by = "sample_alias")
 
     # Components outside the size thresholds are excluded from the report, and are
     # highlighted in red. The palette order also sets the point drawing order.
@@ -805,9 +830,12 @@ component_cell_recovery <-
       )
 
     .plot_MRP <-
-      function(plot_data, plot_data_thresholds, selected_sample) {
-        thresh <- plot_data_thresholds %>%
-          filter(sample_alias == selected_sample)
+      function(plot_data, selected_sample) {
+        thresh <-
+          plot_data %>%
+          filter(sample_alias == selected_sample) %>%
+          select(min_size_theshold, max_size_theshold) %>%
+          slice_head(n = 1L)
 
         plot_data <-
           plot_data %>%
@@ -879,31 +907,28 @@ component_cell_recovery <-
       set_names() %>%
       lapply(function(x) {
         plot_data %>%
-          .plot_MRP(plot_data_thresholds, x)
+          .plot_MRP(x)
       })
 
     if (hashed_experiment) {
       plot_data_sample <-
         object[[]] %>%
-        select(sample_alias, nodes = n_umi) %>%
+        select(sample_alias, nodes = n_umi, pool) %>%
         arrange(sample_alias, -nodes) %>%
         group_by(sample_alias) %>%
         mutate(rank = row_number()) %>%
         ungroup()
 
+      sample_thresholds <-
+        MRP_thresholds %>%
+        mutate(pool = as.character(sample_alias)) %>%
+        select(pool, min_size_theshold, max_size_theshold)
+
       plot_data_sample <-
         plot_data_sample %>%
+        mutate(pool = as.character(pool)) %>%
         set_sample_levels(sample_levels) %>%
-        left_join(
-          plot_data_thresholds %>%
-            select(sample_alias, min_size_theshold, max_size_theshold),
-          by = "sample_alias"
-        ) %>%
-        mutate(
-          excluded =
-            (!is.na(min_size_theshold) & nodes < min_size_theshold) |
-              (!is.na(max_size_theshold) & nodes > max_size_theshold)
-        )
+        .add_MRP_exclusions(sample_thresholds, by = "pool")
 
       plots_sample <-
         plot_data_sample %>%
@@ -912,7 +937,7 @@ component_cell_recovery <-
         set_names() %>%
         lapply(function(x) {
           plot_data_sample %>%
-            .plot_MRP(plot_data_thresholds, x)
+            .plot_MRP(x)
         })
 
       MRP_plots <-

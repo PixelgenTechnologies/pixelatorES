@@ -119,6 +119,10 @@ for (data_type in data_types) {
       MRP_plot$labels$subtitle,
       "Excluded components shown in red"
     )
+    if (data_type == "hashing") {
+      sample_plot <- component$plots[[2]]$Samples[[1]]
+      expect_true(any(!is.na(sample_plot$data$min_size_theshold)))
+    }
 
     for (table in component$table) {
       expect_s3_class(table, "datatables")
