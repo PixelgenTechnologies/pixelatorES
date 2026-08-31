@@ -50,10 +50,14 @@ for (data_type in data_types) {
     )
 
     expect_s3_class(component$p1, "ggplot")
+    expect_equal(component$p1$labels$title, "Isotype control marker fraction")
+    expect_equal(component$p1$labels$y, "Isotype control marker fraction")
     expect_no_error(
       ggplot2::ggplot_build(component$p1)
     )
     expect_s3_class(component$p2, "ggplot")
+    expect_equal(component$p2$labels$title, "Isotype control marker counts")
+    expect_equal(component$p2$labels$y, "Isotype control marker counts")
     expect_no_error(
       ggplot2::ggplot_build(component$p2)
     )

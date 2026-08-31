@@ -15,5 +15,5 @@ both are empty. Individual slots are \code{NULL} when required columns are absen
 }
 \description{
 This function retrieves per-component denoising detail from a Seurat object's
-metadata, including UMIs removed by denoising method and isotype fraction reduction.
+metadata, including UMIs removed by denoising method and isotype control marker fraction reduction.
 }

@@ -686,7 +686,7 @@ for (data_type in data_types) {
             `Sample ID` = c("S1", "S2"), `Number of cells in sample` = c(
               "24",
               "24"
-            ), `Number of cells >10k nodes` = c("7", "7"), `Median isotype % counts` = c(
+            ), `Number of cells >10k nodes` = c("7", "7"), `Isotype control marker fraction` = c(
               "0.19",
               "0.19"
             ), `Median intracellular % counts` = c("0", "0"), `Median proteins per cell [k]` = c(
@@ -734,7 +734,7 @@ for (data_type in data_types) {
             ), `Number of cells >10k nodes` = c(
               "1", "1", "1",
               "1"
-            ), `Median isotype % counts` = c("0.2", "0.3", "0.29", "0.2"),
+            ), `Isotype control marker fraction` = c("0.2", "0.3", "0.29", "0.2"),
             `Median intracellular % counts` = c("0", "0", "0", "0"), `Median proteins per cell [k]` = c(
               "9.54",
               "10.77", "13.33", "10.7"
