@@ -2,7 +2,7 @@
 % Please edit documentation in R/components.R
 \name{component_control_markers}
 \alias{component_control_markers}
-\title{Create the component for control markers}
+\title{Create the component for isotype control markers}
 \usage{
 component_control_markers(es_data)
 }
@@ -13,5 +13,6 @@ component_control_markers(es_data)
 A list containing two violin plots and a summary table.
 }
 \description{
-This function creates a list with two plots and a summary table.
+This function creates a list with two plots and a summary table for
+isotype control marker fraction and counts.
 }
