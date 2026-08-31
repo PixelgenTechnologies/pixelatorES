@@ -137,13 +137,11 @@ close_tabset()
 
 #### Number of components
 
-The molecule rank plot below ranks the components of a sample from the most to the fewest molecules on log-log axes.
-Cells appear as the plateau of large components to the left, and the curve drops where cells give way to background
-components such as debris and free-floating antibodies. A sharp drop means that cells are well separated from
-background, while a gradual slope means that the two are harder to tell apart. The dashed lines mark the minimum and
-maximum component size thresholds, and only components between them are kept as cells. The sample in focus is drawn in
-black and the remaining samples in gray, so that cell size distributions can be compared across the experiment.
-Components with fewer than 20 molecules are not shown.
+The molecule rank plot below ranks the components of a sample from the most to the fewest molecules. Cells appear as
+the plateau of large components to the left, and the curve drops where cells give way to background components such as
+debris. A sharp drop means that cells are well separated from background, while a gradual slope means that the two are
+harder to tell apart. The dashed lines mark the minimum and maximum component size thresholds, and only components
+between them are kept as cells.
 
 ```{r}
 #| label: qc_metrics_molrank_plot
