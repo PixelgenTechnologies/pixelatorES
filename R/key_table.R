@@ -1034,7 +1034,7 @@ key_metric_definitions <-
     "Total number of cells in the sample.",
     "n_cells_over10k", "Number of cells >10k nodes", 1,
     "Number of cells with more than 10,000 nodes (proteins).",
-    "median_isotype_count_pct", "Isotype control marker fraction", 1,
+    "median_isotype_count_pct", "Isotype control marker fraction [%]", 1,
     "Median percentage of counts attributed to isotype control markers across all cells in the sample.",
     "median_intracellular_count_pct", "Median intracellular % counts", 1,
     "Median percentage of counts attributed to intracellular proteins across all cells in the sample.",

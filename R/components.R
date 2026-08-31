@@ -153,7 +153,7 @@ component_denoising <- function(
       x = "sample_alias",
       y = "isotype_reduction",
       title = "Reduction in isotype control marker fraction",
-      y_label = "Isotype control marker reduction by denoising",
+      y_label = "Isotype control marker reduction by denoising [%]",
       use_pct = TRUE,
       hline = 0,
       round = 2
@@ -226,7 +226,7 @@ component_control_markers <- function(
       x = "sample_alias",
       y = "isotype_fraction",
       title = "Isotype control marker fraction",
-      y_label = "Isotype control marker fraction",
+      y_label = "Isotype control marker fraction [%]",
       round = 4,
       expand = c(0, 0.2),
       use_pct = TRUE
@@ -253,11 +253,11 @@ component_control_markers <- function(
     ) %>%
     select(
       `Sample ID` = sample_alias,
-      `Median isotype control marker fraction` = median_isotype_percent,
+      `Median isotype control marker fraction [%]` = median_isotype_percent,
       `Median isotype control marker counts` = median_isotype_counts
     ) %>%
-    mutate(`Median isotype control marker fraction` = round(`Median isotype control marker fraction`, 3)) %>%
-    style_table(caption = "Median isotype control marker fraction", interactive = FALSE)
+    mutate(`Median isotype control marker fraction [%]` = round(`Median isotype control marker fraction [%]`, 3)) %>%
+    style_table(caption = "Median isotype control marker fraction [%]", interactive = FALSE)
 
 
   return(list(p1 = p1, p2 = p2, tabl = tabl))
