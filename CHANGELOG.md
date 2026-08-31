@@ -10,9 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Experiment Summary labels now use "isotype control markers" consistently:
-  the key metrics table shows **Isotype control marker fraction [%]** (was "Median isotype % counts"),
-  and the QC plot section is titled **Isotype control markers** (was "Control markers").
+- Colocalization heatmap text now explains that proteins are selected by mean abundance (up to 40 markers), globally across samples or within each cell type.
+- Experiment Summary labels now use "isotype control markers" consistently.
 
 ## [0.14.0] 2026-08-25
 
