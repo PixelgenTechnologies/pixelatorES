@@ -137,6 +137,12 @@ close_tabset()
 
 #### Number of components
 
+The molecule rank plot below ranks the components of a sample from the most to the fewest molecules. Cells appear as
+the plateau of large components to the left, and the curve drops where cells give way to background components such as
+debris. A sharp drop means that cells are well separated from background, while a gradual slope means that the two are
+harder to tell apart. The dashed lines mark the minimum and maximum component size thresholds, and only components
+between them are kept as cells.
+
 ```{r}
 #| label: qc_metrics_molrank_plot
 #| results: 'asis'
