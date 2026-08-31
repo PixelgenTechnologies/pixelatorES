@@ -16,5 +16,5 @@ by method, and isotype reduction.
 \description{
 This function creates plots and tables visualizing denoising metrics,
 including the fraction of UMIs removed, UMIs removed by method, and
-reduction in isotype fraction.
+reduction in isotype control marker fraction.
 }

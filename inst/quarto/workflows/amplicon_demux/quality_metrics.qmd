@@ -200,7 +200,7 @@ tabset_figure_table(
 close_tabset()
 ```
 
-### Control markers
+### Isotype control markers
 
 ```{r}
 #| label: qc_metrics_frac_control

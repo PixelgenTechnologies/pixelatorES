@@ -243,7 +243,7 @@ get_denoising_data <-
 #' Get denoising detail data
 #'
 #' This function retrieves per-component denoising detail from a Seurat object's
-#' metadata, including UMIs removed by denoising method and isotype fraction reduction.
+#' metadata, including UMIs removed by denoising method and isotype control marker fraction reduction.
 #'
 #' @param object A Seurat object containing denoising metadata columns.
 #'
@@ -455,7 +455,7 @@ get_read_stats <-
         # Abs per cell
         median_abs_per_cell = median(n_umi),
 
-        # Isotype and control fraction
+        # Isotype control marker fraction
         median_isotype_count_pct = 100 * median(isotype_fraction),
         median_intracellular_count_pct = 100 * median(intracellular_fraction),
       )
@@ -1034,8 +1034,8 @@ key_metric_definitions <-
     "Total number of cells in the sample.",
     "n_cells_over10k", "Number of cells >10k nodes", 1,
     "Number of cells with more than 10,000 nodes (proteins).",
-    "median_isotype_count_pct", "Median isotype % counts", 1,
-    "Median percentage of counts attributed to isotype controls across all cells in the sample.",
+    "median_isotype_count_pct", "Isotype control marker fraction [%]", 1,
+    "Median percentage of counts attributed to isotype control markers across all cells in the sample.",
     "median_intracellular_count_pct", "Median intracellular % counts", 1,
     "Median percentage of counts attributed to intracellular proteins across all cells in the sample.",
     "median_abs_per_cell", "Median proteins per cell [k]", 1e3,

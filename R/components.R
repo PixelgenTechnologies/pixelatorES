@@ -2,7 +2,7 @@
 #'
 #' This function creates plots and tables visualizing denoising metrics,
 #' including the fraction of UMIs removed, UMIs removed by method, and
-#' reduction in isotype fraction.
+#' reduction in isotype control marker fraction.
 #'
 #' @param es_data An `es_data` object containing QC metrics and sample aliases.
 #'
@@ -152,8 +152,8 @@ component_denoising <- function(
     plot_violin(
       x = "sample_alias",
       y = "isotype_reduction",
-      title = "Reduction in isotype fraction",
-      y_label = "Isotype reduction by denoising",
+      title = "Reduction in isotype control marker fraction",
+      y_label = "Isotype control marker reduction by denoising [%]",
       use_pct = TRUE,
       hline = 0,
       round = 2
@@ -176,11 +176,11 @@ component_denoising <- function(
     mutate(across(where(is.numeric), ~ round(., 3))) %>%
     select(
       `Sample ID` = sample_alias,
-      `Median isotype reduction [%]` = median_isotype_reduction,
-      `Median pre-denoise isotype [%]` = median_pre_denoise_isotype,
-      `Median post-denoise isotype [%]` = median_post_denoise_isotype
+      `Median isotype control marker reduction [%]` = median_isotype_reduction,
+      `Median pre-denoise isotype control marker [%]` = median_pre_denoise_isotype,
+      `Median post-denoise isotype control marker [%]` = median_post_denoise_isotype
     ) %>%
-    style_table(caption = "Isotype reduction by denoising", interactive = FALSE)
+    style_table(caption = "Isotype control marker reduction by denoising", interactive = FALSE)
 
   list(
     plots = list(
@@ -196,9 +196,10 @@ component_denoising <- function(
   )
 }
 
-#' Create the component for control markers
+#' Create the component for isotype control markers
 #'
-#' This function creates a list with two plots and a summary table.
+#' This function creates a list with two plots and a summary table for
+#' isotype control marker fraction and counts.
 #'
 #' @param es_data An `es_data` object containing processed PXL data.
 #'
@@ -224,7 +225,8 @@ component_control_markers <- function(
     plot_violin(
       x = "sample_alias",
       y = "isotype_fraction",
-      y_label = "Percent control markers",
+      title = "Isotype control marker fraction",
+      y_label = "Isotype control marker fraction [%]",
       round = 4,
       expand = c(0, 0.2),
       use_pct = TRUE
@@ -235,7 +237,8 @@ component_control_markers <- function(
     plot_violin(
       x = "sample_alias",
       y = "isotype_counts",
-      y_label = "Control markers counts",
+      title = "Isotype control marker counts",
+      y_label = "Isotype control marker counts",
       round = 4,
       expand = c(0, 0.2),
       use_log10 = TRUE
@@ -250,11 +253,11 @@ component_control_markers <- function(
     ) %>%
     select(
       `Sample ID` = sample_alias,
-      `Median percent control markers` = median_isotype_percent,
-      `Median control markers counts` = median_isotype_counts
+      `Median isotype control marker fraction [%]` = median_isotype_percent,
+      `Median isotype control marker counts` = median_isotype_counts
     ) %>%
-    mutate(`Median percent control markers` = round(`Median percent control markers`, 3)) %>%
-    style_table(caption = "Median percent control markers", interactive = FALSE)
+    mutate(`Median isotype control marker fraction [%]` = round(`Median isotype control marker fraction [%]`, 3)) %>%
+    style_table(caption = "Median isotype control marker fraction [%]", interactive = FALSE)
 
 
   return(list(p1 = p1, p2 = p2, tabl = tabl))
