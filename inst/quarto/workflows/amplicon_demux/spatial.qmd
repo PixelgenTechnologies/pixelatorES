@@ -29,12 +29,13 @@ tabset_plotlist(plots, level = 5)
 
 
 #### Colocalization 
-::: {.panel-tabset .nav-pills}
 
-In the heatmaps below, proteins were selected per sample or cell type based on detection frequency and variability in 
-Proximity Scores. Only proteins detected in at least 25% of cells were considered. From these, markers showing 
-substantial variation in colocalization (log2 ratio range ≥ ±0.2) were ranked, and up to 40 proteins with the highest 
-variance were chosen. 
+In the heatmaps below, proteins are selected by abundance so that the most highly expressed markers are shown.
+Up to 40 proteins with the highest mean abundance are included. **Global** heatmaps use the same proteins in every
+sample, ranked by mean abundance across samples. **Per Celltype** heatmaps repeat the selection within each cell type,
+so each heatmap shows the most abundant proteins in that population.
+
+::: {.panel-tabset .nav-pills}
 
 ##### Global 
 

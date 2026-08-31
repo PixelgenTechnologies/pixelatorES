@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+### Changed
+
+- Colocalization heatmap text now explains that proteins are selected by mean abundance (up to 40 markers), globally across samples or within each cell type.
+
 ## [0.14.0] 2026-08-25
 
 ### Changed
