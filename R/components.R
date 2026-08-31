@@ -780,28 +780,8 @@ component_cell_recovery <-
       mutate(rank = row_number()) %>%
       ungroup()
 
-    .as_threshold <- function(x) {
-      if (is.list(x)) {
-        x <- vapply(
-          x,
-          function(v) {
-            if (is.null(v) || length(v) == 0) {
-              return(NA_real_)
-            }
-            return(as.numeric(v)[[1]])
-          },
-          numeric(1)
-        )
-      }
-      return(as.numeric(x))
-    }
-
     MRP_thresholds <-
       plot_data_thresholds %>%
-      mutate(
-        min_size_theshold = .as_threshold(min_size_theshold),
-        max_size_theshold = .as_threshold(max_size_theshold)
-      ) %>%
       select(sample_alias, min_size_theshold, max_size_theshold)
 
     .add_MRP_exclusions <- function(plot_data, thresholds, by) {
@@ -814,10 +794,12 @@ component_cell_recovery <-
         )
     }
 
+    # Joining before set_sample_levels() keeps `sample_alias` a factor, which the
+    # per-sample plot loops rely on to enumerate their samples.
     plot_data <-
       plot_data %>%
-      set_sample_levels(sample_levels) %>%
-      .add_MRP_exclusions(MRP_thresholds, by = "sample_alias")
+      .add_MRP_exclusions(MRP_thresholds, by = "sample_alias") %>%
+      set_sample_levels(sample_levels)
 
     # Components outside the size thresholds are excluded from the report, and are
     # highlighted in red. The palette order also sets the point drawing order.
@@ -927,8 +909,8 @@ component_cell_recovery <-
       plot_data_sample <-
         plot_data_sample %>%
         mutate(pool = as.character(pool)) %>%
-        set_sample_levels(sample_levels) %>%
-        .add_MRP_exclusions(sample_thresholds, by = "pool")
+        .add_MRP_exclusions(sample_thresholds, by = "pool") %>%
+        set_sample_levels(sample_levels)
 
       plots_sample <-
         plot_data_sample %>%

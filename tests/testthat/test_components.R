@@ -119,6 +119,20 @@ for (data_type in data_types) {
       MRP_plot$labels$subtitle,
       "Excluded components shown in red"
     )
+    # One named plot per sample: the plot lists are built from the sample_alias
+    # factor levels, so a demoted factor would silently empty them.
+    MRP_plot_lists <-
+      if (data_type == "hashing") {
+        list(component$plots[[2]]$Pools, component$plots[[2]]$Samples)
+      } else {
+        list(component$plots[[2]])
+      }
+
+    for (plot_list in MRP_plot_lists) {
+      expect_gt(length(plot_list), 0)
+      expect_true(all(nzchar(names(plot_list))))
+    }
+
     if (data_type == "hashing") {
       sample_plot <- component$plots[[2]]$Samples[[1]]
       expect_true(any(!is.na(sample_plot$data$min_size_theshold)))
