@@ -780,7 +780,19 @@ component_cell_recovery <-
       mutate(rank = row_number()) %>%
       ungroup()
 
-    plot_data <- set_sample_levels(plot_data, sample_levels)
+    plot_data <-
+      plot_data %>%
+      set_sample_levels(sample_levels) %>%
+      left_join(
+        plot_data_thresholds %>%
+          select(sample_alias, min_size_theshold, max_size_theshold),
+        by = "sample_alias"
+      ) %>%
+      mutate(
+        excluded =
+          (!is.na(min_size_theshold) & nodes < min_size_theshold) |
+            (!is.na(max_size_theshold) & nodes > max_size_theshold)
+      )
 
     # Components outside the size thresholds are excluded from the report, and are
     # highlighted in red. The palette order also sets the point drawing order.
@@ -799,15 +811,7 @@ component_cell_recovery <-
 
         plot_data <-
           plot_data %>%
-          left_join(
-            plot_data_thresholds %>%
-              select(sample_alias, min_size_theshold, max_size_theshold),
-            by = "sample_alias"
-          ) %>%
           mutate(
-            excluded =
-              (!is.na(min_size_theshold) & nodes < min_size_theshold) |
-                (!is.na(max_size_theshold) & nodes > max_size_theshold),
             point_group =
               paste0(
                 ifelse(excluded, "Excluded", "Included"),
@@ -887,7 +891,19 @@ component_cell_recovery <-
         mutate(rank = row_number()) %>%
         ungroup()
 
-      plot_data_sample <- set_sample_levels(plot_data_sample, sample_levels)
+      plot_data_sample <-
+        plot_data_sample %>%
+        set_sample_levels(sample_levels) %>%
+        left_join(
+          plot_data_thresholds %>%
+            select(sample_alias, min_size_theshold, max_size_theshold),
+          by = "sample_alias"
+        ) %>%
+        mutate(
+          excluded =
+            (!is.na(min_size_theshold) & nodes < min_size_theshold) |
+              (!is.na(max_size_theshold) & nodes > max_size_theshold)
+        )
 
       plots_sample <-
         plot_data_sample %>%
