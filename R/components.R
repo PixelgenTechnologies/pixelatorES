@@ -807,9 +807,9 @@ component_cell_recovery <-
     # strongest colours end up on top.
     MRP_palette <-
       c(
-        "Excluded, other samples" = "gray90",
+        "Excluded, other samples" = "gray95",
+        "Excluded, selected sample" = "gray85",
         "Included, other samples" = "gray80",
-        "Excluded, selected sample" = "gray70",
         "Included, selected sample" = "black"
       )
 

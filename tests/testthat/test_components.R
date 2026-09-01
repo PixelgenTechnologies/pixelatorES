@@ -110,8 +110,8 @@ for (data_type in data_types) {
       levels(MRP_plot$data$point_group),
       c(
         "Excluded, other samples",
-        "Included, other samples",
         "Excluded, selected sample",
+        "Included, other samples",
         "Included, selected sample"
       )
     )
