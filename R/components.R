@@ -809,7 +809,7 @@ component_cell_recovery <-
       c(
         "Excluded, other samples" = "gray90",
         "Included, other samples" = "gray80",
-        "Excluded, selected sample" = "gray50",
+        "Excluded, selected sample" = "gray70",
         "Included, selected sample" = "black"
       )
 
