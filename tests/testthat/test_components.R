@@ -109,15 +109,15 @@ for (data_type in data_types) {
     expect_equal(
       levels(MRP_plot$data$point_group),
       c(
-        "Included, other samples",
         "Excluded, other samples",
-        "Included, selected sample",
-        "Excluded, selected sample"
+        "Included, other samples",
+        "Excluded, selected sample",
+        "Included, selected sample"
       )
     )
     expect_equal(
       MRP_plot$labels$subtitle,
-      "Excluded components shown in red"
+      "Excluded components shown faded"
     )
     # One named plot per sample: the plot lists are built from the sample_alias
     # factor levels, so a demoted factor would silently empty them.

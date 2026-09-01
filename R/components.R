@@ -802,13 +802,15 @@ component_cell_recovery <-
       set_sample_levels(sample_levels)
 
     # Components outside the size thresholds are excluded from the report, and are
-    # highlighted in red. The palette order also sets the point drawing order.
+    # drawn in a lighter shade of their sample's colour, as if faded towards the
+    # background. The palette order also sets the point drawing order, so the
+    # strongest colours end up on top.
     MRP_palette <-
       c(
+        "Excluded, other samples" = "gray90",
         "Included, other samples" = "gray80",
-        "Excluded, other samples" = "#E8A3A3",
-        "Included, selected sample" = "black",
-        "Excluded, selected sample" = "#8B0000"
+        "Excluded, selected sample" = "gray50",
+        "Included, selected sample" = "black"
       )
 
     .plot_MRP <-
@@ -878,7 +880,7 @@ component_cell_recovery <-
             x = "Component rank (by number of molecules)",
             y = "Number of molecules",
             title = "Molecule rank plot",
-            subtitle = "Excluded components shown in red"
+            subtitle = "Excluded components shown faded"
           )
       }
 
