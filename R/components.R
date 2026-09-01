@@ -780,14 +780,64 @@ component_cell_recovery <-
       mutate(rank = row_number()) %>%
       ungroup()
 
-    plot_data <- set_sample_levels(plot_data, sample_levels)
+    MRP_thresholds <-
+      plot_data_thresholds %>%
+      select(sample_alias, min_size_theshold, max_size_theshold)
+
+    .add_MRP_exclusions <- function(plot_data, thresholds, by) {
+      plot_data %>%
+        left_join(thresholds, by = by) %>%
+        mutate(
+          excluded =
+            (!is.na(min_size_theshold) & nodes < min_size_theshold) |
+              (!is.na(max_size_theshold) & nodes > max_size_theshold)
+        )
+    }
+
+    # Joining before set_sample_levels() keeps `sample_alias` a factor, which the
+    # per-sample plot loops rely on to enumerate their samples.
+    plot_data <-
+      plot_data %>%
+      .add_MRP_exclusions(MRP_thresholds, by = "sample_alias") %>%
+      set_sample_levels(sample_levels)
+
+    # Components outside the size thresholds are excluded from the report, and are
+    # drawn in a lighter shade of their sample's colour, as if faded towards the
+    # background. The palette order also sets the point drawing order, so the
+    # strongest colours end up on top.
+    MRP_palette <-
+      c(
+        "Excluded, other samples" = "gray95",
+        "Excluded, selected sample" = "gray85",
+        "Included, other samples" = "gray80",
+        "Included, selected sample" = "black"
+      )
 
     .plot_MRP <-
-      function(plot_data, plot_data_thresholds, selected_sample) {
-        thresh <- plot_data_thresholds %>%
-          filter(sample_alias == selected_sample)
+      function(plot_data, selected_sample) {
+        thresh <-
+          plot_data %>%
+          filter(sample_alias == selected_sample) %>%
+          select(min_size_theshold, max_size_theshold) %>%
+          slice_head(n = 1L)
 
-        ggplot(plot_data, aes(rank, nodes, color = sample_alias == selected_sample)) +
+        plot_data <-
+          plot_data %>%
+          mutate(
+            point_group =
+              paste0(
+                ifelse(excluded, "Excluded", "Included"),
+                ", ",
+                ifelse(sample_alias == selected_sample,
+                  "selected sample",
+                  "other samples"
+                )
+              ) %>%
+                factor(levels = names(MRP_palette))
+          ) %>%
+          arrange(point_group)
+
+        ggplot(plot_data, aes(rank, nodes, color = point_group)) +
           geom_point(size = 0.1, show.legend = FALSE) +
           geom_hline(
             data = thresh,
@@ -801,6 +851,7 @@ component_cell_recovery <-
               y = min_size_theshold,
               label = min_size_theshold
             ),
+            inherit.aes = FALSE,
             vjust = -0.5,
             hjust = 0
           ) +
@@ -816,18 +867,20 @@ component_cell_recovery <-
               y = max_size_theshold,
               label = max_size_theshold
             ),
+            inherit.aes = FALSE,
             vjust = -0.5,
             hjust = 0
           ) +
           scale_x_log10() +
           scale_y_log10() +
-          scale_color_manual(values = c("TRUE" = "black", "FALSE" = "gray80")) +
+          scale_color_manual(values = MRP_palette, drop = FALSE) +
           theme_bw() +
           theme(legend.position = "none") +
           labs(
             x = "Component rank (by number of molecules)",
             y = "Number of molecules",
-            title = "Molecule rank plot"
+            title = "Molecule rank plot",
+            subtitle = "Excluded components shown faded"
           )
       }
 
@@ -838,20 +891,28 @@ component_cell_recovery <-
       set_names() %>%
       lapply(function(x) {
         plot_data %>%
-          arrange(sample_alias == x) %>%
-          .plot_MRP(plot_data_thresholds, x)
+          .plot_MRP(x)
       })
 
     if (hashed_experiment) {
       plot_data_sample <-
         object[[]] %>%
-        select(sample_alias, nodes = n_umi) %>%
+        select(sample_alias, nodes = n_umi, pool) %>%
         arrange(sample_alias, -nodes) %>%
         group_by(sample_alias) %>%
         mutate(rank = row_number()) %>%
         ungroup()
 
-      plot_data_sample <- set_sample_levels(plot_data_sample, sample_levels)
+      sample_thresholds <-
+        MRP_thresholds %>%
+        mutate(pool = as.character(sample_alias)) %>%
+        select(pool, min_size_theshold, max_size_theshold)
+
+      plot_data_sample <-
+        plot_data_sample %>%
+        mutate(pool = as.character(pool)) %>%
+        .add_MRP_exclusions(sample_thresholds, by = "pool") %>%
+        set_sample_levels(sample_levels)
 
       plots_sample <-
         plot_data_sample %>%
@@ -860,8 +921,7 @@ component_cell_recovery <-
         set_names() %>%
         lapply(function(x) {
           plot_data_sample %>%
-            arrange(sample_alias == x) %>%
-            .plot_MRP(plot_data_thresholds, x)
+            .plot_MRP(x)
         })
 
       MRP_plots <-

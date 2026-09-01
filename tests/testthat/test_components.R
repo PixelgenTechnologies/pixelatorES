@@ -98,6 +98,46 @@ for (data_type in data_types) {
       }
     }
 
+    # Molecule rank plots group components by exclusion and sample in focus
+    MRP_plot <-
+      if (data_type == "hashing") {
+        component$plots[[2]]$Pools[[1]]
+      } else {
+        component$plots[[2]][[1]]
+      }
+
+    expect_equal(
+      levels(MRP_plot$data$point_group),
+      c(
+        "Excluded, other samples",
+        "Excluded, selected sample",
+        "Included, other samples",
+        "Included, selected sample"
+      )
+    )
+    expect_equal(
+      MRP_plot$labels$subtitle,
+      "Excluded components shown faded"
+    )
+    # One named plot per sample: the plot lists are built from the sample_alias
+    # factor levels, so a demoted factor would silently empty them.
+    MRP_plot_lists <-
+      if (data_type == "hashing") {
+        list(component$plots[[2]]$Pools, component$plots[[2]]$Samples)
+      } else {
+        list(component$plots[[2]])
+      }
+
+    for (plot_list in MRP_plot_lists) {
+      expect_gt(length(plot_list), 0)
+      expect_true(all(nzchar(names(plot_list))))
+    }
+
+    if (data_type == "hashing") {
+      sample_plot <- component$plots[[2]]$Samples[[1]]
+      expect_true(any(!is.na(sample_plot$data$min_size_theshold)))
+    }
+
     for (table in component$table) {
       expect_s3_class(table, "datatables")
     }
