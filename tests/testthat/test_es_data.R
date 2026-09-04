@@ -941,18 +941,6 @@ test_that("es_data parity with legacy preprocessing works as expected", {
       params,
       sample_levels = sample_aliases
     )
-    component_meta <-
-      FetchData(
-        pg_data_processed,
-        vars = c("sample_alias", "condition", "seurat_clusters", "celltype")
-      ) %>%
-      as_tibble(rownames = "sample_component")
-    proximity_scores <- complete_proximity_scores(
-      proximity_scores,
-      only_self = FALSE,
-      component_meta = component_meta
-    )
-    proximity_scores <- set_sample_levels(proximity_scores, sample_aliases)
 
     return(list(
       samplesheet = sample_sheet,

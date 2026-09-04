@@ -4,28 +4,17 @@
 \alias{complete_proximity_scores}
 \title{Complete Proximity Scores}
 \usage{
-complete_proximity_scores(
-  proximity_scores,
-  only_self = FALSE,
-  component_meta = NULL
-)
+complete_proximity_scores(proximity_scores, only_self = TRUE)
 }
 \arguments{
 \item{proximity_scores}{A data frame of proximity scores.}
 
-\item{only_self}{A boolean indicating whether to keep only self-comparisons
-(\code{marker_1 == marker_2}) before completing (default is \code{FALSE}).}
-
-\item{component_meta}{Optional tibble of all components to include, with
-columns \code{sample_component}, \code{sample_alias}, \code{condition}, \code{seurat_clusters},
-and \code{celltype}. When \code{NULL}, only components already present in
-\code{proximity_scores} are completed.}
+\item{only_self}{A boolean indicating whether to filter for self-comparisons only (default is TRUE).}
 }
 \value{
 A data frame of completed proximity scores with missing values filled.
 }
 \description{
-Ensure every component has a proximity score for every marker pair present in
-\code{proximity_scores}. Missing component–pair combinations are filled with 0
-for \code{log2_ratio} and \code{join_count_z}.
+This function completes the proximity scores by ensuring that each marker pair has a score for each sample component,
+filling missing values with 0.
 }
