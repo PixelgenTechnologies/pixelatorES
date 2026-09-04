@@ -19,14 +19,14 @@ eval_standard_key_metrics <-
 #| label: key_metrics_pool
 #| eval: !expr eval_hashed_key_metrics
 #| results: 'asis'
-cat("::: {.panel-tabset .nav-pills}\n")
+open_tabset()
 if (!is.null(key_tables$pool)) {
   section_table(key_tables$pool, "Hash pool metrics", 3)
 }
 if (!is.null(key_tables$sample)) {
   section_table(key_tables$sample, "Sample metrics", 3)
 }
-cat(":::\n")
+close_tabset()
 ```
 
 ```{r}

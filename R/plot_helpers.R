@@ -5,6 +5,134 @@ plot_anchor_slug <- function(...) {
   gsub("^-+|-+$", "", x)
 }
 
+.tabset_state <- new.env(parent = emptyenv())
+.tabset_state$depth <- 0L
+.tabset_state$stack <- integer(0)
+
+#' Reset tracked Quarto tabset depth
+#'
+#' Intended for tests. Report rendering resets state when
+#' [register_tabset_chunk_hooks()] is called.
+#'
+#' @return `NULL`, invisibly.
+#'
+#' @noRd
+reset_tabset_state <- function() {
+  .tabset_state$depth <- 0L
+  .tabset_state$stack <- integer(0)
+  invisible(NULL)
+}
+
+#' Current number of opened tabsets that have not been closed
+#'
+#' @return Integer depth.
+#'
+#' @noRd
+tabset_depth <- function() {
+  .tabset_state$depth
+}
+
+#' Markdown fences that close leftover tabsets down to a depth
+#'
+#' Updates the tracked depth. Does not print; callers that run during knitr
+#' chunk evaluation should `cat()` the result, while knitr output hooks should
+#' return it so it is appended to the chunk markdown.
+#'
+#' @param until Integer depth to restore. Tabsets opened above this depth are
+#'   closed.
+#'
+#' @return A string of `:::` fences, or `""` when nothing is unclosed.
+#'
+#' @noRd
+unclosed_tabset_fences <- function(until = 0L) {
+  until <- as.integer(until)
+  if (length(until) != 1L || is.na(until) || until < 0L) {
+    until <- 0L
+  }
+
+  n <- .tabset_state$depth - until
+  if (n <= 0L) {
+    return("")
+  }
+
+  .tabset_state$depth <- until
+  paste(rep(":::", n), collapse = "\n")
+}
+
+#' Open a Quarto panel tabset
+#'
+#' Emits the fenced div that starts a `{.panel-tabset}` and records it so
+#' leftover tabsets can be closed if a knitr chunk errors. Prefer this over
+#' writing the fence with `cat()` in `.qmd` files.
+#'
+#' @return The new tabset depth, invisibly.
+#'
+#' @export
+open_tabset <- function() {
+  cat("::: {.panel-tabset .nav-pills}\n")
+  .tabset_state$depth <- .tabset_state$depth + 1L
+  invisible(.tabset_state$depth)
+}
+
+#' Close Tabset
+#'
+#' Closes a tabset opened with [open_tabset()] or [tabset_figure_table()].
+#' Does nothing when no tracked tabset is open.
+#'
+#' @return The remaining tabset depth, invisibly.
+#'
+#' @export
+close_tabset <- function() {
+  fence <- unclosed_tabset_fences(until = max(0L, .tabset_state$depth - 1L))
+  if (nzchar(fence)) {
+    cat(fence, "\n", sep = "")
+  }
+  invisible(.tabset_state$depth)
+}
+
+#' Register knitr hooks that close leftover panel tabsets
+#'
+#' When Quarto is run with `execute: error: true`, a chunk can fail after
+#' [open_tabset()] (or a `tabset_*` helper) has written an opening fence.
+#' This hook restores the tabset depth from the start of the chunk by appending
+#' the missing `:::` fences so later sections of the report still parse.
+#'
+#' Call once during report setup (see `inst/quarto/shared/preprocessing.qmd`).
+#'
+#' @return `NULL`, invisibly.
+#'
+#' @export
+register_tabset_chunk_hooks <- function() {
+  reset_tabset_state()
+  knitr::opts_chunk$set(pixelatorES_tabset_guard = TRUE)
+  knitr::knit_hooks$set(
+    pixelatorES_tabset_guard = function(before, options, envir) {
+      if (before) {
+        .tabset_state$stack <- c(.tabset_state$stack, .tabset_state$depth)
+        return(NULL)
+      }
+
+      n_stack <- length(.tabset_state$stack)
+      start <- if (n_stack > 0L) {
+        .tabset_state$stack[[n_stack]]
+      } else {
+        0L
+      }
+      if (n_stack > 0L) {
+        .tabset_state$stack <- .tabset_state$stack[-n_stack]
+      }
+
+      fences <- unclosed_tabset_fences(until = start)
+      if (!nzchar(fences)) {
+        return(NULL)
+      }
+
+      paste0("\n\n", fences, "\n\n")
+    }
+  )
+  invisible(NULL)
+}
+
 resolve_anchor_prefix <- function(anchor_prefix = NULL) {
   if (is.null(anchor_prefix)) {
     label <- knitr::opts_current$get("label")
@@ -89,13 +217,12 @@ tabset_plotlist <-
 
     prefix <- resolve_anchor_prefix(anchor_prefix)
 
-    # Start the tabset
-    cat("::: {.panel-tabset .nav-pills}\n")
+    open_tabset()
+    if (close) {
+      on.exit(close_tabset(), add = TRUE)
+    }
 
     title_plotlist(plots, level, anchor_prefix = prefix)
-
-    # Close the tabset
-    if (close) cat(":::\n")
   }
 
 
@@ -133,9 +260,11 @@ tabset_nested_plotlist <-
 
     prefix <- resolve_anchor_prefix(anchor_prefix)
 
-    # Start the tabset
     cat("\n\n")
-    cat("::: {.panel-tabset .nav-pills}\n")
+    open_tabset()
+    if (close) {
+      on.exit(close_tabset(), add = TRUE)
+    }
 
     for (tab in seq_along(plots)) {
       if (inherits(plots[[tab]], "list")) {
@@ -163,15 +292,14 @@ tabset_nested_plotlist <-
         )
       }
     }
-    # Close the tabset
-    if (close) cat(":::\n")
   }
 
 
 #' Tabset a figure and a table
 #'
 #' Tabset a figure and a table at a given header level. After using this
-#' function, you should close the tabset with `close_tabset()`.
+#' function, you should close the tabset with [close_tabset()]. If the chunk
+#' errors before that call, [register_tabset_chunk_hooks()] closes the fence.
 #'
 #' @param figure A ggplot object representing the figure to be tabsetted or a list of ggplot objects to be tabsetted as
 #' nested tabs.
@@ -194,8 +322,7 @@ tabset_figure_table <- function(figure, table, level = 2,
       title = title_plotlist
     )
 
-  # Start the tabset
-  cat("::: {.panel-tabset .nav-pills}\n")
+  open_tabset()
 
   cat(paste0(strrep("#", level), " Figure\n\n"))
 
@@ -210,19 +337,6 @@ tabset_figure_table <- function(figure, table, level = 2,
 
   return(table)
 }
-
-#' Close Tabset
-#'
-#' Closes the tabset that was opened with `tabset_figure_table`.
-#'
-#' @return Nothing.
-#'
-#' @export
-#'
-close_tabset <-
-  function() {
-    cat(":::\n")
-  }
 
 #' Create a Void Plot
 #'
