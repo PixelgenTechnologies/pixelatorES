@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Files whose pipeline stage cannot be determined no longer abort Experiment Summary ingestion. They are skipped and recorded as `file_discovery` diagnostics.
 - Colocalization heatmap text now explains that proteins are selected by mean abundance (up to 40 markers), globally across samples or within each cell type.
 - The Cell recovery section now explains how to read the molecule rank plot.
 - Experiment Summary labels now use "isotype control markers" consistently.
