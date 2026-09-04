@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Unclosed Quarto panel tabsets after a knitr chunk error no longer break later report sections. `open_tabset()` tracks depth, and `register_tabset_chunk_hooks()` closes leftover fences when a chunk fails.
+
 ### Changed
 
 - Colocalization heatmap text now explains that proteins are selected by mean abundance (up to 40 markers), globally across samples or within each cell type.
