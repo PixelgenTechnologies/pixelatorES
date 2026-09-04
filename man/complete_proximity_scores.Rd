@@ -16,5 +16,6 @@ A data frame of completed proximity scores with missing values filled.
 }
 \description{
 This function completes the proximity scores by ensuring that each marker pair has a score for each sample component,
-filling missing values with 0.
+filling missing values with 0. Components are collected before \code{only_self} is applied, so a component is
+represented even when all of its scores for the kept marker pairs were filtered out.
 }
