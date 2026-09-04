@@ -8,8 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Missing proximity scores are now filled with 0 so every component has a value for every marker pair present in the table.
+
 ### Changed
 
+- `complete_proximity_scores()` now completes all marker pairs by default (`only_self = FALSE`) and can include components that have no scores via `component_meta`.
 - Colocalization heatmap text now explains that proteins are selected by mean abundance (up to 40 markers), globally across samples or within each cell type.
 - The Cell recovery section now explains how to read the molecule rank plot.
 - Experiment Summary labels now use "isotype control markers" consistently.

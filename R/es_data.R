@@ -653,6 +653,10 @@ test_es_data <- function(
 
 #' Extract filtered proximity scores
 #'
+#' Filtered proximity scores are completed so that every component in
+#' `pxl_data_processed` has a value for every marker pair present after
+#' filtering. Missing scores are filled with 0.
+#'
 #' @param object An `es_data` object.
 #'
 #' @return A table of filtered proximity scores.
@@ -664,6 +668,21 @@ test_es_data <- function(
     object$params,
     sample_levels = object$sample_aliases
   )
+
+  component_meta <-
+    FetchData(
+      object$pxl_data_processed,
+      vars = c("sample_alias", "condition", "seurat_clusters", "celltype")
+    ) %>%
+    as_tibble(rownames = "sample_component")
+
+  proximity <- complete_proximity_scores(
+    proximity,
+    only_self = FALSE,
+    component_meta = component_meta
+  )
+
+  proximity <- set_sample_levels(proximity, object$sample_aliases)
 
   return(proximity)
 }

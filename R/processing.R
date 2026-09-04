@@ -138,11 +138,17 @@ filter_proximity_scores <- function(
 
 #' Complete Proximity Scores
 #'
-#' This function completes the proximity scores by ensuring that each marker pair has a score for each sample component,
-#' filling missing values with 0.
+#' Ensure every component has a proximity score for every marker pair present in
+#' `proximity_scores`. Missing component–pair combinations are filled with 0
+#' for `log2_ratio` and `join_count_z`.
 #'
 #' @param proximity_scores A data frame of proximity scores.
-#' @param only_self A boolean indicating whether to filter for self-comparisons only (default is TRUE).
+#' @param only_self A boolean indicating whether to keep only self-comparisons
+#'   (`marker_1 == marker_2`) before completing (default is `FALSE`).
+#' @param component_meta Optional tibble of all components to include, with
+#'   columns `sample_component`, `sample_alias`, `condition`, `seurat_clusters`,
+#'   and `celltype`. When `NULL`, only components already present in
+#'   `proximity_scores` are completed.
 #'
 #' @return A data frame of completed proximity scores with missing values filled.
 #'
@@ -151,10 +157,14 @@ filter_proximity_scores <- function(
 complete_proximity_scores <-
   function(
     proximity_scores,
-    only_self = TRUE
+    only_self = FALSE,
+    component_meta = NULL
   ) {
     pixelatorR:::assert_class(proximity_scores, "tbl_df")
     pixelatorR:::assert_single_value(only_self, "bool")
+    pixelatorR:::assert_class(component_meta, "tbl_df", allow_null = TRUE)
+
+    proximity_scores <- ungroup(proximity_scores)
 
     if (only_self) {
       proximity_scores <-
@@ -162,12 +172,77 @@ complete_proximity_scores <-
         filter(marker_1 == marker_2)
     }
 
-    proximity_scores %>%
-      complete(
-        nesting(sample_component, sample_alias, condition, seurat_clusters, celltype),
-        nesting(marker_1, marker_2),
-        fill = list(log2_ratio = 0)
+    fill_vals <- list()
+    if ("log2_ratio" %in% names(proximity_scores)) {
+      fill_vals$log2_ratio <- 0
+    }
+    if ("join_count_z" %in% names(proximity_scores)) {
+      fill_vals$join_count_z <- 0
+    }
+
+    key_cols <- c(
+      "sample_component", "sample_alias", "condition",
+      "seurat_clusters", "celltype"
+    )
+
+    if (is.null(component_meta)) {
+      completed <-
+        proximity_scores %>%
+        complete(
+          nesting(
+            sample_component, sample_alias, condition,
+            seurat_clusters, celltype
+          ),
+          nesting(marker_1, marker_2),
+          fill = fill_vals
+        )
+
+      return(completed)
+    }
+
+    missing_cols <- setdiff(key_cols, names(component_meta))
+    if (length(missing_cols) > 0) {
+      cli_abort(c(
+        "{.arg component_meta} is missing required columns.",
+        "x" = "Missing: {.val {missing_cols}}."
+      ))
+    }
+
+    marker_pairs <-
+      proximity_scores %>%
+      distinct(marker_1, marker_2) %>%
+      filter(!is.na(marker_1), !is.na(marker_2))
+
+    if (nrow(marker_pairs) == 0) {
+      return(proximity_scores)
+    }
+
+    score_cols <- setdiff(
+      names(proximity_scores),
+      c(key_cols, "marker_1", "marker_2")
+    )
+
+    proximity_values <-
+      proximity_scores %>%
+      select(sample_component, marker_1, marker_2, all_of(score_cols))
+
+    completed <-
+      crossing(
+        component_meta %>%
+          select(all_of(key_cols)) %>%
+          distinct(),
+        marker_pairs
+      ) %>%
+      left_join(
+        proximity_values,
+        by = c("sample_component", "marker_1", "marker_2")
       )
+
+    if (length(fill_vals) > 0) {
+      completed <- replace_na(completed, fill_vals)
+    }
+
+    return(completed)
   }
 
 #' Summarize proximity scores per sample and condition
