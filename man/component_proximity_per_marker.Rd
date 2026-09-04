@@ -25,5 +25,6 @@ A list containing plots for each marker.
 }
 \description{
 This function creates plots visualizing the proximity scores for each marker
-across different samples and conditions.
+across different samples and conditions. Every component is shown for every
+plotted marker, with proximity scores that were filtered out set to 0.
 }

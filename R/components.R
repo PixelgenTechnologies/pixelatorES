@@ -1628,7 +1628,8 @@ component_proximity_selected <-
 #' Create the component for proximity per marker
 #'
 #' This function creates plots visualizing the proximity scores for each marker
-#' across different samples and conditions.
+#' across different samples and conditions. Every component is shown for every
+#' plotted marker, with proximity scores that were filtered out set to 0.
 #'
 #' @param es_data An `es_data` object containing proximity scores and sample aliases.
 #' @param sample_palette A color palette for the samples.
@@ -1651,7 +1652,7 @@ component_proximity_per_marker <- function(
 
   plot_data <-
     proximity_scores %>%
-    filter(marker_1 == marker_2) %>%
+    complete_proximity_scores(only_self = TRUE) %>%
     {
       if (test_mode) {
         filter(., marker_1 %in% head(levels(marker_1), 10))
