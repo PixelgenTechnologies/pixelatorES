@@ -196,18 +196,19 @@ list(
 
 1. `new_es_data(params)` creates the shell and looks up the workflow extractors.
 2. The samplesheet is read first — this is the **only** hard requirement, and a failure here stops the build.
-3. `sample_aliases` is derived from the samplesheet with `.sample_aliases_from_samplesheet()`, and input files are discovered once with `get_file_paths()`, using the object's stage vocabulary.
+3. `sample_aliases` is derived from the samplesheet with `.sample_aliases_from_samplesheet()`, and input files are discovered once with `get_file_paths()`, using the object's stage vocabulary. Files whose stage cannot be determined are skipped rather than aborting the build.
 4. `run_es_data_extractors()` walks the extractor tree depth-first and fills the remaining slots. Once `pxl_data_processed` is set, the raw `pxl_data` slot is cleared to release memory.
 
 ### Soft-fail diagnostics
 
-Ingestion is resilient: a broken sample or missing QC file should not lose the whole report. Two mechanisms support this:
+Ingestion is resilient: a broken sample or missing QC file should not lose the whole report. These mechanisms support this:
 
 - An extractor can return an `es_data_extractor_result` (via the internal `.new_es_data_extractor_result(value, diagnostics)`) to hand back a **partial** value together with diagnostics — for example, PXL loading returns the samples that loaded plus `pxl_load` diagnostics for those that did not.
 - If an extractor throws instead, `run_es_data_extractors()` catches the error, records an `extractor` diagnostic, and leaves that slot `NULL` while continuing with the rest.
 - After QC groups load, relative stage completeness is checked within samples and within pools. If peers have a stage that another loaded entity lacks, a `qc_load` diagnostic is recorded for that entity while keeping its partial QC data.
+- During file discovery, files whose stage cannot be determined are skipped. Each skipped path is recorded as a `file_discovery` diagnostic so the rest of the folder can still load.
 
-Each diagnostic (`.new_es_data_diagnostic()`) has a `type` (`"pxl_load"`, `"qc_load"`, or `"extractor"`), a `target` (a sample alias, pool id, or slot path such as `"qc$crossing_edges"`), and a human-readable `message`. Inspect them via `es_data$diagnostics`.
+Each diagnostic (`.new_es_data_diagnostic()`) has a `type` (`"pxl_load"`, `"qc_load"`, `"extractor"`, or `"file_discovery"`), a `target` (a sample alias, pool id, file path, or slot path such as `"qc$crossing_edges"`), and a human-readable `message`. Inspect them via `es_data$diagnostics`.
 
 On the report, diagnostics surface in two places:
 

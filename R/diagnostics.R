@@ -40,7 +40,8 @@ diagnostics_to_tibble <- function(es_data) {
   labels <- c(
     pxl_load = "PXL loading",
     qc_load = "QC loading",
-    extractor = "Analysis step"
+    extractor = "Analysis step",
+    file_discovery = "File discovery"
   )
 
   return(unname(labels[type]))

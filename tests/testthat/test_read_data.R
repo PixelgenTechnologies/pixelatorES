@@ -242,6 +242,53 @@ test_that("Custom stage vocabularies drive file discovery as expected", {
   )
 })
 
+test_that("Unknown stages can be omitted as expected", {
+  file_paths <- c(
+    "run/graph/A_sample_S1.report.json",
+    "run/A_sample_S1.graph.pxl",
+    "run/edgelist/A_sample_S1.report.json",
+    "run/A_sample_S1.edgelist.pxl"
+  )
+  sample_sheet <- tibble(
+    sample = "A_sample_S1",
+    sample_alias = "S1",
+    condition = "PBMC"
+  )
+  stages <- get_es_workflow_stages("amplicon_demux")
+
+  expect_error(
+    get_file_paths(
+      file_paths = file_paths,
+      sample_sheet = sample_sheet,
+      stages = stages
+    ),
+    "Could not determine stage for file"
+  )
+
+  omitted <- get_file_paths(
+    file_paths = file_paths,
+    sample_sheet = sample_sheet,
+    on_unknown_stage = "omit",
+    stages = stages
+  )
+
+  expect_equal(
+    list(
+      data_files = omitted$data_files$filename,
+      qc_files = omitted$qc_files$filename,
+      unknown_stage_files = attr(omitted, "unknown_stage_files")
+    ),
+    list(
+      data_files = "run/A_sample_S1.graph.pxl",
+      qc_files = "run/graph/A_sample_S1.report.json",
+      unknown_stage_files = c(
+        "run/A_sample_S1.edgelist.pxl",
+        "run/edgelist/A_sample_S1.report.json"
+      )
+    )
+  )
+})
+
 test_that("Custom stage vocabularies drive QC extraction as expected", {
   qc_metrics <- list(
     qc_files = list(

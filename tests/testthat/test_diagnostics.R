@@ -138,6 +138,35 @@ test_that("Sample diagnostics work as expected", {
       )
     )
   )
+
+  file_discovery <- test_es_data(
+    samplesheet = samplesheet,
+    diagnostics = list(list(
+      type = "file_discovery",
+      target = "run/edgelist/S1.report.json",
+      message = "Could not determine stage of file."
+    ))
+  )
+  expect_equal(
+    list(
+      tibble = diagnostics_to_tibble(file_discovery),
+      has_sample = has_sample_diagnostics(file_discovery),
+      targets = pixelatorES:::sample_diagnostic_targets(file_discovery),
+      summary = format_sample_diagnostics_summary(file_discovery),
+      callout = format_sample_diagnostics_callout(file_discovery)
+    ),
+    list(
+      tibble = tibble(
+        type = "file_discovery",
+        target = "run/edgelist/S1.report.json",
+        message = "Could not determine stage of file."
+      ),
+      has_sample = FALSE,
+      targets = character(),
+      summary = NULL,
+      callout = NULL
+    )
+  )
 })
 
 test_that("Relative QC stage completeness diagnostics work as expected", {
