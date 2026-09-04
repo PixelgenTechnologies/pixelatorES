@@ -851,21 +851,17 @@ build_es_data <- function(params) {
   if (is.null(unknown_stage_files)) {
     unknown_stage_files <- character()
   }
-  if (length(unknown_stage_files) > 0) {
+  for (filepath in unknown_stage_files) {
+    message <- "Could not determine stage of file."
     cli::cli_warn(
-      c(
-        "Could not determine stage of file{?s}: {.val {unknown_stage_files}}",
-        "i" = "Skipping {?it/them} and continuing."
-      )
+      "Skipping file {.val {filepath}}: {message}"
     )
-    for (filepath in unknown_stage_files) {
-      object <- add_es_data_diagnostic(
-        object,
-        type = "file_discovery",
-        target = filepath,
-        message = "Could not determine stage of file."
-      )
-    }
+    object <- add_es_data_diagnostic(
+      object,
+      type = "file_discovery",
+      target = filepath,
+      message = message
+    )
   }
 
   object$file_paths <- file_paths
