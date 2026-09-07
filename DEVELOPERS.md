@@ -212,7 +212,7 @@ Each diagnostic (`.new_es_data_diagnostic()`) has a `type` (`"pxl_load"`, `"qc_l
 
 On the report, diagnostics surface in two places:
 
-- **Samples**: a red callout lists sample/pool loading issues and analysis-step failures. Sample- or pool-targeted loading issues also add a warning marker in the metadata table.
+- **Samples**: a red callout lists sample/pool loading issues, analysis-step failures, and file discovery issues. Sample- or pool-targeted loading issues also add a warning marker in the metadata table; `file_discovery` diagnostics target a file path rather than a sample, so they appear in the callout without marking any sample.
 - **Run info**: the Diagnostics section lists every recorded diagnostic when any exist.
 
 ### Registering a workflow

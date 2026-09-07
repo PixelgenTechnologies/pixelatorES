@@ -163,8 +163,20 @@ test_that("Sample diagnostics work as expected", {
       ),
       has_sample = FALSE,
       targets = character(),
-      summary = NULL,
-      callout = NULL
+      summary = paste0(
+        "- **run/edgelist/S1.report.json** (File discovery): ",
+        "Could not determine stage of file."
+      ),
+      callout = paste0(
+        '::: {.callout-important title="Report data issues"}\n',
+        "Some input data could not be loaded or some analyses could not be ",
+        "completed, and the metrics in this report are therefore incomplete.",
+        "\n\n",
+        "- **run/edgelist/S1.report.json** (File discovery): ",
+        "Could not determine stage of file.",
+        "\n\nSee the Diagnostics section under Run info for the complete list.\n",
+        ":::\n"
+      )
     )
   )
 })

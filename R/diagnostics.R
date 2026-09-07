@@ -110,8 +110,8 @@ has_sample_diagnostics <- function(es_data) {
 #' Format report diagnostics for an Experiment Summary
 #'
 #' Formats sample- and pool-targeted loading diagnostics together with
-#' analysis-step (`extractor`) diagnostics as Markdown lines for the Samples
-#' page callout.
+#' analysis-step (`extractor`) and file discovery (`file_discovery`)
+#' diagnostics as Markdown lines for the Samples page callout.
 #'
 #' @param es_data An `es_data` object.
 #'
@@ -141,7 +141,7 @@ format_sample_diagnostics_summary <- function(es_data) {
 
   diagnostics <- diagnostics %>%
     filter(
-      type == "extractor" |
+      type %in% c("extractor", "file_discovery") |
         (
           type %in% c("pxl_load", "qc_load") &
             target %in% valid_targets
