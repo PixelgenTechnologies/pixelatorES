@@ -389,3 +389,75 @@ test_that("Proximity ANOVAs work as expected", {
     ))
   )
 })
+
+test_that("Proximity score completion works as expected", {
+  proximity_scores <- tibble(
+    sample_component = c("c1", "c1", "c2"),
+    sample_alias = factor(c("S1", "S1", "S2"), levels = c("S1", "S2")),
+    condition = "unstim",
+    seurat_clusters = "1",
+    celltype = "T",
+    marker_1 = factor(c("CD3", "CD3", "CD4"), levels = c("CD3", "CD4")),
+    marker_2 = factor(c("CD3", "CD4", "CD4"), levels = c("CD3", "CD4")),
+    log2_ratio = c(0.5, 0.2, 0.1),
+    join_count_z = c(1.2, 0.3, 0.8)
+  )
+
+  expect_equal(
+    complete_proximity_scores(proximity_scores),
+    structure(list(sample_component = c("c1", "c1", "c2", "c2"), sample_alias = structure(c(
+      1L,
+      1L, 2L, 2L
+    ), levels = c("S1", "S2"), class = "factor"), condition = c(
+      "unstim",
+      "unstim", "unstim", "unstim"
+    ), seurat_clusters = c(
+      "1", "1",
+      "1", "1"
+    ), celltype = c("T", "T", "T", "T"), marker_1 = structure(c(
+      1L,
+      2L, 1L, 2L
+    ), levels = c("CD3", "CD4"), class = "factor"), marker_2 = structure(c(
+      1L,
+      2L, 1L, 2L
+    ), levels = c("CD3", "CD4"), class = "factor"), log2_ratio = c(
+      0.5,
+      0, 0, 0.1
+    ), join_count_z = c(1.2, 0, 0, 0.8)), row.names = c(
+      NA,
+      -4L
+    ), class = c("tbl_df", "tbl", "data.frame"))
+  )
+
+  expect_equal(
+    complete_proximity_scores(proximity_scores, only_self = FALSE),
+    structure(list(sample_component = c(
+      "c1", "c1", "c1", "c2", "c2",
+      "c2"
+    ), sample_alias = structure(c(1L, 1L, 1L, 2L, 2L, 2L), levels = c(
+      "S1",
+      "S2"
+    ), class = "factor"), condition = c(
+      "unstim", "unstim", "unstim",
+      "unstim", "unstim", "unstim"
+    ), seurat_clusters = c(
+      "1", "1",
+      "1", "1", "1", "1"
+    ), celltype = c(
+      "T", "T", "T", "T", "T",
+      "T"
+    ), marker_1 = structure(c(1L, 1L, 2L, 1L, 1L, 2L), levels = c(
+      "CD3",
+      "CD4"
+    ), class = "factor"), marker_2 = structure(c(
+      1L, 2L, 2L, 1L,
+      2L, 2L
+    ), levels = c("CD3", "CD4"), class = "factor"), log2_ratio = c(
+      0.5,
+      0.2, 0, 0, 0, 0.1
+    ), join_count_z = c(1.2, 0.3, 0, 0, 0, 0.8)), row.names = c(
+      NA,
+      -6L
+    ), class = c("tbl_df", "tbl", "data.frame"))
+  )
+})

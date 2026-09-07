@@ -139,7 +139,8 @@ filter_proximity_scores <- function(
 #' Complete Proximity Scores
 #'
 #' This function completes the proximity scores by ensuring that each marker pair has a score for each sample component,
-#' filling missing values with 0.
+#' filling missing values with 0. Components are collected before `only_self` is applied, so a component is
+#' represented even when all of its scores for the kept marker pairs were filtered out.
 #'
 #' @param proximity_scores A data frame of proximity scores.
 #' @param only_self A boolean indicating whether to filter for self-comparisons only (default is TRUE).
@@ -156,18 +157,33 @@ complete_proximity_scores <-
     pixelatorR:::assert_class(proximity_scores, "tbl_df")
     pixelatorR:::assert_single_value(only_self, "bool")
 
+    components <-
+      proximity_scores %>%
+      ungroup() %>%
+      distinct(
+        sample_component, sample_alias, condition,
+        seurat_clusters, celltype
+      )
+
     if (only_self) {
       proximity_scores <-
         proximity_scores %>%
         filter(marker_1 == marker_2)
     }
 
-    proximity_scores %>%
+    fill_values <-
+      list(log2_ratio = 0, join_count_z = 0) %>%
+      keep(names(.) %in% colnames(proximity_scores))
+
+    completed <-
+      proximity_scores %>%
       complete(
-        nesting(sample_component, sample_alias, condition, seurat_clusters, celltype),
+        components,
         nesting(marker_1, marker_2),
-        fill = list(log2_ratio = 0)
+        fill = fill_values
       )
+
+    return(completed)
   }
 
 #' Summarize proximity scores per sample and condition
