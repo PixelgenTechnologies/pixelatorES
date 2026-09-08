@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Proximity score violin plots now show every cell for each plotted marker, with proximity scores that were filtered out shown as 0.
+- Violin plots no longer emit an "Ignoring unknown parameters: `position`" warning, and their data points are now dodged together with the violins.
 
 ### Changed
 

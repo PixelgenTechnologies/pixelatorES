@@ -175,8 +175,9 @@ test_that("`plot_violin` works as expected", {
       row.names = c(NA, -5L), class = c("tbl_df", "tbl", "data.frame")
     )
 
-  expect_no_error(
-    plot_data %>%
+  expect_no_warning(
+    p <-
+      plot_data %>%
       plot_violin(
         x = "sample_alias",
         y = "log2_ratio",
@@ -189,4 +190,8 @@ test_that("`plot_violin` works as expected", {
         hline = 0
       )
   )
+
+  jitter_position <- p$layers[[length(p$layers)]]$position
+  expect_s3_class(jitter_position, "PositionQuasirandom")
+  expect_equal(jitter_position$dodge.width, 0.9)
 })

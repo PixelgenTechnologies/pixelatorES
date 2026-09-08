@@ -788,7 +788,10 @@ plot_violin <- function(
         color = "grey20",
         alpha = jitter_alpha,
         size = jitter_size,
-        position = position_quasirandom(width = "units", dodge.width = 0.9)
+        # geom_quasirandom() builds its own position object from these
+        # arguments; a position_quasirandom() object passed as `position` is
+        # silently dropped
+        dodge.width = 0.9
       )
   }
 
