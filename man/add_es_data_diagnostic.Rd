@@ -9,9 +9,10 @@ add_es_data_diagnostic(object, type, target, message)
 \arguments{
 \item{object}{An \code{es_data} object.}
 
-\item{type}{Diagnostic type: \code{"pxl_load"}, \code{"qc_load"}, or \code{"extractor"}.}
+\item{type}{Diagnostic type: \code{"pxl_load"}, \code{"qc_load"}, \code{"extractor"}, or
+\code{"file_discovery"}.}
 
-\item{target}{Sample alias, pool id, or slot path that failed
+\item{target}{Sample alias, pool id, slot path, or file path that failed
 (e.g. \code{"proximity"} or \code{"qc$crossing_edges"}).}
 
 \item{message}{Human-readable reason.}

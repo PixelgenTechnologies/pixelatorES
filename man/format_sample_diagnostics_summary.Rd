@@ -14,6 +14,6 @@ A single Markdown string, or \code{NULL} when there is nothing to show.
 }
 \description{
 Formats sample- and pool-targeted loading diagnostics together with
-analysis-step (\code{extractor}) diagnostics as Markdown lines for the Samples
-page callout.
+analysis-step (\code{extractor}) and file discovery (\code{file_discovery})
+diagnostics as Markdown lines for the Samples page callout.
 }

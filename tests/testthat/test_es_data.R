@@ -844,6 +844,72 @@ test_that("Duplicate PXL matches soft-fail as expected", {
   )
 })
 
+test_that("Unknown-stage files soft-fail as expected", {
+  sample_sheet <- read_samplesheet(test_samplesheet())
+  data_folder <- .copy_es_data_test_folder("default")
+  extra_dir <- file.path(data_folder, "edgelist")
+  dir.create(extra_dir)
+  extra_qc <- file.path(extra_dir, paste0(sample_sheet$sample[[1]], ".report.json"))
+  extra_pxl <- file.path(data_folder, paste0(sample_sheet$sample[[1]], ".edgelist.pxl"))
+  writeLines("{}", extra_qc)
+  writeLines("not a pxl", extra_pxl)
+  extra_files <- sort(c(extra_qc, extra_pxl))
+
+  expect_error(
+    get_file_paths(
+      data_folder = data_folder,
+      sample_sheet = sample_sheet,
+      stages = get_es_workflow_stages("amplicon_demux")
+    ),
+    "Could not determine stage for file"
+  )
+
+  expect_warning(
+    object <- build_es_data(list(
+      sample_sheet = test_samplesheet(),
+      data_folder = data_folder,
+      test_mode = TRUE,
+      workflow = "amplicon_demux"
+    )),
+    "Could not determine stage of file"
+  )
+
+  discovery_diagnostics <- lapply(
+    object$diagnostics[vapply(
+      object$diagnostics,
+      function(diagnostic) {
+        return(identical(diagnostic$type, "file_discovery"))
+      },
+      logical(1)
+    )],
+    function(diagnostic) {
+      return(diagnostic[c("type", "target", "message")])
+    }
+  )
+
+  expect_equal(
+    list(
+      effective_samplesheet = object$effective_samplesheet$sample_alias,
+      discovery_diagnostics = discovery_diagnostics
+    ),
+    list(
+      effective_samplesheet = c("S1", "S2"),
+      discovery_diagnostics = list(
+        list(
+          type = "file_discovery",
+          target = extra_files[[1]],
+          message = "Could not determine stage of file."
+        ),
+        list(
+          type = "file_discovery",
+          target = extra_files[[2]],
+          message = "Could not determine stage of file."
+        )
+      )
+    )
+  )
+})
+
 test_that("QC-only builds work as expected", {
   data_folder <- .copy_es_data_test_folder("default")
   unlink(list.files(

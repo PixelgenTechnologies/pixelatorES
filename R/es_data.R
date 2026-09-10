@@ -1,7 +1,7 @@
 #' Valid diagnostic types for `es_data`
 #'
 #' @noRd
-.es_data_diagnostic_types <- c("pxl_load", "qc_load", "extractor")
+.es_data_diagnostic_types <- c("pxl_load", "qc_load", "extractor", "file_discovery")
 
 #' Create an extractor result with diagnostics
 #'
@@ -674,8 +674,9 @@ test_es_data <- function(
 #' `object$diagnostics` implies a soft failure.
 #'
 #' @param object An `es_data` object.
-#' @param type Diagnostic type: `"pxl_load"`, `"qc_load"`, or `"extractor"`.
-#' @param target Sample alias, pool id, or slot path that failed
+#' @param type Diagnostic type: `"pxl_load"`, `"qc_load"`, `"extractor"`, or
+#'   `"file_discovery"`.
+#' @param target Sample alias, pool id, slot path, or file path that failed
 #'   (e.g. `"proximity"` or `"qc$crossing_edges"`).
 #' @param message Human-readable reason.
 #'
@@ -812,7 +813,8 @@ build_es_data <- function(params) {
 #'
 #' Calls [get_file_paths()] once after the samplesheet is available, using the
 #' workflow's stage vocabulary. Duplicate PXL matches are omitted for the
-#' affected sample and recorded as diagnostics.
+#' affected sample and recorded as diagnostics. Files whose stage cannot be
+#' determined are skipped and recorded as diagnostics.
 #'
 #' @param object An `es_data` object with `samplesheet` filled.
 #'
@@ -824,6 +826,7 @@ build_es_data <- function(params) {
     data_folder = object$params$data_folder,
     sample_sheet = object$samplesheet,
     on_duplicate_samples = "omit",
+    on_unknown_stage = "omit",
     stages = object$stages
   )
 
@@ -840,6 +843,23 @@ build_es_data <- function(params) {
       object,
       type = "pxl_load",
       target = sample_alias,
+      message = message
+    )
+  }
+
+  unknown_stage_files <- attr(file_paths, "unknown_stage_files")
+  if (is.null(unknown_stage_files)) {
+    unknown_stage_files <- character()
+  }
+  for (filepath in unknown_stage_files) {
+    message <- "Could not determine stage of file."
+    cli::cli_warn(
+      "Skipping file {.val {filepath}}: {message}"
+    )
+    object <- add_es_data_diagnostic(
+      object,
+      type = "file_discovery",
+      target = filepath,
       message = message
     )
   }

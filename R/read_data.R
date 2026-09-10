@@ -52,9 +52,14 @@ find_stage <-
 #' @param sample_sheet A sample sheet [tibble::tibble()] including `sample`, `sample_alias`, and
 #'   optionally `pool` for hashed experiments. When supplied, pool-level QC files are detected.
 #' @param allow_unknown A logical indicating whether to allow files from unknown stages (default: FALSE).
+#'   When `TRUE`, the parent directory name is used as the stage. When `FALSE`, unknown stages
+#'   are handled by `on_unknown_stage`.
 #' @param on_duplicate_samples How to handle samples that still match multiple PXL files after
 #'   stage selection: `"error"` aborts (default), `"omit"` drops those samples and records them
 #'   in attribute `duplicate_data_samples` on the returned list.
+#' @param on_unknown_stage How to handle files whose stage cannot be determined when
+#'   `allow_unknown` is `FALSE`: `"error"` aborts (default), `"omit"` skips those files and
+#'   records them in attribute `unknown_stage_files` on the returned list.
 #' @param stages A stage vocabulary list with `all`, `pool`, and `pxl_preference`, as returned by
 #'   [get_es_workflow_stages()], required. `all` decides which stages are recognised, and
 #'   `pxl_preference` picks the PXL file when a sample has several. Inside a build pass
@@ -62,7 +67,8 @@ find_stage <-
 #'
 #' @return A list with `data_files`, `qc_files`, and `pool_qc_files` (the last is `NULL` when absent).
 #'   When `on_duplicate_samples = "omit"`, attribute `duplicate_data_samples` is a character
-#'   vector of omitted sample aliases.
+#'   vector of omitted sample aliases. When `on_unknown_stage = "omit"`, attribute
+#'   `unknown_stage_files` is a character vector of skipped file paths.
 #'
 #' @export
 #'
@@ -73,12 +79,14 @@ get_file_paths <-
     sample_sheet = NULL,
     allow_unknown = FALSE,
     on_duplicate_samples = c("error", "omit"),
+    on_unknown_stage = c("error", "omit"),
     stages
   ) {
     pixelatorR:::assert_single_value(data_folder, type = "string", allow_null = TRUE)
     pixelatorR:::assert_vector(file_paths, "character", allow_null = TRUE)
     pixelatorR:::assert_single_value(allow_unknown, type = "bool")
     on_duplicate_samples <- match.arg(on_duplicate_samples)
+    on_unknown_stage <- match.arg(on_unknown_stage)
     .validate_es_workflow_stages(stages)
 
     if (is.null(file_paths)) {
@@ -97,12 +105,41 @@ get_file_paths <-
         file_basename = basename(filename),
         stage = sapply(
           filename,
-          find_stage,
-          allow_unknown = allow_unknown,
-          stages = stages$all
+          function(filepath) {
+            tryCatch(
+              find_stage(
+                filepath,
+                allow_unknown = allow_unknown,
+                stages = stages$all
+              ),
+              error = function(error) {
+                return(NA_character_)
+              }
+            )
+          }
         ),
         file_alias = str_remove(file_basename, "\\..*")
       )
+
+    unknown_stage_files <-
+      all_files %>%
+      filter(is.na(stage)) %>%
+      pull(filename) %>%
+      sort()
+
+    if (length(unknown_stage_files) > 0) {
+      if (on_unknown_stage == "error") {
+        cli_abort(
+          c(
+            "x" = "Could not determine stage for file: {.val {unknown_stage_files}}"
+          )
+        )
+      }
+
+      all_files <-
+        all_files %>%
+        filter(!is.na(stage))
+    }
 
     if ("pool" %in% names(sample_sheet)) {
       pool_ids <- unique(sample_sheet$pool)
@@ -180,6 +217,9 @@ get_file_paths <-
     )
     if (on_duplicate_samples == "omit") {
       attr(result, "duplicate_data_samples") <- duplicate_data_samples
+    }
+    if (on_unknown_stage == "omit") {
+      attr(result, "unknown_stage_files") <- unknown_stage_files
     }
 
     return(result)
