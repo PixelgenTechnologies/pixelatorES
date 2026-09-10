@@ -24,6 +24,9 @@ library(knitr)
 
 # Hook to convert PNG -> WebP after each plot is saved
 knit_hooks$set(plot = convert_png_to_webp)
+
+# Close leftover panel-tabset fences when a chunk errors
+register_tabset_chunk_hooks()
 ```
 
 ```{r}

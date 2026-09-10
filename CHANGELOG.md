@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Unclosed Quarto panel tabsets after a knitr chunk error no longer break later report sections. `open_tabset()` tracks depth, and `register_tabset_chunk_hooks()` closes leftover fences when a chunk fails.
 - Proximity score violin plots now show every cell for each plotted marker, with proximity scores that were filtered out shown as 0.
 - Violin plots no longer emit an "Ignoring unknown parameters: `position`" warning, and their data points are now dodged together with the violins.
 

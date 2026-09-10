@@ -333,6 +333,8 @@ Tab UI is created with Quarto fenced divs:
 
 The `tabset_*` helpers write these divs for you. Tab titles come from markdown headings (`#` level set by the `level` argument). Use `level` consistently within a section so tab nesting matches the surrounding heading hierarchy (e.g. `level = 5` under a `####` markdown heading).
 
+Report setup calls `register_tabset_chunk_hooks()`. If a knitr chunk errors after `open_tabset()` or a `tabset_*` helper has written an opening fence, the hook appends the missing `:::` so later sections still parse. In `.qmd` chunks, call `open_tabset()` instead of writing the opening fence with `cat()`. Markdown tabsets written outside R chunks are unchanged.
+
 ### `tabset_plotlist()`
 
 Renders a **named list of plots** as a tabset — one tab per plot.
@@ -409,10 +411,10 @@ Often used inside a manually opened tabset:
 
 ```r
 #| results: 'asis'
-cat("::: {.panel-tabset .nav-pills}\n")
+open_tabset()
 section_table(key_tables$pool, "Hash pool metrics", 3)
 section_table(key_tables$sample, "Sample metrics", 3)
-cat(":::\n")
+close_tabset()
 ```
 
 ### `style_table()`

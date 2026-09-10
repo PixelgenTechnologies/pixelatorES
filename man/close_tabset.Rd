@@ -7,8 +7,9 @@
 close_tabset()
 }
 \value{
-Nothing.
+The remaining tabset depth, invisibly.
 }
 \description{
-Closes the tabset that was opened with \code{tabset_figure_table}.
+Closes a tabset opened with \code{\link[=open_tabset]{open_tabset()}} or \code{\link[=tabset_figure_table]{tabset_figure_table()}}.
+Does nothing when no tracked tabset is open.
 }

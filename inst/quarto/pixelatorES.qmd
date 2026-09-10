@@ -22,6 +22,7 @@ params:
 #| include: false
 
 library(pixelatorES)
+register_tabset_chunk_hooks()
 report <- get_es_workflow_report(params$workflow)
 ```
 
@@ -41,12 +42,12 @@ for (child in report$preamble) {
 #| echo: false
 
 cat("\n# \n\n")
-cat("::: {.panel-tabset .nav-pills}\n\n")
+open_tabset()
 for (section in report$sections) {
   # Two newlines so the heading starts a new block even when the preceding
   # child ends with a list or paragraph
   cat("\n\n## ", section$title, "\n\n", sep = "")
   cat(knitr::knit_child(section$child, quiet = TRUE))
 }
-cat("\n:::\n")
+close_tabset()
 ```

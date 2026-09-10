@@ -21,5 +21,6 @@ A formatted tabset containing the figure and table.
 }
 \description{
 Tabset a figure and a table at a given header level. After using this
-function, you should close the tabset with \code{close_tabset()}.
+function, you should close the tabset with \code{\link[=close_tabset]{close_tabset()}}. If the chunk
+errors before that call, \code{\link[=register_tabset_chunk_hooks]{register_tabset_chunk_hooks()}} closes the fence.
 }
