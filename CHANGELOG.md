@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] 2026-09-18
+
 ### Fixed
 
 - Unclosed Quarto panel tabsets after a knitr chunk error no longer break later report sections. `open_tabset()` tracks depth, and `register_tabset_chunk_hooks()` closes leftover fences when a chunk fails.
