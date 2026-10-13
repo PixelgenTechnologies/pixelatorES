@@ -251,7 +251,10 @@ test_es_data <- function(
       list(
         value = ReadPNA_Seurat(
           sample_file,
-          load_proximity_scores = FALSE
+          load_proximity_scores = FALSE,
+          # k-core, denoising, and sample-hashing columns sit outside
+          # pixelatorR's default cell-metadata subset.
+          detailed_meta_data = TRUE
         ),
         error = NULL
       ),

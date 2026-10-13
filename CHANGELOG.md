@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `get_read_stats()` no longer fetches `intracellular_fraction` or reports `median_intracellular_count_pct`. pixelatorR no longer includes this column in its default Seurat cell metadata, and the Experiment Summary did not use the statistic.
+- PXL loading requests detailed cell metadata so k-core, denoising, and sample-hashing columns are still available after pixelatorR's default metadata subset.
+
 ## [0.14.1] 2026-09-18
 
 ### Fixed

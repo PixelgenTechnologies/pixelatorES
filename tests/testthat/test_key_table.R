@@ -149,7 +149,7 @@ for (data_type in data_types) {
           ), median_isotype_count_pct = c(
             0.190114870060899,
             0.190114870060899
-          ), median_intracellular_count_pct = c(0, 0)), row.names = c(
+          )), row.names = c(
             NA,
             -2L
           ), class = c("tbl_df", "tbl", "data.frame")),
@@ -169,9 +169,6 @@ for (data_type in data_types) {
           ), median_isotype_count_pct = c(
             0.1997935831379,
             0.299137580565269, 0.288901593366738, 0.197655770206966
-          ), median_intracellular_count_pct = c(
-            0,
-            0, 0, 0
           )), row.names = c(NA, -4L), class = c(
             "tbl_df", "tbl",
             "data.frame"
@@ -689,7 +686,7 @@ for (data_type in data_types) {
             ), `Number of cells >10k nodes` = c("7", "7"), `Isotype control marker fraction [%]` = c(
               "0.19",
               "0.19"
-            ), `Median intracellular % counts` = c("0", "0"), `Median proteins per cell [k]` = c(
+            ), `Median proteins per cell [k]` = c(
               "8.99",
               "8.99"
             ), `Median reads per cell [k]` = c("34.7", "34.7"), `Q30 [%]` = c(
@@ -735,7 +732,7 @@ for (data_type in data_types) {
               "1", "1", "1",
               "1"
             ), `Isotype control marker fraction [%]` = c("0.2", "0.3", "0.29", "0.2"),
-            `Median intracellular % counts` = c("0", "0", "0", "0"), `Median proteins per cell [k]` = c(
+            `Median proteins per cell [k]` = c(
               "9.54",
               "10.77", "13.33", "10.7"
             ), `Median reads per cell [k]` = c(

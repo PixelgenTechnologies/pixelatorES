@@ -264,7 +264,10 @@ load_pxl_data_list <-
       select(sample_alias, filename) %>%
       deframe() %>%
       lapply(ReadPNA_Seurat,
-        load_proximity_scores = FALSE
+        load_proximity_scores = FALSE,
+        # k-core, denoising, and sample-hashing columns sit outside
+        # pixelatorR's default cell-metadata subset.
+        detailed_meta_data = TRUE
       )
 
     if (length(pg_data) != nrow(sample_sheet)) {
