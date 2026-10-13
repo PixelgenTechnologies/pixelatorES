@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `get_read_stats()` no longer fetches `intracellular_fraction` or reports `median_intracellular_count_pct`. pixelatorR no longer stores this column on Seurat objects, and the Experiment Summary did not use the statistic.
+
 ## [0.14.1] 2026-09-18
 
 ### Fixed

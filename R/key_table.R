@@ -441,7 +441,7 @@ get_read_stats <-
 
     FetchData(object, c(
       "sample_alias", "reads_in_component", "n_umi",
-      "isotype_fraction", "intracellular_fraction"
+      "isotype_fraction"
     )) %>%
       group_by(sample_alias) %>%
       summarise(
@@ -457,7 +457,6 @@ get_read_stats <-
 
         # Isotype control marker fraction
         median_isotype_count_pct = 100 * median(isotype_fraction),
-        median_intracellular_count_pct = 100 * median(intracellular_fraction),
       )
   }
 
@@ -1036,8 +1035,6 @@ key_metric_definitions <-
     "Number of cells with more than 10,000 nodes (proteins).",
     "median_isotype_count_pct", "Isotype control marker fraction [%]", 1,
     "Median percentage of counts attributed to isotype control markers across all cells in the sample.",
-    "median_intracellular_count_pct", "Median intracellular % counts", 1,
-    "Median percentage of counts attributed to intracellular proteins across all cells in the sample.",
     "median_abs_per_cell", "Median proteins per cell [k]", 1e3,
     "Median number of proteins (nodes) per cell, scaled to thousands.",
     "median_reads_per_cell", "Median reads per cell [k]", 1e3,
