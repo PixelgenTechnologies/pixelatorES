@@ -4,7 +4,13 @@
 \alias{tabset_plotlist}
 \title{Tabset plots}
 \usage{
-tabset_plotlist(plots, level = 2, close = TRUE, anchor_prefix = NULL)
+tabset_plotlist(
+  plots,
+  level = 2,
+  close = TRUE,
+  anchor_prefix = NULL,
+  mc_cores = NULL
+)
 }
 \arguments{
 \item{plots}{List of plots to be tabsetted.}
@@ -15,6 +21,9 @@ tabset_plotlist(plots, level = 2, close = TRUE, anchor_prefix = NULL)
 
 \item{anchor_prefix}{Prefix for in-report deep-link anchor IDs. \code{NULL} (default)
 auto-detects from the current knitr chunk label; pass a string to override.}
+
+\item{mc_cores}{Optional integer number of cores for parallel plot rendering
+during knitr/Quarto execution.}
 }
 \value{
 A formatted tabset of plots.

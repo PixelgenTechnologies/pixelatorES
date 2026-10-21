@@ -4,7 +4,7 @@
 \alias{title_plotlist}
 \title{Header wrap plots}
 \usage{
-title_plotlist(plots, level = 2, anchor_prefix = NULL)
+title_plotlist(plots, level = 2, anchor_prefix = NULL, mc_cores = NULL)
 }
 \arguments{
 \item{plots}{List of plots to be wrapped.}
@@ -13,6 +13,10 @@ title_plotlist(plots, level = 2, anchor_prefix = NULL)
 
 \item{anchor_prefix}{Prefix for in-report deep-link anchor IDs. \code{NULL} (default)
 auto-detects from the current knitr chunk label; pass a string to override.}
+
+\item{mc_cores}{Optional integer number of cores for parallel plot rendering
+during knitr/Quarto execution. When \code{NULL}, uses the \code{mc_cores} attached to
+\code{plots} (from \code{es_data$params$mc_cores}) or \code{getOption("pixelatorES.mc_cores", 1L)}.}
 }
 \value{
 A formatted list of plots with headers.

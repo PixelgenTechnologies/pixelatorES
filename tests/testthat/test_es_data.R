@@ -865,12 +865,15 @@ test_that("Unknown-stage files soft-fail as expected", {
   )
 
   expect_warning(
-    object <- build_es_data(list(
-      sample_sheet = test_samplesheet(),
-      data_folder = data_folder,
-      test_mode = TRUE,
-      workflow = "amplicon_demux"
-    )),
+    expect_warning(
+      object <- build_es_data(list(
+        sample_sheet = test_samplesheet(),
+        data_folder = data_folder,
+        test_mode = TRUE,
+        workflow = "amplicon_demux"
+      )),
+      "Could not determine stage of file"
+    ),
     "Could not determine stage of file"
   )
 
@@ -1055,11 +1058,11 @@ test_that("es_data parity with legacy preprocessing works as expected", {
       )
     )
 
-    legacy <- .legacy_preprocessing(params)
+    legacy <- suppressWarnings(.legacy_preprocessing(params))
 
     params$data_folder <- .copy_es_data_test_folder(data_type)
     set.seed(37)
-    built <- build_es_data(params)
+    built <- suppressWarnings(build_es_data(params))
 
     expect_equal(
       list(

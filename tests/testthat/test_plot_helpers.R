@@ -272,4 +272,105 @@ test_that("`plot_violin` works as expected", {
   jitter_position <- p$layers[[length(p$layers)]]$position
   expect_s3_class(jitter_position, "PositionQuasirandom")
   expect_equal(jitter_position$dodge.width, 0.9)
+
+  # When all displayed_cell_types are present as factor levels on facet_var,
+  # empty facets should still be shown without emitting min/max Inf warnings
+  sparse_facet_data <-
+    tibble(
+      sample_alias = factor(rep(c("S1", "S2"), each = 10), levels = c("S1", "S2", "S3")),
+      normcount = seq_len(20),
+      condition = factor(rep(c("A", "B"), each = 10)),
+      celltype = factor(rep(c("T", "B"), each = 10), levels = displayed_cell_types)
+    ) %>%
+    complete(
+      sample_alias = levels(sample_alias),
+      celltype = displayed_cell_types
+    ) %>%
+    mutate(celltype = factor(celltype, displayed_cell_types))
+
+  p_facet <- plot_violin(
+    sparse_facet_data,
+    x = "sample_alias",
+    y = "normcount",
+    fill = "condition",
+    summarize = FALSE,
+    palette = c(A = "red", B = "blue"),
+    facet_var = "celltype",
+    use_jitter = TRUE,
+    use_grid = TRUE
+  )
+
+  w_facet <- testthat::capture_warnings(built <- ggplot2::ggplot_build(p_facet))
+  expect_false(any(grepl("no non-missing arguments to (min|max)", w_facet)))
+  expect_false(any(grepl("stat_ydensity", w_facet)))
+  expect_equal(as.character(built$layout$layout$celltype), displayed_cell_types)
+  expect_equal(built$layout$panel_params[[1]]$x$get_limits(), c("S1", "S2", "S3"))
 })
+
+test_that("PSOCK parallel rendering in tabset_plotlist matches sequential output", {
+  on.exit(pixelatorES:::stop_psock_cluster(), add = TRUE)
+
+  pg_data <- get_test_data(type = "default") |>
+    subset(features = rownames(get_test_data(type = "default"))[1:3])
+  set.seed(101)
+  pg_data[["celltype"]] <- sample(c("B", "T"), ncol(pg_data), replace = TRUE)
+  pg_data[["seurat_clusters"]] <- factor(1)
+  sample_sheet <- read_samplesheet(test_samplesheet(type = "default"))
+
+  es_seq <- test_es_data(
+    samplesheet = sample_sheet,
+    pxl_data_processed = pg_data,
+    params = modifyList(default_params, list(mc_cores = 1L))
+  )
+  es_par <- test_es_data(
+    samplesheet = sample_sheet,
+    pxl_data_processed = pg_data,
+    params = modifyList(default_params, list(mc_cores = 2L))
+  )
+  sample_palette <- create_sample_palette(es_seq$samplesheet$condition)
+
+  dir_seq <- tempfile("knit_seq_")
+  dir_par <- tempfile("knit_par_")
+  dir.create(dir_seq, recursive = TRUE)
+  dir.create(dir_par, recursive = TRUE)
+  on.exit(unlink(c(dir_seq, dir_par), recursive = TRUE), add = TRUE)
+
+  env_seq <- new.env(parent = globalenv())
+  env_seq$es_data <- es_seq
+  env_seq$sample_palette <- sample_palette
+
+  env_par <- new.env(parent = globalenv())
+  env_par$es_data <- es_par
+  env_par$sample_palette <- sample_palette
+
+  rmd_lines <- c(
+    "```{r setup, include=FALSE}",
+    "knitr::knit_hooks$set(plot = convert_png_to_webp)",
+    "```",
+    "```{r abundance_per_marker, fig.height=8, results='asis', echo=FALSE}",
+    "plots <- component_abundance_per_marker(es_data, sample_palette, per_celltype = TRUE)",
+    "tabset_plotlist(plots, level = 5)",
+    "```"
+  )
+  writeLines(rmd_lines, file.path(dir_seq, "test.Rmd"))
+  writeLines(rmd_lines, file.path(dir_par, "test.Rmd"))
+
+  old_wd <- setwd(dir_seq)
+  on.exit(setwd(old_wd), add = TRUE)
+  knitr::knit("test.Rmd", output = "test.md", quiet = TRUE, envir = env_seq)
+  setwd(dir_par)
+  knitr::knit("test.Rmd", output = "test.md", quiet = TRUE, envir = env_par)
+  setwd(old_wd)
+
+  expect_equal(
+    readLines(file.path(dir_seq, "test.md")),
+    readLines(file.path(dir_par, "test.md"))
+  )
+
+  webp_seq <- sort(list.files(file.path(dir_seq, "figure"), pattern = "\\.webp$", full.names = TRUE))
+  webp_par <- sort(list.files(file.path(dir_par, "figure"), pattern = "\\.webp$", full.names = TRUE))
+  expect_equal(basename(webp_seq), basename(webp_par))
+  expect_length(webp_par, 3L)
+})
+
+

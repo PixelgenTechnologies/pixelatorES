@@ -451,14 +451,7 @@ run_abundance_anova <-
     pixelatorR:::assert_single_value(p_adj_method, "string")
     pixelatorR:::assert_is_one_of(p_adj_method, p.adjust.methods)
 
-    cnt_data <-
-      LayerData(object, layer) %>%
-      as_tibble(rownames = "marker") %>%
-      pivot_longer(
-        cols = -marker,
-        names_to = "comp_id",
-        values_to = "x"
-      )
+    mat <- as.matrix(LayerData(object, layer))
 
     comp_meta_data <-
       FetchData(object, vars = vars) %>%
@@ -470,23 +463,55 @@ run_abundance_anova <-
                      leaving no variables for comparison.")
     }
 
-    aov_res <-
-      cnt_data %>%
-      left_join(comp_meta_data, by = "comp_id") %>%
-      group_by(marker) %>%
-      group_split() %>%
-      parallel::mclapply(function(x) {
-        .run_anova(x, vars, tidy = TRUE) %>%
-          {
-            if (is.null(.)) {
-              .
-            } else {
-              mutate(., marker = x$marker[1]) %>%
-                select(marker, everything())
-            }
+    markers <- sort(rownames(mat))
+    run_one_marker <- function(m) {
+      df_m <- comp_meta_data
+      df_m$x <- unname(mat[m, ])
+      res <- .run_anova(df_m, vars, tidy = TRUE)
+      if (is.null(res)) {
+        return(NULL)
+      }
+      res %>%
+        mutate(marker = m) %>%
+        select(marker, everything())
+    }
+
+    cl <- if (mc_cores > 1 && length(markers) > 1L) {
+      .get_psock_cluster(min(as.integer(mc_cores), length(markers)))
+    } else {
+      NULL
+    }
+
+    aov_list <- if (!is.null(cl)) {
+      idx_splits <- parallel::splitIndices(length(markers), length(cl))
+      idx_splits <- idx_splits[lengths(idx_splits) > 0L]
+      chunks <- lapply(idx_splits, function(idx) {
+        sub_markers <- markers[idx]
+        list(
+          mat = mat[sub_markers, , drop = FALSE],
+          markers = sub_markers,
+          comp_meta_data = comp_meta_data,
+          vars = vars
+        )
+      })
+      parallel::parLapply(cl, chunks, function(ch) {
+        lapply(ch$markers, function(m) {
+          df_m <- ch$comp_meta_data
+          df_m$x <- unname(ch$mat[m, ])
+          res <- pixelatorES:::.run_anova(df_m, ch$vars, tidy = TRUE)
+          if (is.null(res)) {
+            return(NULL)
           }
-      }, mc.cores = mc_cores) %>%
-      bind_rows()
+          dplyr::mutate(res, marker = m) |>
+            dplyr::select(marker, dplyr::everything())
+        }) |>
+          dplyr::bind_rows()
+      })
+    } else {
+      lapply(markers, run_one_marker)
+    }
+
+    aov_res <- bind_rows(aov_list)
 
     aov_res <- aov_res %>%
       mutate(p_adj = p.adjust(p, method = p_adj_method)) %>%
@@ -551,9 +576,38 @@ run_proximity_anova <-
     proximity_scores_wide <-
       proximity_scores_wide[, comp_meta_data$comp_id]
 
-    aov_res <-
-      seq_len(nrow(proximity_scores_wide)) %>%
-      parallel::mclapply(function(i) {
+    n_contrasts <- nrow(proximity_scores_wide)
+    cl <- if (mc_cores > 1 && n_contrasts > 1L) {
+      .get_psock_cluster(min(as.integer(mc_cores), n_contrasts))
+    } else {
+      NULL
+    }
+
+    aov_list <- if (!is.null(cl)) {
+      idx_splits <- parallel::splitIndices(n_contrasts, length(cl))
+      idx_splits <- idx_splits[lengths(idx_splits) > 0L]
+      chunks <- lapply(idx_splits, function(idx) {
+        list(
+          mat = proximity_scores_wide[idx, , drop = FALSE],
+          comp_meta_data = comp_meta_data,
+          vars = vars
+        )
+      })
+      parallel::parLapply(cl, chunks, function(ch) {
+        lapply(seq_len(nrow(ch$mat)), function(i) {
+          df_i <- ch$comp_meta_data
+          df_i$x <- unname(ch$mat[i, ])
+          res <- pixelatorES:::.run_anova(df_i, ch$vars, tidy = TRUE)
+          if (is.null(res)) {
+            return(NULL)
+          }
+          dplyr::mutate(res, contrast = rownames(ch$mat)[i]) |>
+            dplyr::select(contrast, dplyr::everything())
+        }) |>
+          dplyr::bind_rows()
+      })
+    } else {
+      lapply(seq_len(n_contrasts), function(i) {
         comp_meta_data %>%
           mutate(x = proximity_scores_wide[i, ]) %>%
           .run_anova(vars, tidy = TRUE) %>%
@@ -565,8 +619,10 @@ run_proximity_anova <-
                 select(contrast, everything())
             }
           }
-      }, mc.cores = mc_cores) %>%
-      bind_rows()
+      })
+    }
+
+    aov_res <- bind_rows(aov_list)
 
     aov_res <- aov_res %>%
       separate(contrast, into = c("marker_1", "marker_2"), sep = ":") %>%
