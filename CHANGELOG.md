@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Per-marker violin and beeswarm plot generation (`plot_violin()`, `component_abundance_per_marker()`, `component_proximity_per_marker()`) is now significantly faster via vectorized base-2 Van der Corput quasirandom positioning (`PositionQuasirandomFast`), pre-cached violin themes, and pre-indexed template data frames.
+- `title_plotlist()`, `tabset_plotlist()`, `run_abundance_anova()`, and `run_proximity_anova()` now use a persistent fork-free PSOCK worker cluster when `mc_cores > 1`, parallelizing per-marker plot rendering, PNG-to-WebP conversion, and ANOVA calculations.
+
 ### Fixed
 
 - `get_read_stats()` no longer fetches `intracellular_fraction` or reports `median_intracellular_count_pct`. pixelatorR no longer includes this column in its default Seurat cell metadata, and the Experiment Summary did not use the statistic.
