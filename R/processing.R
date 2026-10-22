@@ -457,6 +457,12 @@ run_abundance_anova <-
       FetchData(object, vars = vars) %>%
       as_tibble(rownames = "comp_id")
 
+    cell_match <- match(comp_meta_data$comp_id, colnames(mat))
+    if (anyNA(cell_match) || length(cell_match) != ncol(mat)) {
+      cli::cli_abort("Cell IDs in {.fn FetchData} do not match column names of {.fn LayerData}.")
+    }
+    mat <- mat[, cell_match, drop = FALSE]
+
     vars <- tidy_vars(comp_meta_data, vars)
     if (length(vars) == 0) {
       cli::cli_abort("No valid variables provided for ANOVA. Variables with only one unique value were filtered out,

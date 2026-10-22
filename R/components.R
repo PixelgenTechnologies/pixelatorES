@@ -1419,6 +1419,13 @@ component_abundance_per_marker <- function(
     ) %>%
     as_tibble(rownames = "cell_id")
 
+  # Explicitly align LayerData columns with FetchData cell_id order
+  cell_match <- match(meta$cell_id, colnames(mat))
+  if (anyNA(cell_match) || length(cell_match) != ncol(mat)) {
+    cli::cli_abort("Cell IDs in {.fn FetchData} do not match column names of {.fn LayerData}.")
+  }
+  mat <- mat[, cell_match, drop = FALSE]
+
   # Match column layout of the original per-marker tibble:
   # (marker, cell_id, normcount, sample_alias, condition, seurat_clusters, celltype)
   base_p1 <-
