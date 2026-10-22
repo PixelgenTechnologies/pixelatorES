@@ -358,9 +358,10 @@ stop_psock_cluster <- function() {
 }
 
 .build_single_kit_qc_lot_plot <- function(g_data, spec) {
+  blend_fn <- getExportedValue("ggblend", "blend")
   plot <- g_data |>
     ggplot2::ggplot(ggplot2::aes(x = condition, y = value, fill = lot_role)) +
-    ggblend::blend(
+    blend_fn(
       ggplot2::geom_violin(
         position = "identity",
         alpha = 1,
@@ -595,8 +596,7 @@ title_plotlist <- function(plots, level = 2, anchor_prefix = NULL, mc_cores = NU
       } else {
         plot_hook(rel_paths[[tab]], opts)
       }
-      cat(md_str)
-      cat("\n\n")
+      cat(sub("\n+$", "", md_str), "\n\n", sep = "")
     }
     return(invisible(NULL))
   }
@@ -1231,7 +1231,7 @@ PositionQuasirandomFast <- ggplot2::ggproto(
       nbins = params$nbins,
       max.length = params$max.length
     )
-    data <- vctrs::vec_rbind(!!!data)
+    data <- do.call(rbind, data)
     ggplot2::flip_data(data, params$flipped_aes)
   }
 )

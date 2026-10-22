@@ -28,6 +28,7 @@ Imports:
     purrr,
     ggplot2,
     ggbeeswarm,
+    vipor,
     ggplotify,
     RcppSimdJson,
     ComplexHeatmap,
@@ -45,9 +46,8 @@ Imports:
     broom,
     htmlwidgets,
     magick,
-    dbplyr,
-    RcppML, 
-    htmltools
+    htmltools,
+    utils
 Remotes: 
     PixelgenTechnologies/pixelatorR
 Suggests: 
@@ -55,6 +55,7 @@ Suggests:
     DBI,
     duckdb,
     fs,
+    pkgload,
     rstudioapi,
     quarto
 Config/testthat/edition: 3
