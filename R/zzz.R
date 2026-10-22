@@ -15,5 +15,15 @@
     overwrite = TRUE
   )
 
+  reg.finalizer(
+    .psock_pool,
+    function(e) {
+      if (!is.null(e$cl)) {
+        try(parallel::stopCluster(e$cl), silent = TRUE)
+      }
+    },
+    onexit = TRUE
+  )
+
   return(invisible(NULL))
 }

@@ -176,21 +176,40 @@ resolve_anchor_prefix <- function(anchor_prefix = NULL) {
     .psock_pool$n_workers <- 0L
   }
 
-  cl <- parallel::makePSOCKcluster(mc_cores)
-  is_dev_source <- !is.null(ns_path) && file.exists(file.path(ns_path, "R", "plot_helpers.R"))
-  parallel::clusterCall(
-    cl,
-    function(path, is_dev) {
-      if (is_dev && requireNamespace("pkgload", quietly = TRUE)) {
-        suppressMessages(pkgload::load_all(path, quiet = TRUE))
-      } else {
-        suppressPackageStartupMessages(library(pixelatorES))
-      }
-      TRUE
+  cl <- tryCatch(
+    {
+      c_obj <- parallel::makePSOCKcluster(mc_cores)
+      is_dev_source <- !is.null(ns_path) && file.exists(file.path(ns_path, "R", "plot_helpers.R"))
+      parallel::clusterCall(
+        c_obj,
+        function(path, is_dev) {
+          Sys.setenv(
+            OMP_NUM_THREADS = "1",
+            OPENBLAS_NUM_THREADS = "1",
+            MKL_NUM_THREADS = "1",
+            VECLIB_MAXIMUM_THREADS = "1",
+            MAGICK_THREAD_LIMIT = "1"
+          )
+          if (is_dev && requireNamespace("pkgload", quietly = TRUE)) {
+            suppressMessages(pkgload::load_all(path, quiet = TRUE))
+          } else {
+            suppressPackageStartupMessages(library(pixelatorES))
+          }
+          TRUE
+        },
+        ns_path,
+        is_dev_source
+      )
+      c_obj
     },
-    ns_path,
-    is_dev_source
+    error = function(e) {
+      NULL
+    }
   )
+
+  if (is.null(cl)) {
+    return(NULL)
+  }
 
   .psock_pool$cl <- cl
   .psock_pool$n_workers <- mc_cores
