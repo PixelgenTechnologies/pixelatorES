@@ -596,7 +596,10 @@ title_plotlist <- function(plots, level = 2, anchor_prefix = NULL, mc_cores = NU
       } else {
         plot_hook(rel_paths[[tab]], opts)
       }
-      cat(sub("\n+$", "", md_str), "\n\n", sep = "")
+      cat(md_str)
+      if (!grepl("\n$", md_str)) {
+        cat("\n\n")
+      }
     }
     return(invisible(NULL))
   }

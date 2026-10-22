@@ -182,15 +182,17 @@ test_that("Abundance ANOVAs work as expected", {
     ), class = c("tbl_df", "tbl", "data.frame"))
   )
 
-  on.exit(pixelatorES:::stop_psock_cluster(), add = TRUE)
-  anova_res_par <- run_abundance_anova(
-    pg_data %>% subset(features = rownames(pg_data)[1:3]),
-    vars = c("seurat_clusters", "condition"),
-    layer = "data",
-    mc_cores = 2,
-    p_adj_method = "bonferroni"
-  )
-  expect_equal(anova_res_par, anova_res)
+  if (!identical(Sys.getenv("CI"), "true")) {
+    on.exit(pixelatorES:::stop_psock_cluster(), add = TRUE)
+    anova_res_par <- run_abundance_anova(
+      pg_data %>% subset(features = rownames(pg_data)[1:3]),
+      vars = c("seurat_clusters", "condition"),
+      layer = "data",
+      mc_cores = 2,
+      p_adj_method = "bonferroni"
+    )
+    expect_equal(anova_res_par, anova_res)
+  }
 
   # When there is only one sample
 

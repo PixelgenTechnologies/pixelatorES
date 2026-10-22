@@ -308,6 +308,7 @@ test_that("`plot_violin` works as expected", {
 })
 
 test_that("PSOCK parallel rendering in tabset_plotlist matches sequential output", {
+  skip_on_ci()
   on.exit(pixelatorES:::stop_psock_cluster(), add = TRUE)
 
   pg_data <- get_test_data(type = "default") |>

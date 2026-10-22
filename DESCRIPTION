@@ -46,6 +46,8 @@ Imports:
     broom,
     htmlwidgets,
     magick,
+    dbplyr,
+    RcppML,
     htmltools,
     utils
 Remotes: 
