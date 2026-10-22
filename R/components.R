@@ -1454,8 +1454,6 @@ component_abundance_per_marker <- function(
     base_p2 <- base_p2_indexed[, setdiff(names(base_p2_indexed), ".row_idx"), drop = FALSE]
   }
 
-  no_fill_guide <- guides(fill = "none")
-
   plots <-
     lapply(ordered_markers, function(m) {
       vals <- unname(mat[m, ])
@@ -1477,9 +1475,9 @@ component_abundance_per_marker <- function(
           summarize = FALSE,
           palette = sample_palette,
           use_jitter = TRUE,
-          use_grid = TRUE
-        ) +
-        no_fill_guide
+          use_grid = TRUE,
+          show_fill_guide = FALSE
+        )
 
       if (!per_celltype) {
         return(p1)
@@ -1500,11 +1498,13 @@ component_abundance_per_marker <- function(
           palette = sample_palette,
           facet_var = "celltype",
           use_jitter = TRUE,
-          use_grid = TRUE
-        ) +
-        no_fill_guide
+          use_grid = TRUE,
+          show_fill_guide = FALSE
+        )
 
-      p1 / p2
+      p <- p1 / p2
+      p@plot_env <- emptyenv()
+      p
     }) %>%
     set_names(ordered_markers)
 
@@ -1744,8 +1744,6 @@ component_proximity_per_marker <- function(
     p2_celltype <- t_p2$celltype
   }
 
-  no_fill_guide <- guides(fill = "none")
-
   plots <-
     lapply(groups, function(g_data) {
       g_p1 <- g_data[p1_idx, p1_cols, drop = FALSE]
@@ -1763,9 +1761,9 @@ component_proximity_per_marker <- function(
           palette = sample_palette,
           use_jitter = TRUE,
           use_grid = TRUE,
-          hline = 0
-        ) +
-        no_fill_guide
+          hline = 0,
+          show_fill_guide = FALSE
+        )
 
       if (!per_celltype) {
         return(p1)
@@ -1787,21 +1785,29 @@ component_proximity_per_marker <- function(
           facet_var = "celltype",
           use_jitter = TRUE,
           use_grid = TRUE,
-          hline = 0
-        ) +
-        no_fill_guide
+          hline = 0,
+          show_fill_guide = FALSE
+        )
 
-      p1 / p2
+      p <- p1 / p2
+      p@plot_env <- emptyenv()
+      p
     })
+
+  # Retain only columns used by .build_single_proximity_marker_plot in parallel_render_spec
+  spec_groups <- lapply(
+    groups,
+    function(g_data) g_data[, c("marker_1", "sample_alias", "condition", "celltype", "log2_ratio"), drop = FALSE]
+  )
 
   attr(plots, "parallel_render_spec") <- list(
     type = "proximity_per_marker",
-    groups = groups,
+    groups = spec_groups,
     p1_idx = p1_idx,
-    p1_cols = p1_cols,
+    p1_cols = c("marker_1", "sample_alias", "condition", "celltype", "log2_ratio"),
     p1_sample_alias = p1_sample_alias,
     p2_idx = if (per_celltype) p2_idx else NULL,
-    p2_cols = if (per_celltype) p2_cols else NULL,
+    p2_cols = if (per_celltype) c("marker_1", "sample_alias", "condition", "celltype", "log2_ratio") else NULL,
     p2_sample_alias = if (per_celltype) p2_sample_alias else NULL,
     p2_celltype = if (per_celltype) p2_celltype else NULL,
     per_celltype = per_celltype,

@@ -348,6 +348,17 @@ test_that("Proximity ANOVAs work as expected", {
     ))
   )
 
+  if (!identical(Sys.getenv("CI"), "true")) {
+    on.exit(pixelatorES:::stop_psock_cluster(), add = TRUE)
+    anova_res_par <- suppressWarnings(run_proximity_anova(
+      prox_data,
+      vars = c("seurat_clusters", "condition"),
+      mc_cores = 2,
+      p_adj_method = "bonferroni"
+    ))
+    expect_equal(anova_res_par, anova_res)
+  }
+
   # Only one sample
   prox_data$condition <- "one"
 

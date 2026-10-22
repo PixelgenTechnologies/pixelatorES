@@ -49,6 +49,7 @@ Imports:
     dbplyr,
     RcppML,
     htmltools,
+    ragg,
     utils
 Remotes: 
     PixelgenTechnologies/pixelatorR

@@ -411,6 +411,20 @@ tidy_vars <-
       names()
   }
 
+.anova_abundance_worker_chunk <- function(ch) {
+  lapply(ch$markers, function(m) {
+    df_m <- ch$comp_meta_data
+    df_m$x <- unname(ch$mat[m, ])
+    res <- .run_anova(df_m, ch$vars, tidy = TRUE)
+    if (is.null(res)) {
+      return(NULL)
+    }
+    dplyr::mutate(res, marker = m) |>
+      dplyr::select(marker, dplyr::everything())
+  }) |>
+    dplyr::bind_rows()
+}
+
 #' Run ANOVA for abundance data in a Seurat object
 #'
 #' This function runs an ANOVA for abundance data in a Seurat object, allowing for parallel processing.
@@ -490,19 +504,7 @@ run_abundance_anova <-
           vars = vars
         )
       })
-      parallel::parLapply(cl, chunks, function(ch) {
-        lapply(ch$markers, function(m) {
-          df_m <- ch$comp_meta_data
-          df_m$x <- unname(ch$mat[m, ])
-          res <- pixelatorES:::.run_anova(df_m, ch$vars, tidy = TRUE)
-          if (is.null(res)) {
-            return(NULL)
-          }
-          dplyr::mutate(res, marker = m) |>
-            dplyr::select(marker, dplyr::everything())
-        }) |>
-          dplyr::bind_rows()
-      })
+      parallel::parLapply(cl, chunks, .anova_abundance_worker_chunk)
     } else {
       lapply(markers, run_one_marker)
     }
@@ -516,6 +518,19 @@ run_abundance_anova <-
     return(aov_res)
   }
 
+.anova_proximity_worker_chunk <- function(ch) {
+  lapply(seq_len(nrow(ch$mat)), function(i) {
+    df_i <- ch$comp_meta_data
+    df_i$x <- unname(ch$mat[i, ])
+    res <- .run_anova(df_i, ch$vars, tidy = TRUE)
+    if (is.null(res)) {
+      return(NULL)
+    }
+    dplyr::mutate(res, contrast = rownames(ch$mat)[i]) |>
+      dplyr::select(contrast, dplyr::everything())
+  }) |>
+    dplyr::bind_rows()
+}
 
 #' Run ANOVA for proximity scores in a Seurat object
 #'
@@ -589,19 +604,7 @@ run_proximity_anova <-
           vars = vars
         )
       })
-      parallel::parLapply(cl, chunks, function(ch) {
-        lapply(seq_len(nrow(ch$mat)), function(i) {
-          df_i <- ch$comp_meta_data
-          df_i$x <- unname(ch$mat[i, ])
-          res <- pixelatorES:::.run_anova(df_i, ch$vars, tidy = TRUE)
-          if (is.null(res)) {
-            return(NULL)
-          }
-          dplyr::mutate(res, contrast = rownames(ch$mat)[i]) |>
-            dplyr::select(contrast, dplyr::everything())
-        }) |>
-          dplyr::bind_rows()
-      })
+      parallel::parLapply(cl, chunks, .anova_proximity_worker_chunk)
     } else {
       lapply(seq_len(n_contrasts), function(i) {
         comp_meta_data %>%

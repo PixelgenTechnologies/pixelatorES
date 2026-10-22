@@ -316,16 +316,23 @@ test_that("PSOCK parallel rendering in tabset_plotlist matches sequential output
   set.seed(101)
   pg_data[["celltype"]] <- sample(c("B", "T"), ncol(pg_data), replace = TRUE)
   pg_data[["seurat_clusters"]] <- factor(1)
+  pg_data[["condition"]] <- "good"
   sample_sheet <- read_samplesheet(test_samplesheet(type = "default"))
+  proximity_scores <- suppressWarnings(filter_proximity_scores(
+    pg_data,
+    list(control_markers = c("mIgG1", "mIgG2a", "mIgG2b"))
+  ))
 
   es_seq <- test_es_data(
     samplesheet = sample_sheet,
     pxl_data_processed = pg_data,
+    proximity = proximity_scores,
     params = modifyList(default_params, list(mc_cores = 1L))
   )
   es_par <- test_es_data(
     samplesheet = sample_sheet,
     pxl_data_processed = pg_data,
+    proximity = proximity_scores,
     params = modifyList(default_params, list(mc_cores = 2L))
   )
   sample_palette <- create_sample_palette(es_seq$samplesheet$condition)
@@ -351,6 +358,10 @@ test_that("PSOCK parallel rendering in tabset_plotlist matches sequential output
     "```{r abundance_per_marker, fig.height=8, results='asis', echo=FALSE}",
     "plots <- component_abundance_per_marker(es_data, sample_palette, per_celltype = TRUE)",
     "tabset_plotlist(plots, level = 5)",
+    "```",
+    "```{r proximity_per_marker, fig.height=8, results='asis', echo=FALSE}",
+    "plots_prox <- component_proximity_per_marker(es_data, sample_palette, per_celltype = TRUE)",
+    "tabset_plotlist(plots_prox, level = 5)",
     "```"
   )
   writeLines(rmd_lines, file.path(dir_seq, "test.Rmd"))
@@ -371,7 +382,7 @@ test_that("PSOCK parallel rendering in tabset_plotlist matches sequential output
   webp_seq <- sort(list.files(file.path(dir_seq, "figure"), pattern = "\\.webp$", full.names = TRUE))
   webp_par <- sort(list.files(file.path(dir_par, "figure"), pattern = "\\.webp$", full.names = TRUE))
   expect_equal(basename(webp_seq), basename(webp_par))
-  expect_length(webp_par, 3L)
+  expect_length(webp_par, 6L)
 })
 
 

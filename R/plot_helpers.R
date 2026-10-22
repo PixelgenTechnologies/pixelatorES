@@ -234,7 +234,6 @@ stop_psock_cluster <- function() {
 .build_single_abundance_marker_plot <- function(m, spec) {
   vals <- unname(spec$mat[m, ])
   marker_fac <- factor(m, levels = spec$ordered_markers)
-  no_fill_guide <- ggplot2::guides(fill = "none")
 
   g_p1 <- spec$base_p1
   g_p1$marker <- marker_fac
@@ -252,9 +251,9 @@ stop_psock_cluster <- function() {
       summarize = FALSE,
       palette = spec$sample_palette,
       use_jitter = TRUE,
-      use_grid = TRUE
-    ) +
-    no_fill_guide
+      use_grid = TRUE,
+      show_fill_guide = FALSE
+    )
 
   if (!spec$per_celltype) {
     p <- p1
@@ -274,9 +273,9 @@ stop_psock_cluster <- function() {
         palette = spec$sample_palette,
         facet_var = "celltype",
         use_jitter = TRUE,
-        use_grid = TRUE
-      ) +
-      no_fill_guide
+        use_grid = TRUE,
+        show_fill_guide = FALSE
+      )
 
     p <- p1 / p2
   }
@@ -329,11 +328,11 @@ stop_psock_cluster <- function() {
     }
   }
 
+  p@plot_env <- emptyenv()
   p
 }
 
 .build_single_proximity_marker_plot <- function(g_data, spec) {
-  no_fill_guide <- ggplot2::guides(fill = "none")
   g_p1 <- g_data[spec$p1_idx, spec$p1_cols, drop = FALSE]
   g_p1$sample_alias <- spec$p1_sample_alias
 
@@ -349,9 +348,9 @@ stop_psock_cluster <- function() {
       palette = spec$sample_palette,
       use_jitter = TRUE,
       use_grid = TRUE,
-      hline = 0
-    ) +
-    no_fill_guide
+      hline = 0,
+      show_fill_guide = FALSE
+    )
 
   if (!spec$per_celltype) {
     return(p1)
@@ -373,11 +372,41 @@ stop_psock_cluster <- function() {
       facet_var = "celltype",
       use_jitter = TRUE,
       use_grid = TRUE,
-      hline = 0
-    ) +
-    no_fill_guide
+      hline = 0,
+      show_fill_guide = FALSE
+    )
 
-  p1 / p2
+  p <- p1 / p2
+  p@plot_env <- emptyenv()
+  p
+}
+
+.build_single_positive_rate_marker_plot <- function(mrkr_data, spec) {
+  p <-
+    mrkr_data |>
+    ggplot2::ggplot(ggplot2::aes(sample_alias, celltype, fill = positive_rate)) +
+    ggplot2::geom_tile(show.legend = FALSE) +
+    ggplot2::geom_text(ggplot2::aes(label = round(positive_rate, 0)), size = 3) +
+    ggplot2::scale_fill_gradientn(
+      colours = spec$palette,
+      limits = c(0, 100)
+    ) +
+    ggplot2::scale_x_discrete(expand = ggplot2::expansion(0)) +
+    ggplot2::scale_y_discrete(expand = ggplot2::expansion(0)) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 60, hjust = 1),
+      axis.text.y = ggplot2::element_text(angle = 90, hjust = 0.5),
+      panel.grid = ggplot2::element_blank(),
+      axis.title.x = ggplot2::element_blank()
+    ) +
+    ggplot2::labs(
+      title = paste0("Positive rate for ", unique(mrkr_data$marker)),
+      subtitle = paste0("% Cells with CLR >= ", spec$positive_threshold),
+      y = "Cell type"
+    )
+  p@plot_env <- emptyenv()
+  p
 }
 
 .build_single_kit_qc_lot_plot <- function(g_data, spec) {
@@ -435,14 +464,18 @@ stop_psock_cluster <- function() {
       list(filename = png_file, width = width, height = height, units = "in", res = dpi),
       dev_args
     )
-    do.call(grDevices::png, args)
+    do.call(ragg::agg_png, args)
     p <- try(
       if (identical(spec$type, "abundance_per_marker")) {
         .build_single_abundance_marker_plot(chunk$markers[[i]], spec)
+      } else if (identical(spec$type, "proximity_per_marker")) {
+        .build_single_proximity_marker_plot(chunk$groups[[i]], spec)
+      } else if (identical(spec$type, "positive_rate_per_marker")) {
+        .build_single_positive_rate_marker_plot(chunk$groups[[i]], spec)
       } else if (identical(spec$type, "kit_qc_lot_distribution")) {
         .build_single_kit_qc_lot_plot(chunk$groups[[i]], spec)
       } else {
-        .build_single_proximity_marker_plot(chunk$groups[[i]], spec)
+        stop(sprintf("Unsupported parallel_render_spec type: %s", as.character(spec$type)))
       },
       silent = TRUE
     )
@@ -486,7 +519,9 @@ stop_psock_cluster <- function() {
   height <- if (!is.null(opts$fig.height)) opts$fig.height[1L] else 7
   dpi <- if (!is.null(opts$dpi)) opts$dpi[1L] else 72
   dev_args <- opts$dev.args
-  if (is.list(dev_args) && !is.null(dev_args$png)) {
+  if (is.list(dev_args) && !is.null(dev_args$ragg_png)) {
+    dev_args <- dev_args$ragg_png
+  } else if (is.list(dev_args) && !is.null(dev_args$png)) {
     dev_args <- dev_args$png
   }
   if (!is.list(dev_args)) {
@@ -554,9 +589,7 @@ stop_psock_cluster <- function() {
     }
   })
 
-  parallel::parLapply(cl, chunks, function(ch) {
-    pixelatorES:::.render_worker_chunk(ch)
-  })
+  parallel::parLapply(cl, chunks, .render_worker_chunk)
 
   if (convert_webp) rel_webp_paths else rel_png_paths
 }
@@ -1303,6 +1336,7 @@ PositionQuasirandomFast <- ggplot2::ggproto(
 #' @param jitter_size Size of the quasirandom points.
 #' @param jitter_alpha Transparency level for the quasirandom points (default 0.35).
 #' @param hline Optional horizontal line to draw on the plot.
+#' @param show_fill_guide Logical indicating whether to show the fill legend (default TRUE).
 #'
 #' @return A ggplot object representing the violin plot.
 #'
@@ -1333,7 +1367,8 @@ plot_violin <- function(
   use_jitter = FALSE,
   jitter_size = 0.1,
   jitter_alpha = 0.35,
-  hline = NULL
+  hline = NULL,
+  show_fill_guide = TRUE
 ) {
   pixelatorR:::assert_class(plot_data, "data.frame")
   pixelatorR:::assert_single_value(x, type = "string", allow_null = TRUE)
@@ -1360,6 +1395,7 @@ plot_violin <- function(
   pixelatorR:::assert_single_value(jitter_alpha, type = "numeric")
   pixelatorR:::assert_within_limits(jitter_alpha, c(0, 1))
   pixelatorR:::assert_single_value(hline, type = "numeric", allow_null = TRUE)
+  pixelatorR:::assert_single_value(show_fill_guide, type = "bool")
 
   if (is.null(expand)) {
     expand <- waiver()
@@ -1497,7 +1533,10 @@ plot_violin <- function(
   }
   if (!is.null(fill)) {
     p <- p +
-      scale_fill_manual(values = palette)
+      scale_fill_manual(
+        values = palette,
+        guide = if (show_fill_guide) "legend" else "none"
+      )
   }
   if (use_log10) {
     p <- p +

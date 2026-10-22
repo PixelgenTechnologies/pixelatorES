@@ -29,7 +29,8 @@ plot_violin(
   use_jitter = FALSE,
   jitter_size = 0.1,
   jitter_alpha = 0.35,
-  hline = NULL
+  hline = NULL,
+  show_fill_guide = TRUE
 )
 }
 \arguments{
@@ -83,6 +84,8 @@ above the 0.5 quantile.}
 \item{jitter_alpha}{Transparency level for the quasirandom points (default 0.35).}
 
 \item{hline}{Optional horizontal line to draw on the plot.}
+
+\item{show_fill_guide}{Logical indicating whether to show the fill legend (default TRUE).}
 }
 \value{
 A ggplot object representing the violin plot.
