@@ -34,7 +34,10 @@ register_tabset_chunk_hooks()
 #| include: false
 
 # Set pixelatorES dev mode based on test_mode or debug_mode
-options(pixelatorES.dev_mode = isTRUE(params$test_mode) || isTRUE(params$debug_mode))
+options(
+  pixelatorES.dev_mode = isTRUE(params$test_mode) || isTRUE(params$debug_mode),
+  pixelatorES.mc_cores = if (!is.null(params$mc_cores)) as.integer(params$mc_cores) else 1L
+)
 ```
 
 ```{r}
