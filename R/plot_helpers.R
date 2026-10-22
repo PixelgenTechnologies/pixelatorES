@@ -176,6 +176,7 @@ resolve_anchor_prefix <- function(anchor_prefix = NULL) {
     .psock_pool$n_workers <- 0L
   }
 
+  c_obj <- NULL
   cl <- tryCatch(
     {
       c_obj <- parallel::makePSOCKcluster(mc_cores)
@@ -203,6 +204,9 @@ resolve_anchor_prefix <- function(anchor_prefix = NULL) {
       c_obj
     },
     error = function(e) {
+      if (!is.null(c_obj)) {
+        try(parallel::stopCluster(c_obj), silent = TRUE)
+      }
       NULL
     }
   )
