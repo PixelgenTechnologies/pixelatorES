@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Per-marker violin and beeswarm plot generation (`plot_violin()`, `component_abundance_per_marker()`, `component_proximity_per_marker()`) is now significantly faster via vectorized base-2 Van der Corput quasirandom positioning (`PositionQuasirandomFast`), pre-cached violin themes, and pre-indexed template data frames.
 - `title_plotlist()`, `tabset_plotlist()`, `run_abundance_anova()`, and `run_proximity_anova()` now use a persistent fork-free PSOCK worker cluster when `mc_cores > 1`, parallelizing per-marker plot rendering, PNG-to-WebP conversion, and ANOVA calculations.
+- `summarize_colocalization_scores_per_sample()`, `summarize_colocalization_scores_per_celltype()`, and `component_clustering_summary()` now compute `mean_join_count_z` and `mean_log2_ratio` directly via `SummarizeProximityScores(..., proximity_metric = c("join_count_z", "log2_ratio"), detailed = FALSE)`, avoiding slow `rowwise()` list-column materialization.
 
 ### Fixed
 

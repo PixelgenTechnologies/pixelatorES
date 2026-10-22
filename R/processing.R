@@ -217,15 +217,10 @@ summarize_colocalization_scores_per_sample <- function(
     proximity_scores %>%
     rename(component = sample_component) %>%
     SummarizeProximityScores(
-      proximity_metric = "join_count_z",
-      detailed = TRUE,
+      proximity_metric = c("join_count_z", "log2_ratio"),
+      detailed = FALSE,
       group_vars = c("sample_alias", "condition")
     ) %>%
-    rowwise() %>%
-    mutate(mean_log2_ratio = mean(log2(
-      pmax(unlist(join_count_list), 1) /
-        pmax(unlist(join_count_expected_mean_list), 1)
-    ))) %>%
     {
       if (test_mode) {
         .
@@ -283,18 +278,13 @@ summarize_colocalization_scores_per_celltype <- function(
     proximity_scores %>%
     rename(component = sample_component) %>%
     SummarizeProximityScores(
-      proximity_metric = "join_count_z",
-      detailed = TRUE,
+      proximity_metric = c("join_count_z", "log2_ratio"),
+      detailed = FALSE,
       group_vars = c(
         "sample_alias", "condition",
         "celltype"
       )
     ) %>%
-    rowwise() %>%
-    mutate(mean_log2_ratio = mean(log2(
-      pmax(unlist(join_count_list), 1) /
-        pmax(unlist(join_count_expected_mean_list), 1)
-    ))) %>%
     {
       if (test_mode) {
         .

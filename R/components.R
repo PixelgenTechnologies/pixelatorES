@@ -1837,18 +1837,14 @@ component_clustering_summary <- function(
     filter(marker_1 == marker_2) %>%
     rename(component = sample_component) %>%
     SummarizeProximityScores(
-      proximity_metric = "join_count_z", detailed = TRUE,
+      proximity_metric = c("join_count_z", "log2_ratio"),
+      detailed = FALSE,
       group_vars = c(
         "sample_alias",
         "celltype",
         "condition"
       )
     ) %>%
-    rowwise() %>%
-    mutate(mean_log2_ratio = mean(log2(
-      pmax(unlist(join_count_list), 1) /
-        pmax(unlist(join_count_expected_mean_list), 1)
-    ))) %>%
     rename(marker = marker_1) %>%
     {
       if (test_mode) {
