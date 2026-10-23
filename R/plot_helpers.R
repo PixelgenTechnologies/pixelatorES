@@ -479,6 +479,20 @@ stop_psock_cluster <- function() {
   plot
 }
 
+.build_single_plot_from_spec <- function(spec, i) {
+  if (identical(spec$type, "abundance_per_marker")) {
+    .build_single_abundance_marker_plot(spec$ordered_markers[[i]], spec)
+  } else if (identical(spec$type, "proximity_per_marker")) {
+    .build_single_proximity_marker_plot(spec$groups[[i]], spec)
+  } else if (identical(spec$type, "positive_rate_per_marker")) {
+    .build_single_positive_rate_marker_plot(spec$groups[[i]], spec)
+  } else if (identical(spec$type, "kit_qc_lot_distribution")) {
+    .build_single_kit_qc_lot_plot(spec$groups[[i]], spec)
+  } else {
+    stop(sprintf("Unsupported parallel_render_spec type: %s", as.character(spec$type)))
+  }
+}
+
 .render_worker_chunk <- function(chunk) {
   spec <- chunk$spec
   png_paths <- chunk$png_paths
@@ -719,8 +733,17 @@ title_plotlist <- function(plots, level = 2, anchor_prefix = NULL, mc_cores = NU
       ))
     }
 
-    # Print the plot
-    msg <- try(print(plots[[tab]]), silent = TRUE)
+    # Print the plot (rebuilding on demand if deferred to parallel_render_spec)
+    msg <- try(
+      {
+        p_tab <- plots[[tab]]
+        if (!is.null(spec) && inherits(p_tab, "ggplot") && length(p_tab$layers) == 0L) {
+          p_tab <- .build_single_plot_from_spec(spec, tab)
+        }
+        print(p_tab)
+      },
+      silent = TRUE
+    )
     if (inherits(msg, "try-error")) {
       if (getOption("pixelatorES.dev_mode", default = FALSE)) stop(msg)
 

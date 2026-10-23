@@ -392,6 +392,14 @@ test_that("PSOCK parallel rendering in tabset_plotlist matches sequential output
   expect_true(inherits(env_par$plots_prox[[1]], "ggplot"))
   expect_false(inherits(env_par$plots_prox[[1]], "patchwork"))
   expect_true(inherits(env_seq$plots_prox[[1]], "patchwork"))
+
+  # Verify sequential fallback in title_plotlist rebuilds deferred plots from spec
+  # when parallel rendering does not run (e.g., mc_cores = 1 override)
+  p_rebuilt <- pixelatorES:::.build_single_plot_from_spec(
+    attr(env_par$plots, "parallel_render_spec"),
+    1L
+  )
+  expect_true(inherits(p_rebuilt, "patchwork"))
 })
 
 
