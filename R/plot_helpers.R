@@ -8,6 +8,7 @@ plot_anchor_slug <- function(...) {
 .tabset_state <- new.env(parent = emptyenv())
 .tabset_state$depth <- 0L
 .tabset_state$stack <- integer(0)
+.tabset_state$t0 <- numeric(0)
 
 #' Reset tracked Quarto tabset depth
 #'
@@ -20,6 +21,7 @@ plot_anchor_slug <- function(...) {
 reset_tabset_state <- function() {
   .tabset_state$depth <- 0L
   .tabset_state$stack <- integer(0)
+  .tabset_state$t0 <- numeric(0)
   invisible(NULL)
 }
 
@@ -109,7 +111,21 @@ register_tabset_chunk_hooks <- function() {
     pixelatorES_tabset_guard = function(before, options, envir) {
       if (before) {
         .tabset_state$stack <- c(.tabset_state$stack, .tabset_state$depth)
+        .tabset_state$t0 <- c(.tabset_state$t0, proc.time()[["elapsed"]])
         return(NULL)
+      }
+
+      n_t0 <- length(.tabset_state$t0)
+      if (n_t0 > 0L) {
+        elapsed <- proc.time()[["elapsed"]] - .tabset_state$t0[[n_t0]]
+        .tabset_state$t0 <- .tabset_state$t0[-n_t0]
+        label <- options$label %||% "<unnamed>"
+        if (elapsed >= 0.05) {
+          cat(
+            sprintf("[pixelatorES timing] chunk '%s': %.2fs\n", label, elapsed),
+            file = stderr()
+          )
+        }
       }
 
       n_stack <- length(.tabset_state$stack)
@@ -589,7 +605,19 @@ stop_psock_cluster <- function() {
     }
   })
 
+  t_par0 <- proc.time()[["elapsed"]]
   parallel::parLapply(cl, chunks, .render_worker_chunk)
+  t_par_elapsed <- proc.time()[["elapsed"]] - t_par0
+  cat(
+    sprintf(
+      "[pixelatorES timing] parallel render '%s' (%d plots on %d workers): %.2fs\n",
+      spec$type,
+      n_plots,
+      n_workers,
+      t_par_elapsed
+    ),
+    file = stderr()
+  )
 
   if (convert_webp) rel_webp_paths else rel_png_paths
 }

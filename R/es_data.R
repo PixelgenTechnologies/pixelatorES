@@ -738,12 +738,20 @@ run_es_data_extractors <- function(
       next
     }
 
+    t_ext0 <- proc.time()[["elapsed"]]
     result <- tryCatch(
       list(value = node(object), error = NULL),
       error = function(error) {
         return(list(value = NULL, error = error))
       }
     )
+    t_ext_elapsed <- proc.time()[["elapsed"]] - t_ext0
+    if (isTRUE(getOption("knitr.in.progress")) && t_ext_elapsed >= 0.05) {
+      cat(
+        sprintf("[pixelatorES timing] extractor '%s': %.2fs\n", target, t_ext_elapsed),
+        file = stderr()
+      )
+    }
 
     if (!is.null(result$error)) {
       object <- add_es_data_diagnostic(
