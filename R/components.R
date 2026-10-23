@@ -1385,6 +1385,15 @@ component_coreness <-
 #'   (default is TRUE).
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
+#' @details
+#' When called during a `knitr` / Quarto render with `mc_cores > 1`, full
+#' `ggplot` / `patchwork` object construction is deferred to the parallel worker
+#' pool in [title_plotlist()] / [tabset_plotlist()] via the
+#' `"parallel_render_spec"` attribute, and the returned list contains lightweight
+#' placeholder `ggplot` objects on the main thread. In interactive sessions,
+#' unit tests, or when `mc_cores == 1`, all marker plots are constructed and
+#' returned directly.
+#'
 #' @return A list containing plots for each marker.
 #'
 #' @export
@@ -1454,59 +1463,73 @@ component_abundance_per_marker <- function(
     base_p2 <- base_p2_indexed[, setdiff(names(base_p2_indexed), ".row_idx"), drop = FALSE]
   }
 
-  plots <-
-    lapply(ordered_markers, function(m) {
-      vals <- unname(mat[m, ])
-      marker_fac <- factor(m, levels = ordered_markers)
+  mc_cores <- if (!is.null(params$mc_cores)) {
+    as.integer(params$mc_cores)
+  } else {
+    as.integer(getOption("pixelatorES.mc_cores", default = 1L))
+  }
+  defer_to_workers <- !is.na(mc_cores) && mc_cores > 1L && isTRUE(getOption("knitr.in.progress"))
 
-      g_p1 <- base_p1
-      g_p1$marker <- marker_fac
-      g_p1$normcount <- vals
+  if (defer_to_workers) {
+    placeholder <- ggplot()
+    placeholder@plot_env <- emptyenv()
+    plots <- rep(list(placeholder), length(ordered_markers)) %>%
+      set_names(ordered_markers)
+  } else {
+    plots <-
+      lapply(ordered_markers, function(m) {
+        vals <- unname(mat[m, ])
+        marker_fac <- factor(m, levels = ordered_markers)
 
-      p1 <-
-        plot_violin(
-          g_p1,
-          x = "sample_alias",
-          y = "normcount",
-          fill = "condition",
-          fill_label = "Condition",
-          title = m,
-          y_label = "Normalized counts",
-          summarize = FALSE,
-          palette = sample_palette,
-          use_jitter = TRUE,
-          use_grid = TRUE,
-          show_fill_guide = FALSE
-        )
+        g_p1 <- base_p1
+        g_p1$marker <- marker_fac
+        g_p1$normcount <- vals
 
-      if (!per_celltype) {
-        return(p1)
-      }
+        p1 <-
+          plot_violin(
+            g_p1,
+            x = "sample_alias",
+            y = "normcount",
+            fill = "condition",
+            fill_label = "Condition",
+            title = m,
+            y_label = "Normalized counts",
+            summarize = FALSE,
+            palette = sample_palette,
+            use_jitter = TRUE,
+            use_grid = TRUE,
+            show_fill_guide = FALSE
+          )
 
-      g_p2 <- base_p2
-      g_p2$marker[!is.na(p2_row_idx)] <- marker_fac
-      g_p2$normcount <- vals[p2_row_idx]
+        if (!per_celltype) {
+          return(p1)
+        }
 
-      p2 <-
-        plot_violin(
-          g_p2,
-          x = "sample_alias",
-          y = "normcount",
-          fill = "condition",
-          y_label = "Normalized counts",
-          summarize = FALSE,
-          palette = sample_palette,
-          facet_var = "celltype",
-          use_jitter = TRUE,
-          use_grid = TRUE,
-          show_fill_guide = FALSE
-        )
+        g_p2 <- base_p2
+        g_p2$marker[!is.na(p2_row_idx)] <- marker_fac
+        g_p2$normcount <- vals[p2_row_idx]
 
-      p <- p1 / p2
-      p@plot_env <- emptyenv()
-      p
-    }) %>%
-    set_names(ordered_markers)
+        p2 <-
+          plot_violin(
+            g_p2,
+            x = "sample_alias",
+            y = "normcount",
+            fill = "condition",
+            y_label = "Normalized counts",
+            summarize = FALSE,
+            palette = sample_palette,
+            facet_var = "celltype",
+            use_jitter = TRUE,
+            use_grid = TRUE,
+            show_fill_guide = FALSE
+          )
+
+        p <- p1 / p2
+        p@plot_env <- emptyenv()
+        p
+      }) %>%
+      set_names(ordered_markers)
+  }
 
   attr(plots, "parallel_render_spec") <- list(
     type = "abundance_per_marker",
@@ -1517,7 +1540,7 @@ component_abundance_per_marker <- function(
     p2_row_idx = if (per_celltype) p2_row_idx else NULL,
     per_celltype = per_celltype,
     sample_palette = sample_palette,
-    mc_cores = if (!is.null(params$mc_cores)) as.integer(params$mc_cores) else 1L
+    mc_cores = mc_cores
   )
 
   return(plots)
@@ -1676,6 +1699,15 @@ component_proximity_selected <-
 #' @param per_celltype A boolean indicating whether to add a plot per cell type (default is TRUE).
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
+#' @details
+#' When called during a `knitr` / Quarto render with `mc_cores > 1`, full
+#' `ggplot` / `patchwork` object construction is deferred to the parallel worker
+#' pool in [title_plotlist()] / [tabset_plotlist()] via the
+#' `"parallel_render_spec"` attribute, and the returned list contains lightweight
+#' placeholder `ggplot` objects on the main thread. In interactive sessions,
+#' unit tests, or when `mc_cores == 1`, all marker plots are constructed and
+#' returned directly.
+#'
 #' @return A list containing plots for each marker.
 #'
 #' @export
@@ -1744,55 +1776,69 @@ component_proximity_per_marker <- function(
     p2_celltype <- t_p2$celltype
   }
 
-  plots <-
-    lapply(groups, function(g_data) {
-      g_p1 <- g_data[p1_idx, p1_cols, drop = FALSE]
-      g_p1$sample_alias <- p1_sample_alias
+  mc_cores <- if (!is.null(es_data$params$mc_cores)) {
+    as.integer(es_data$params$mc_cores)
+  } else {
+    as.integer(getOption("pixelatorES.mc_cores", default = 1L))
+  }
+  defer_to_workers <- !is.na(mc_cores) && mc_cores > 1L && isTRUE(getOption("knitr.in.progress"))
 
-      p1 <-
-        plot_violin(
-          g_p1,
-          x = "sample_alias",
-          y = "log2_ratio",
-          fill = "condition",
-          title = as.character(g_data$marker_1[1]),
-          y_label = "Log2 ratio Proximity Score",
-          summarize = FALSE,
-          palette = sample_palette,
-          use_jitter = TRUE,
-          use_grid = TRUE,
-          hline = 0,
-          show_fill_guide = FALSE
-        )
+  if (defer_to_workers) {
+    placeholder <- ggplot()
+    placeholder@plot_env <- emptyenv()
+    plots <- rep(list(placeholder), length(groups)) %>%
+      set_names(names(groups))
+  } else {
+    plots <-
+      lapply(groups, function(g_data) {
+        g_p1 <- g_data[p1_idx, p1_cols, drop = FALSE]
+        g_p1$sample_alias <- p1_sample_alias
 
-      if (!per_celltype) {
-        return(p1)
-      }
+        p1 <-
+          plot_violin(
+            g_p1,
+            x = "sample_alias",
+            y = "log2_ratio",
+            fill = "condition",
+            title = as.character(g_data$marker_1[1]),
+            y_label = "Log2 ratio Proximity Score",
+            summarize = FALSE,
+            palette = sample_palette,
+            use_jitter = TRUE,
+            use_grid = TRUE,
+            hline = 0,
+            show_fill_guide = FALSE
+          )
 
-      g_p2 <- g_data[p2_idx, p2_cols, drop = FALSE]
-      g_p2$sample_alias <- p2_sample_alias
-      g_p2$celltype <- p2_celltype
+        if (!per_celltype) {
+          return(p1)
+        }
 
-      p2 <-
-        plot_violin(
-          g_p2,
-          x = "sample_alias",
-          y = "log2_ratio",
-          fill = "condition",
-          y_label = "Log2 ratio Proximity Score",
-          summarize = FALSE,
-          palette = sample_palette,
-          facet_var = "celltype",
-          use_jitter = TRUE,
-          use_grid = TRUE,
-          hline = 0,
-          show_fill_guide = FALSE
-        )
+        g_p2 <- g_data[p2_idx, p2_cols, drop = FALSE]
+        g_p2$sample_alias <- p2_sample_alias
+        g_p2$celltype <- p2_celltype
 
-      p <- p1 / p2
-      p@plot_env <- emptyenv()
-      p
-    })
+        p2 <-
+          plot_violin(
+            g_p2,
+            x = "sample_alias",
+            y = "log2_ratio",
+            fill = "condition",
+            y_label = "Log2 ratio Proximity Score",
+            summarize = FALSE,
+            palette = sample_palette,
+            facet_var = "celltype",
+            use_jitter = TRUE,
+            use_grid = TRUE,
+            hline = 0,
+            show_fill_guide = FALSE
+          )
+
+        p <- p1 / p2
+        p@plot_env <- emptyenv()
+        p
+      })
+  }
 
   # Retain only columns used by .build_single_proximity_marker_plot in parallel_render_spec
   spec_groups <- lapply(
@@ -1812,7 +1858,7 @@ component_proximity_per_marker <- function(
     p2_celltype = if (per_celltype) p2_celltype else NULL,
     per_celltype = per_celltype,
     sample_palette = sample_palette,
-    mc_cores = if (!is.null(es_data$params$mc_cores)) as.integer(es_data$params$mc_cores) else 1L
+    mc_cores = mc_cores
   )
 
   return(plots)

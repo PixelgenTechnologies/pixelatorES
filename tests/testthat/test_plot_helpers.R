@@ -383,6 +383,15 @@ test_that("PSOCK parallel rendering in tabset_plotlist matches sequential output
   webp_par <- sort(list.files(file.path(dir_par, "figure"), pattern = "\\.webp$", full.names = TRUE))
   expect_equal(basename(webp_seq), basename(webp_par))
   expect_length(webp_par, 6L)
+
+  # When knitr.in.progress is TRUE and mc_cores > 1, main-thread plot construction
+  # is deferred to the worker pool (elements are lightweight ggplot placeholders)
+  expect_true(inherits(env_par$plots[[1]], "ggplot"))
+  expect_false(inherits(env_par$plots[[1]], "patchwork"))
+  expect_true(inherits(env_seq$plots[[1]], "patchwork"))
+  expect_true(inherits(env_par$plots_prox[[1]], "ggplot"))
+  expect_false(inherits(env_par$plots_prox[[1]], "patchwork"))
+  expect_true(inherits(env_seq$plots_prox[[1]], "patchwork"))
 })
 
 
