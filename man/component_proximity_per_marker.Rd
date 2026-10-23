@@ -28,3 +28,12 @@ This function creates plots visualizing the proximity scores for each marker
 across different samples and conditions. Every component is shown for every
 plotted marker, with proximity scores that were filtered out set to 0.
 }
+\details{
+When called during a \code{knitr} / Quarto render with \code{mc_cores > 1}, full
+\code{ggplot} / \code{patchwork} object construction is deferred to the parallel worker
+pool in \code{\link[=title_plotlist]{title_plotlist()}} / \code{\link[=tabset_plotlist]{tabset_plotlist()}} via the
+\code{"parallel_render_spec"} attribute, and the returned list contains lightweight
+placeholder \code{ggplot} objects on the main thread. In interactive sessions,
+unit tests, or when \code{mc_cores == 1}, all marker plots are constructed and
+returned directly.
+}

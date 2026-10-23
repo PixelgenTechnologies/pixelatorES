@@ -11,9 +11,9 @@ register_tabset_chunk_hooks()
 }
 \description{
 When Quarto is run with \code{execute: error: true}, a chunk can fail after
-\code{\link[=open_tabset]{open_tabset()}} (or a \code{tabset_*} helper) has written an opening fence.
+\code{\link[=open_tabset]{open_tabset()}} (or a \verb{tabset_*} helper) has written an opening fence.
 This hook restores the tabset depth from the start of the chunk by appending
-the missing \verb{:::} fences so later sections of the report still parse.
+the missing \code{:::} fences so later sections of the report still parse.
 }
 \details{
 Call once during report setup (see \code{inst/quarto/shared/preprocessing.qmd}).

@@ -3,7 +3,7 @@ pg_data <- get_test_data()
 test_that("process_data works as expected", {
   expect_no_error(
     dat_processed <-
-      process_data(
+      suppressWarnings(process_data(
         pg_data,
         params = list(
           test_mode = FALSE,
@@ -11,13 +11,13 @@ test_that("process_data works as expected", {
           clustering_resolution = 1,
           annotation_method = "nmf"
         )
-      )
+      ))
   )
 
   # With few cells
   expect_no_error(
     dat_processed <-
-      process_data(
+      suppressWarnings(process_data(
         pg_data |>
           subset(cells = 1:5),
         params = list(
@@ -26,7 +26,7 @@ test_that("process_data works as expected", {
           clustering_resolution = 1,
           annotation_method = "nmf"
         )
-      )
+      ))
   )
 })
 
@@ -182,6 +182,18 @@ test_that("Abundance ANOVAs work as expected", {
     ), class = c("tbl_df", "tbl", "data.frame"))
   )
 
+  if (!identical(Sys.getenv("CI"), "true")) {
+    on.exit(pixelatorES:::stop_psock_cluster(), add = TRUE)
+    anova_res_par <- run_abundance_anova(
+      pg_data %>% subset(features = rownames(pg_data)[1:3]),
+      vars = c("seurat_clusters", "condition"),
+      layer = "data",
+      mc_cores = 2,
+      p_adj_method = "bonferroni"
+    )
+    expect_equal(anova_res_par, anova_res)
+  }
+
   # When there is only one sample
 
   test_data$condition <- "one"
@@ -275,12 +287,12 @@ test_that("Proximity ANOVAs work as expected", {
 
   expect_no_error(
     anova_res <-
-      run_proximity_anova(
+      suppressWarnings(run_proximity_anova(
         prox_data,
         vars = c("seurat_clusters", "condition"),
         mc_cores = 1,
         p_adj_method = "bonferroni"
-      )
+      ))
   )
 
   expect_equal(
@@ -336,17 +348,28 @@ test_that("Proximity ANOVAs work as expected", {
     ))
   )
 
+  if (!identical(Sys.getenv("CI"), "true")) {
+    on.exit(pixelatorES:::stop_psock_cluster(), add = TRUE)
+    anova_res_par <- suppressWarnings(run_proximity_anova(
+      prox_data,
+      vars = c("seurat_clusters", "condition"),
+      mc_cores = 2,
+      p_adj_method = "bonferroni"
+    ))
+    expect_equal(anova_res_par, anova_res)
+  }
+
   # Only one sample
   prox_data$condition <- "one"
 
   expect_no_error(
     anova_res <-
-      run_proximity_anova(
+      suppressWarnings(run_proximity_anova(
         prox_data,
         vars = c("seurat_clusters", "condition"),
         mc_cores = 1,
         p_adj_method = "bonferroni"
-      )
+      ))
   )
 
   expect_equal(

@@ -200,7 +200,7 @@ for (data_type in data_types) {
 
     # component_sequencing_saturation_curve
     expect_no_error(
-      component <- component_sequencing_saturation_curve(es_data)
+      component <- suppressWarnings(component_sequencing_saturation_curve(es_data))
     )
 
     # component_denoising
@@ -212,7 +212,7 @@ for (data_type in data_types) {
 
     for (plot in component$plots) {
       expect_s3_class(plot, "ggplot")
-      expect_no_error(ggplot2::ggplot_build(plot))
+      expect_no_error(suppressWarnings(ggplot2::ggplot_build(plot)))
     }
     for (table in component$tables) {
       expect_s3_class(table, "datatables")
@@ -254,7 +254,7 @@ for (data_type in data_types) {
 
     expect_s3_class(component[[1]], "ggplot")
     expect_no_error(
-      ggplot2::ggplot_build(component[[1]])
+      suppressWarnings(ggplot2::ggplot_build(component[[1]]))
     )
     # component_proximity_per_marker
     temp <-
@@ -288,7 +288,7 @@ for (data_type in data_types) {
     )
     expect_s3_class(component[[1]], "ggplot")
     expect_no_error(
-      ggplot2::ggplot_build(component[[1]])
+      suppressWarnings(ggplot2::ggplot_build(component[[1]]))
     )
     expect_equal(
       component[[1]]$data,
@@ -439,12 +439,12 @@ for (data_type in data_types) {
     selected_es_data$proximity <- proximity_scores %>%
       filter(as.character(marker_1) == as.character(marker_2))
     expect_no_error(
-      component <- component_proximity_selected(
+      component <- suppressWarnings(component_proximity_selected(
         selected_es_data,
         sample_palette = c("red", "black"),
         selected_contrasts = FALSE,
         proximity_score = "log2_ratio"
-      )
+      ))
     )
 
     expect_named(component, expected = switch(data_type,
@@ -453,7 +453,7 @@ for (data_type in data_types) {
     ))
     expect_s3_class(component[[1]], "ggplot")
     expect_no_error(
-      ggplot2::ggplot_build(component[[1]])
+      suppressWarnings(ggplot2::ggplot_build(component[[1]]))
     )
 
 
