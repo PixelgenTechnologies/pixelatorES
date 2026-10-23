@@ -10,6 +10,20 @@ plot_anchor_slug <- function(...) {
 .tabset_state$stack <- integer(0)
 .tabset_state$t0 <- numeric(0)
 
+#' Check whether timing logs are enabled
+#'
+#' Enabled when `options(pixelatorES.timing = TRUE)` is set or when the
+#' `PIXELATOR_ES_TIMING` environment variable is set to `"1"`, `"true"`, or
+#' `"yes"` (case-insensitive).
+#'
+#' @return Logical scalar.
+#'
+#' @noRd
+.timing_enabled <- function() {
+  isTRUE(getOption("pixelatorES.timing")) ||
+    tolower(Sys.getenv("PIXELATOR_ES_TIMING")) %in% c("1", "true", "yes")
+}
+
 #' Reset tracked Quarto tabset depth
 #'
 #' Intended for tests. Report rendering resets state when
@@ -120,7 +134,7 @@ register_tabset_chunk_hooks <- function() {
         elapsed <- proc.time()[["elapsed"]] - .tabset_state$t0[[n_t0]]
         .tabset_state$t0 <- .tabset_state$t0[-n_t0]
         label <- options$label %||% "<unnamed>"
-        if (elapsed >= 0.05) {
+        if (.timing_enabled() && elapsed >= 0.05) {
           cat(
             sprintf("[pixelatorES timing] chunk '%s': %.2fs\n", label, elapsed),
             file = stderr()
@@ -611,16 +625,18 @@ stop_psock_cluster <- function() {
   t_par0 <- proc.time()[["elapsed"]]
   parallel::parLapply(cl, chunks, .render_worker_chunk)
   t_par_elapsed <- proc.time()[["elapsed"]] - t_par0
-  cat(
-    sprintf(
-      "[pixelatorES timing] parallel render '%s' (%d plots on %d workers): %.2fs\n",
-      spec$type,
-      n_plots,
-      n_workers,
-      t_par_elapsed
-    ),
-    file = stderr()
-  )
+  if (.timing_enabled()) {
+    cat(
+      sprintf(
+        "[pixelatorES timing] parallel render '%s' (%d plots on %d workers): %.2fs\n",
+        spec$type,
+        n_plots,
+        n_workers,
+        t_par_elapsed
+      ),
+      file = stderr()
+    )
+  }
 
   if (convert_webp) rel_webp_paths else rel_png_paths
 }

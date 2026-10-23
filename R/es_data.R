@@ -746,7 +746,7 @@ run_es_data_extractors <- function(
       }
     )
     t_ext_elapsed <- proc.time()[["elapsed"]] - t_ext0
-    if (isTRUE(getOption("knitr.in.progress")) && t_ext_elapsed >= 0.05) {
+    if (.timing_enabled() && isTRUE(getOption("knitr.in.progress")) && t_ext_elapsed >= 0.05) {
       cat(
         sprintf("[pixelatorES timing] extractor '%s': %.2fs\n", target, t_ext_elapsed),
         file = stderr()
