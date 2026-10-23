@@ -555,8 +555,9 @@ component_sequencing_saturation_curve <-
         pxl_file <- data_files %>%
           filter(sample_alias == sampl) %>%
           pull(filename)
+
         db <- PixelDB$new(pxl_file)
-        on.exit(db$close())
+        on.exit(db$close(), add = TRUE)
         approximate_saturation_curve(
           db,
           fracs = sample_frac,

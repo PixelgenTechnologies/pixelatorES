@@ -105,7 +105,7 @@ filter_proximity_scores <- function(
   # Fall back to a small cutoff if the background threshold is too low
   background_threshold_pct <- max(background_threshold_pct, 0.0025)
 
-  proximity_scores <-
+  lazy_proximity <-
     ProximityScores(pg_data_processed,
       add_marker_counts = TRUE, add_marker_proportions = TRUE,
       meta_data_columns = c(
@@ -114,7 +114,17 @@ filter_proximity_scores <- function(
         "condition"
       ),
       lazy = TRUE
-    ) %>%
+    )
+  con_fed <- lazy_proximity$src$con
+  on.exit(
+    if (!is.null(con_fed) && DBI::dbIsValid(con_fed)) {
+      DBI::dbDisconnect(con_fed, shutdown = TRUE)
+    },
+    add = TRUE
+  )
+
+  proximity_scores <-
+    lazy_proximity %>%
     rename(sample_component = component) %>%
     FilterProximityScores(
       background_threshold_pct = background_threshold_pct

@@ -207,6 +207,9 @@ resolve_anchor_prefix <- function(anchor_prefix = NULL) {
             VECLIB_MAXIMUM_THREADS = "1",
             MAGICK_THREAD_LIMIT = "1"
           )
+          if (!nzchar(Sys.getenv("PIXELATOR_DUCKDB_TEMP_DIR"))) {
+            Sys.setenv(PIXELATOR_DUCKDB_TEMP_DIR = tempdir())
+          }
           if (is_dev && requireNamespace("pkgload", quietly = TRUE)) {
             suppressMessages(pkgload::load_all(path, quiet = TRUE))
           } else {

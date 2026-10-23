@@ -7,6 +7,10 @@
 #'
 #' @noRd
 .onLoad <- function(libname, pkgname) {
+  if (!nzchar(Sys.getenv("PIXELATOR_DUCKDB_TEMP_DIR"))) {
+    Sys.setenv(PIXELATOR_DUCKDB_TEMP_DIR = tempdir())
+  }
+
   register_es_data_workflow(
     name = "amplicon_demux",
     extractors = .amplicon_demux_extractors,
