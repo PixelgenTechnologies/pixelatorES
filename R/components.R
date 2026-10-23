@@ -1994,6 +1994,15 @@ component_proximity_heatmap_sample <- function(
   pixelatorR:::assert_class(plot_markers, "character", allow_null = TRUE)
   pixelatorR:::assert_class(test_mode, "logical")
 
+  if (is.null(plot_markers)) {
+    plot_markers <-
+      find_top_abundance_markers(pg_data_processed,
+        n_markers = n_markers,
+        summary_method = "mean"
+      ) %>%
+      pull(marker)
+  }
+
   processed_data <-
     summarize_colocalization_scores_per_sample(
       proximity_scores,
@@ -2006,15 +2015,6 @@ component_proximity_heatmap_sample <- function(
       everything()
     )) %>%
     distinct()
-
-  if (is.null(plot_markers)) {
-    plot_markers <-
-      find_top_abundance_markers(pg_data_processed,
-        n_markers = n_markers,
-        summary_method = "mean"
-      ) %>%
-      pull(marker)
-  }
 
   # Filter and symmetrise data
   processed_data <-
@@ -2129,9 +2129,26 @@ component_proximity_heatmap_celltype <- function(
   pixelatorR:::assert_class(plot_markers, "character", allow_null = TRUE)
   pixelatorR:::assert_class(test_mode, "logical")
 
-  processed_data <-
+  proximity_filtered <-
     proximity_scores %>%
-    filter(celltype %in% displayed_cell_types) %>%
+    filter(celltype %in% displayed_cell_types)
+
+  if (is.null(plot_markers)) {
+    top_markers <-
+      find_top_abundance_markers(pg_data_processed,
+        n_markers = n_markers,
+        summary_method = "mean",
+        group_col = "celltype"
+      )
+
+    proximity_filtered <-
+      proximity_filtered %>%
+      semi_join(top_markers, by = c("celltype", "marker_1" = "marker")) %>%
+      semi_join(top_markers, by = c("celltype", "marker_2" = "marker"))
+  }
+
+  processed_data <-
+    proximity_filtered %>%
     summarize_colocalization_scores_per_celltype(
       plot_markers = plot_markers,
       test_mode = test_mode
@@ -2144,13 +2161,6 @@ component_proximity_heatmap_celltype <- function(
     distinct()
 
   if (is.null(plot_markers)) {
-    top_markers <-
-      find_top_abundance_markers(pg_data_processed,
-        n_markers = n_markers,
-        summary_method = "mean",
-        group_col = "celltype"
-      )
-
     processed_data <-
       processed_data %>%
       inner_join(top_markers, by = c("celltype", "marker_1" = "marker")) %>%
