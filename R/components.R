@@ -157,7 +157,13 @@ component_denoising <- function(
       use_pct = TRUE,
       hline = 0,
       round = 2
-    ) +
+    )
+  p_isotype_reduction$scales$scales <- Filter(
+    function(s) !("y" %in% s$aesthetics),
+    p_isotype_reduction$scales$scales
+  )
+  p_isotype_reduction <-
+    p_isotype_reduction +
     scale_y_continuous(
       labels = scales::percent_format(accuracy = 1),
       limits = c(-1, 1),
@@ -549,8 +555,9 @@ component_sequencing_saturation_curve <-
         pxl_file <- data_files %>%
           filter(sample_alias == sampl) %>%
           pull(filename)
+
         db <- PixelDB$new(pxl_file)
-        on.exit(db$close())
+        on.exit(db$close(), add = TRUE)
         approximate_saturation_curve(
           db,
           fracs = sample_frac,
@@ -1379,6 +1386,15 @@ component_coreness <-
 #'   (default is TRUE).
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
+#' @details
+#' When called during a `knitr` / Quarto render with `mc_cores > 1`, full
+#' `ggplot` / `patchwork` object construction is deferred to the parallel worker
+#' pool in [title_plotlist()] / [tabset_plotlist()] via the
+#' `"parallel_render_spec"` attribute, and the returned list contains lightweight
+#' placeholder `ggplot` objects on the main thread. In interactive sessions,
+#' unit tests, or when `mc_cores == 1`, all marker plots are constructed and
+#' returned directly.
+#'
 #' @return A list containing plots for each marker.
 #'
 #' @export
@@ -1394,91 +1410,139 @@ component_abundance_per_marker <- function(
   params <- es_data$params
   sample_levels <- es_data$sample_aliases
 
-  .abundance_plot_data <- function(object, params, test_mode = FALSE) {
-    object %>%
-      LayerData("data") %>%
-      as_tibble(rownames = "marker") %>%
-      {
-        if (test_mode) {
-          slice_head(., n = 10)
-        } else {
-          .
-        }
-      } %>%
-      pivot_longer(-marker, names_to = "cell_id", values_to = "normcount") %>%
-      left_join(
-        FetchData(object,
-          vars = c(
-            "sample_alias",
-            "condition",
-            "seurat_clusters",
-            "celltype"
-          )
-        ) %>%
-          as_tibble(rownames = "cell_id"),
-        by = "cell_id"
+  mat <- as.matrix(LayerData(object, "data"))
+  if (test_mode) {
+    mat <- mat[seq_len(min(10L, nrow(mat))), , drop = FALSE]
+  }
+  ordered_markers <- order_cd_markers(rownames(mat), params$control_markers)
+  ordered_markers <- ordered_markers[ordered_markers %in% rownames(mat)]
+
+  meta <-
+    FetchData(
+      object,
+      vars = c(
+        "sample_alias",
+        "condition",
+        "seurat_clusters",
+        "celltype"
+      )
+    ) %>%
+    as_tibble(rownames = "cell_id")
+
+  # Explicitly align LayerData columns with FetchData cell_id order
+  cell_match <- match(meta$cell_id, colnames(mat))
+  if (anyNA(cell_match) || length(cell_match) != ncol(mat)) {
+    cli::cli_abort("Cell IDs in {.fn FetchData} do not match column names of {.fn LayerData}.")
+  }
+  mat <- mat[, cell_match, drop = FALSE]
+
+  # Match column layout of the original per-marker tibble:
+  # (marker, cell_id, normcount, sample_alias, condition, seurat_clusters, celltype)
+  base_p1 <-
+    tibble(
+      marker = factor(NA_character_, levels = ordered_markers),
+      cell_id = meta$cell_id,
+      normcount = NA_real_,
+      sample_alias = meta$sample_alias,
+      condition = meta$condition,
+      seurat_clusters = meta$seurat_clusters,
+      celltype = meta$celltype
+    ) %>%
+    set_sample_levels(sample_levels)
+
+  if (per_celltype) {
+    base_p2_indexed <-
+      base_p1 %>%
+      mutate(.row_idx = seq_len(nrow(base_p1))) %>%
+      filter(celltype %in% displayed_cell_types) %>%
+      complete(
+        sample_alias = levels(sample_alias),
+        celltype = displayed_cell_types
       ) %>%
-      mutate(
-        marker = factor(marker, order_cd_markers(
-          unique(marker),
-          params$control_markers
-        ))
-      ) %>%
-      group_by(marker)
+      mutate(celltype = factor(celltype, displayed_cell_types))
+    p2_row_idx <- base_p2_indexed$.row_idx
+    base_p2 <- base_p2_indexed[, setdiff(names(base_p2_indexed), ".row_idx"), drop = FALSE]
   }
 
-  plot_data <- .abundance_plot_data(object, params, test_mode)
+  mc_cores <- if (!is.null(params$mc_cores)) {
+    as.integer(params$mc_cores)
+  } else {
+    as.integer(getOption("pixelatorES.mc_cores", default = 1L))
+  }
+  defer_to_workers <- !is.na(mc_cores) && mc_cores > 1L && isTRUE(getOption("knitr.in.progress"))
 
-  plots <-
-    plot_data %>%
-    group_split() %>%
-    set_names(group_keys(plot_data)$marker) %>%
-    lapply(function(g_data) {
-      p1 <-
-        g_data %>%
-        set_sample_levels(sample_levels) %>%
-        plot_violin(
-          x = "sample_alias",
-          y = "normcount",
-          fill = "condition",
-          fill_label = "Condition",
-          title = unique(g_data$marker) %>% as.character(),
-          y_label = "Normalized counts",
-          summarize = FALSE,
-          palette = sample_palette,
-          use_jitter = TRUE,
-          use_grid = TRUE
-        ) +
-        guides(fill = "none")
+  if (defer_to_workers) {
+    placeholder <- ggplot()
+    placeholder@plot_env <- emptyenv()
+    plots <- rep(list(placeholder), length(ordered_markers)) %>%
+      set_names(ordered_markers)
+  } else {
+    plots <-
+      lapply(ordered_markers, function(m) {
+        vals <- unname(mat[m, ])
+        marker_fac <- factor(m, levels = ordered_markers)
 
-      if (!per_celltype) {
-        return(p1)
-      }
+        g_p1 <- base_p1
+        g_p1$marker <- marker_fac
+        g_p1$normcount <- vals
 
-      p2 <-
-        g_data %>%
-        set_sample_levels(sample_levels) %>%
-        filter(celltype %in% displayed_cell_types) %>%
-        complete(
-          sample_alias = levels(sample_alias),
-          celltype = displayed_cell_types
-        ) %>%
-        mutate(celltype = factor(celltype, displayed_cell_types)) %>%
-        plot_violin(
-          x = "sample_alias",
-          y = "normcount",
-          fill = "condition",
-          y_label = "Normalized counts",
-          summarize = FALSE,
-          palette = sample_palette,
-          facet_var = "celltype",
-          use_jitter = TRUE,
-          use_grid = TRUE
-        ) +
-        guides(fill = "none")
+        p1 <-
+          plot_violin(
+            g_p1,
+            x = "sample_alias",
+            y = "normcount",
+            fill = "condition",
+            fill_label = "Condition",
+            title = m,
+            y_label = "Normalized counts",
+            summarize = FALSE,
+            palette = sample_palette,
+            use_jitter = TRUE,
+            use_grid = TRUE,
+            show_fill_guide = FALSE
+          )
 
-      p1 / p2
-    })
+        if (!per_celltype) {
+          return(p1)
+        }
+
+        g_p2 <- base_p2
+        g_p2$marker[!is.na(p2_row_idx)] <- marker_fac
+        g_p2$normcount <- vals[p2_row_idx]
+
+        p2 <-
+          plot_violin(
+            g_p2,
+            x = "sample_alias",
+            y = "normcount",
+            fill = "condition",
+            y_label = "Normalized counts",
+            summarize = FALSE,
+            palette = sample_palette,
+            facet_var = "celltype",
+            use_jitter = TRUE,
+            use_grid = TRUE,
+            show_fill_guide = FALSE
+          )
+
+        p <- p1 / p2
+        p@plot_env <- emptyenv()
+        p
+      }) %>%
+      set_names(ordered_markers)
+  }
+
+  attr(plots, "parallel_render_spec") <- list(
+    type = "abundance_per_marker",
+    mat = mat[ordered_markers, , drop = FALSE],
+    ordered_markers = ordered_markers,
+    base_p1 = base_p1,
+    base_p2 = if (per_celltype) base_p2 else NULL,
+    p2_row_idx = if (per_celltype) p2_row_idx else NULL,
+    per_celltype = per_celltype,
+    sample_palette = sample_palette,
+    mc_cores = mc_cores
+  )
 
   return(plots)
 }
@@ -1636,6 +1700,15 @@ component_proximity_selected <-
 #' @param per_celltype A boolean indicating whether to add a plot per cell type (default is TRUE).
 #' @param test_mode A boolean indicating whether to run in test mode (default is FALSE).
 #'
+#' @details
+#' When called during a `knitr` / Quarto render with `mc_cores > 1`, full
+#' `ggplot` / `patchwork` object construction is deferred to the parallel worker
+#' pool in [title_plotlist()] / [tabset_plotlist()] via the
+#' `"parallel_render_spec"` attribute, and the returned list contains lightweight
+#' placeholder `ggplot` objects on the main thread. In interactive sessions,
+#' unit tests, or when `mc_cores == 1`, all marker plots are constructed and
+#' returned directly.
+#'
 #' @return A list containing plots for each marker.
 #'
 #' @export
@@ -1665,59 +1738,131 @@ component_proximity_per_marker <- function(
     ) %>%
     group_by(marker_1)
 
-  plots <-
+  groups <-
     plot_data %>%
     group_split() %>%
-    set_names(group_keys(plot_data)$marker_1) %>%
-    lapply(function(g_data) {
-      p1 <-
-        g_data %>%
-        complete(
-          sample_alias = levels(g_data$sample_alias)
-        ) %>%
-        set_sample_levels(sample_levels = sample_levels) %>%
-        plot_violin(
-          x = "sample_alias",
-          y = "log2_ratio",
-          fill = "condition",
-          title = unique(g_data$marker_1) %>% as.character(),
-          y_label = "Log2 ratio Proximity Score",
-          summarize = FALSE,
-          palette = sample_palette,
-          use_jitter = TRUE,
-          use_grid = TRUE,
-          hline = 0
-        ) +
-        guides(fill = "none")
+    set_names(group_keys(plot_data)$marker_1)
 
-      if (!per_celltype) {
-        return(p1)
-      }
+  if (length(groups) == 0L) {
+    return(groups)
+  }
 
-      p2 <-
-        g_data %>%
-        filter(celltype %in% displayed_cell_types) %>%
-        complete(
-          sample_alias = levels(g_data$sample_alias),
-          celltype = displayed_cell_types
-        ) %>%
-        set_sample_levels(sample_levels = sample_levels) %>%
-        plot_violin(
-          x = "sample_alias",
-          y = "log2_ratio",
-          fill = "condition",
-          y_label = "Log2 ratio Proximity Score",
-          summarize = FALSE,
-          palette = sample_palette,
-          facet_var = "celltype",
-          use_jitter = TRUE,
-          use_grid = TRUE,
-          hline = 0
-        ) +
-        guides(fill = "none")
+  # Pre-compute the row index mappings for p1 and p2 once on the first marker group
+  # instead of calling tidyr::complete() and set_sample_levels() 2 * N_markers times.
+  g_ref <- groups[[1]]
+  g_ref$.row_idx <- seq_len(nrow(g_ref))
 
-      p1 / p2
-    })
+  t_p1 <-
+    g_ref %>%
+    complete(
+      sample_alias = levels(g_ref$sample_alias)
+    ) %>%
+    set_sample_levels(sample_levels = sample_levels)
+  p1_idx <- t_p1$.row_idx
+  p1_cols <- setdiff(names(t_p1), ".row_idx")
+  p1_sample_alias <- t_p1$sample_alias
+
+  if (per_celltype) {
+    t_p2 <-
+      g_ref %>%
+      filter(celltype %in% displayed_cell_types) %>%
+      complete(
+        sample_alias = levels(g_ref$sample_alias),
+        celltype = displayed_cell_types
+      ) %>%
+      set_sample_levels(sample_levels = sample_levels)
+    p2_idx <- t_p2$.row_idx
+    p2_cols <- setdiff(names(t_p2), ".row_idx")
+    p2_sample_alias <- t_p2$sample_alias
+    p2_celltype <- t_p2$celltype
+  }
+
+  mc_cores <- if (!is.null(es_data$params$mc_cores)) {
+    as.integer(es_data$params$mc_cores)
+  } else {
+    as.integer(getOption("pixelatorES.mc_cores", default = 1L))
+  }
+  defer_to_workers <- !is.na(mc_cores) && mc_cores > 1L && isTRUE(getOption("knitr.in.progress"))
+
+  if (defer_to_workers) {
+    placeholder <- ggplot()
+    placeholder@plot_env <- emptyenv()
+    plots <- rep(list(placeholder), length(groups)) %>%
+      set_names(names(groups))
+  } else {
+    plots <-
+      lapply(groups, function(g_data) {
+        g_p1 <- g_data[p1_idx, p1_cols, drop = FALSE]
+        g_p1$sample_alias <- p1_sample_alias
+
+        p1 <-
+          plot_violin(
+            g_p1,
+            x = "sample_alias",
+            y = "log2_ratio",
+            fill = "condition",
+            title = as.character(g_data$marker_1[1]),
+            y_label = "Log2 ratio Proximity Score",
+            summarize = FALSE,
+            palette = sample_palette,
+            use_jitter = TRUE,
+            use_grid = TRUE,
+            hline = 0,
+            show_fill_guide = FALSE
+          )
+
+        if (!per_celltype) {
+          return(p1)
+        }
+
+        g_p2 <- g_data[p2_idx, p2_cols, drop = FALSE]
+        g_p2$sample_alias <- p2_sample_alias
+        g_p2$celltype <- p2_celltype
+
+        p2 <-
+          plot_violin(
+            g_p2,
+            x = "sample_alias",
+            y = "log2_ratio",
+            fill = "condition",
+            y_label = "Log2 ratio Proximity Score",
+            summarize = FALSE,
+            palette = sample_palette,
+            facet_var = "celltype",
+            use_jitter = TRUE,
+            use_grid = TRUE,
+            hline = 0,
+            show_fill_guide = FALSE
+          )
+
+        p <- p1 / p2
+        p@plot_env <- emptyenv()
+        p
+      })
+  }
+
+  # Retain only columns used by .build_single_proximity_marker_plot in parallel_render_spec
+  spec_groups <- lapply(
+    groups,
+    function(g_data) g_data[, c("marker_1", "sample_alias", "condition", "celltype", "log2_ratio"), drop = FALSE]
+  )
+
+  attr(plots, "parallel_render_spec") <- list(
+    type = "proximity_per_marker",
+    groups = spec_groups,
+    p1_idx = p1_idx,
+    p1_cols = c("marker_1", "sample_alias", "condition", "celltype", "log2_ratio"),
+    p1_sample_alias = p1_sample_alias,
+    p2_idx = if (per_celltype) p2_idx else NULL,
+    p2_cols = if (per_celltype) c("marker_1", "sample_alias", "condition", "celltype", "log2_ratio") else NULL,
+    p2_sample_alias = if (per_celltype) p2_sample_alias else NULL,
+    p2_celltype = if (per_celltype) p2_celltype else NULL,
+    per_celltype = per_celltype,
+    sample_palette = sample_palette,
+    mc_cores = mc_cores
+  )
+
+  return(plots)
 }
 
 #' Create a clustering summary component
@@ -1745,18 +1890,14 @@ component_clustering_summary <- function(
     filter(marker_1 == marker_2) %>%
     rename(component = sample_component) %>%
     SummarizeProximityScores(
-      proximity_metric = "join_count_z", detailed = TRUE,
+      proximity_metric = c("join_count_z", "log2_ratio"),
+      detailed = FALSE,
       group_vars = c(
         "sample_alias",
         "celltype",
         "condition"
       )
     ) %>%
-    rowwise() %>%
-    mutate(mean_log2_ratio = mean(log2(
-      pmax(unlist(join_count_list), 1) /
-        pmax(unlist(join_count_expected_mean_list), 1)
-    ))) %>%
     rename(marker = marker_1) %>%
     {
       if (test_mode) {
@@ -1854,6 +1995,15 @@ component_proximity_heatmap_sample <- function(
   pixelatorR:::assert_class(plot_markers, "character", allow_null = TRUE)
   pixelatorR:::assert_class(test_mode, "logical")
 
+  if (is.null(plot_markers)) {
+    plot_markers <-
+      find_top_abundance_markers(pg_data_processed,
+        n_markers = n_markers,
+        summary_method = "mean"
+      ) %>%
+      pull(marker)
+  }
+
   processed_data <-
     summarize_colocalization_scores_per_sample(
       proximity_scores,
@@ -1866,15 +2016,6 @@ component_proximity_heatmap_sample <- function(
       everything()
     )) %>%
     distinct()
-
-  if (is.null(plot_markers)) {
-    plot_markers <-
-      find_top_abundance_markers(pg_data_processed,
-        n_markers = n_markers,
-        summary_method = "mean"
-      ) %>%
-      pull(marker)
-  }
 
   # Filter and symmetrise data
   processed_data <-
@@ -1910,7 +2051,8 @@ component_proximity_heatmap_sample <- function(
       samp_id <- unique(sample_data$sample_alias)
       cond <- unique(sample_data$condition)
 
-      sample_data %>%
+      p <-
+        sample_data %>%
         mutate(
           marker_1 = factor(marker_1, levels = plot_order),
           marker_2 = factor(marker_2, levels = plot_order)
@@ -1931,7 +2073,12 @@ component_proximity_heatmap_sample <- function(
           colors = heatmap_gradient,
           border_color = "white",
           legend_range = c(-1, 1) * 0.75
-        ) +
+        )
+      p$scales$scales <- Filter(
+        function(s) !("size" %in% s$aesthetics),
+        p$scales$scales
+      )
+      p +
         scale_size_continuous(range = c(0, 5), limits = c(0, 100)) +
         labs(
           title = paste(samp_id),
@@ -1983,9 +2130,26 @@ component_proximity_heatmap_celltype <- function(
   pixelatorR:::assert_class(plot_markers, "character", allow_null = TRUE)
   pixelatorR:::assert_class(test_mode, "logical")
 
-  processed_data <-
+  proximity_filtered <-
     proximity_scores %>%
-    filter(celltype %in% displayed_cell_types) %>%
+    filter(celltype %in% displayed_cell_types)
+
+  if (is.null(plot_markers)) {
+    top_markers <-
+      find_top_abundance_markers(pg_data_processed,
+        n_markers = n_markers,
+        summary_method = "mean",
+        group_col = "celltype"
+      )
+
+    proximity_filtered <-
+      proximity_filtered %>%
+      semi_join(top_markers, by = c("celltype", "marker_1" = "marker")) %>%
+      semi_join(top_markers, by = c("celltype", "marker_2" = "marker"))
+  }
+
+  processed_data <-
+    proximity_filtered %>%
     summarize_colocalization_scores_per_celltype(
       plot_markers = plot_markers,
       test_mode = test_mode
@@ -1998,13 +2162,6 @@ component_proximity_heatmap_celltype <- function(
     distinct()
 
   if (is.null(plot_markers)) {
-    top_markers <-
-      find_top_abundance_markers(pg_data_processed,
-        n_markers = n_markers,
-        summary_method = "mean",
-        group_col = "celltype"
-      )
-
     processed_data <-
       processed_data %>%
       inner_join(top_markers, by = c("celltype", "marker_1" = "marker")) %>%
@@ -2060,7 +2217,8 @@ component_proximity_heatmap_celltype <- function(
           samp_id <- unique(sample_data$sample_alias)
           cond <- unique(sample_data$condition)
 
-          sample_data %>%
+          p <-
+            sample_data %>%
             mutate(
               marker_1 = factor(marker_1, levels = plot_order),
               marker_2 = factor(marker_2, levels = plot_order)
@@ -2081,7 +2239,12 @@ component_proximity_heatmap_celltype <- function(
               colors = heatmap_gradient,
               border_color = "white",
               legend_range = c(-1, 1) * 0.8
-            ) +
+            )
+          p$scales$scales <- Filter(
+            function(s) !("size" %in% s$aesthetics),
+            p$scales$scales
+          )
+          p +
             scale_size_continuous(range = c(0, 5), limits = c(0, 100)) +
             labs(
               title = paste(samp_id, "-", cellpop),
@@ -2672,7 +2835,7 @@ component_hashing <-
 
     # Use 90% as lower limit unless there are smaller values
     plot_limits <- c(floor(10 * min(c(min(plot_data$hash_fraction), 0.9))) / 10, 1)
-    p1 <- suppressMessages(
+    p1 <-
       plot_violin(
         plot_data,
         x = "sample_alias",
@@ -2683,9 +2846,14 @@ component_hashing <-
         title = "Hash purity",
         subtitle = "Fraction of UMIs from the most abundant hash",
         y_label = "Hash purity"
-      ) +
-        scale_y_continuous(limits = plot_limits, labels = scales::percent)
+      )
+    p1$scales$scales <- Filter(
+      function(s) !("y" %in% s$aesthetics),
+      p1$scales$scales
     )
+    p1 <-
+      p1 +
+      scale_y_continuous(limits = plot_limits, labels = scales::percent)
 
     # Sample confidence plot
     plot_data <-

@@ -55,7 +55,8 @@ globalVariables(
     "pre_denoise_isotype_fraction", "umis_denoised", "isotype_reduction",
     "fraction_denoised", "median_isotype_reduction",
     "median_pre_denoise_isotype", "median_post_denoise_isotype",
-    "x_pos", "y_pos"
+    "x_pos", "y_pos", "positive_rate", "lot_role", "excluded",
+    "point_group", "target", "n_available"
   ),
   package = "pixelatorES",
   add = TRUE
