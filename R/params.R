@@ -117,6 +117,48 @@ print_session_info <- function() {
     style_table(caption = "Sample settings", interactive = FALSE, buttons = FALSE)
 }
 
+#' Read run information from a PXL file
+#'
+#' Reads the sample name and Pixelator version from the `metadata` table. The
+#' panel name comes from `metadata$panel_name` in older PXL files. Newer files
+#' no longer store it there, so it is built from the `panel_sources` table by
+#' joining the names of all panel sources with `+`.
+#'
+#' @param pxl_file Path to a PXL file.
+#'
+#' @return A one-row tibble with `sample_name`, `version` and `panel_name`.
+#'   Fields that cannot be found are `NA`.
+#'
+#' @noRd
+.read_pxl_run_info <- function(pxl_file) {
+  con <- DBI::dbConnect(duckdb::duckdb(), pxl_file, read_only = TRUE)
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+
+  metadata <-
+    DBI::dbGetQuery(con, "SELECT * FROM metadata")$value %>%
+    RcppSimdJson::fparse()
+
+  panel_name <- metadata$panel_name
+  if (is.null(panel_name) && "panel_sources" %in% DBI::dbListTables(con)) {
+    source_names <-
+      DBI::dbGetQuery(con, "SELECT name FROM panel_sources ORDER BY source_id")$name
+    if (length(source_names) > 0) {
+      panel_name <- paste(source_names, collapse = "+")
+    }
+  }
+
+  # Missing fields become NA so a single file cannot break the whole table
+  as_field <- function(x) {
+    if (is.null(x) || length(x) == 0) NA_character_ else as.character(x[[1]])
+  }
+
+  tibble(
+    sample_name = as_field(metadata$sample_name),
+    version = as_field(metadata$version),
+    panel_name = as_field(panel_name)
+  )
+}
+
 #' Print Pixelator Version table
 #'
 #' Print the Pixelator version information from the pxl files.
@@ -146,35 +188,9 @@ print_pixelator_version <-
 
     fs_map$pxl_file %>%
       set_names(sample_sheet$sample_alias) %>%
-      sapply(function(x) {
-        # Open connection
-        con <-
-          DBI::dbConnect(
-            duckdb::duckdb(),
-            x,
-            read_only = TRUE
-          )
-
-        # Get metadata
-        metadata <-
-          DBI::dbGetQuery(
-            con,
-            "SELECT * FROM metadata"
-          )
-
-        # Close connection
-        DBI::dbDisconnect(con, shutdown = TRUE)
-
-        metadata_parsed <-
-          metadata$value %>%
-          RcppSimdJson::fparse()
-
-        return(metadata_parsed)
-      }) %>%
-      t() %>%
-      as_tibble(rownames = "sample_alias") %>%
+      map(.read_pxl_run_info) %>%
+      bind_rows(.id = "sample_alias") %>%
       select(all_of(save_fields$var)) %>%
-      unnest(cols = everything()) %>%
       set_names(save_fields$display_name) %>%
       style_table(
         escape = FALSE,
