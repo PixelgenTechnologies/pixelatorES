@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] 2026-11-02
+
 ### Fixed
 
 - `print_pixelator_version()` reads the panel name from `panel_sources` when PXL metadata lacks `panel_name`.
