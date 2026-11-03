@@ -335,7 +335,7 @@ test_that("es_data workflow registration works as expected", {
 
   expect_equal(
     list_es_data_workflows(),
-    c("amplicon_demux", "test_workflow")
+    c("amplicon_demux", "edgelist_aggregate", "test_workflow")
   )
   expect_equal(
     pixelatorES:::new_es_data(

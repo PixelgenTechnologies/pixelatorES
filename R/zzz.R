@@ -19,6 +19,14 @@
     overwrite = TRUE
   )
 
+  register_es_data_workflow(
+    name = "edgelist_aggregate",
+    extractors = .edgelist_aggregate_extractors,
+    report = .edgelist_aggregate_report,
+    stages = .edgelist_aggregate_stages,
+    overwrite = TRUE
+  )
+
   reg.finalizer(
     .psock_pool,
     function(e) {

@@ -456,6 +456,140 @@ component_sequencing_reads_and_molecules <-
     ))
   }
 
+#' Reads and molecules per pipeline stage
+#'
+#' The funnel has one column per read-processing stage plus a leading `fastQ`
+#' column restating what entered the first stage. There are three stages rather
+#' than the four a pipeline with a separate demultiplexing step reports, because
+#' `edgelist` covers both.
+#'
+#' @param es_data An `es_data` object.
+#'
+#' @return A list with a `plots` element, holding one plot per pool or sample
+#'   alias, and a `table` element summarising the counts removed per stage.
+#'
+#' @export
+#'
+component_read_funnel <- function(es_data) {
+  pixelatorR:::assert_class(es_data, "es_data")
+
+  sample_qc_metrics <- es_data$qc_raw
+  sample_levels <- es_data$sample_aliases
+
+  if ("qc_files" %in% names(sample_qc_metrics)) {
+    qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
+      sample_qc_metrics$qc_files
+    } else {
+      sample_qc_metrics$pool_qc_files
+    }
+  } else {
+    qc_data <- sample_qc_metrics
+  }
+
+  stage_levels <- c("fastQ", "edgelist", "aggregate", "graph")
+
+  plot_data <-
+    qc_data %>%
+    lapply(function(sample_qc_data) {
+      return(tibble(
+        stage = c("edgelist", "aggregate", "graph"),
+        input = c(
+          .scalar_qc_count(sample_qc_data$edgelist$input_reads),
+          .scalar_qc_count(sample_qc_data$aggregate$input_reads),
+          .scalar_qc_count(sample_qc_data$graph$molecules_input)
+        ),
+        output = c(
+          .scalar_qc_count(sample_qc_data$edgelist$output_reads),
+          .scalar_qc_count(sample_qc_data$aggregate$output_molecules),
+          .scalar_qc_count(sample_qc_data$graph$molecules_output)
+        )
+      ))
+    }) %>%
+    bind_rows(.id = "sample_alias") %>%
+    mutate(filtered = input - output) %>%
+    bind_rows(
+      filter(., stage == "edgelist") %>%
+        mutate(stage = "fastQ", output = input, filtered = NA_real_)
+    ) %>%
+    pivot_longer(
+      cols = c("output", "filtered"),
+      names_to = "type", values_to = "value"
+    ) %>%
+    filter(!is.na(value)) %>%
+    mutate(
+      stage = factor(stage, levels = stage_levels),
+      M_reads = value / 1e6
+    ) %>%
+    arrange(stage, type) %>%
+    select("sample_alias", "stage", "type", "M_reads")
+
+  plot_data <- set_sample_levels(plot_data, sample_levels)
+  plot_data <- group_by(plot_data, sample_alias)
+
+  plot_range <- max(plot_data$M_reads)
+
+  plots <-
+    plot_data %>%
+    group_split() %>%
+    set_names(group_keys(plot_data)$sample_alias) %>%
+    lapply(function(sample_data) {
+      sample_data %>%
+        ggplot(aes(stage, M_reads, fill = type)) +
+        geom_col(show.legend = FALSE) +
+        geom_text(
+          data = . %>%
+            mutate(label = case_when(
+              type == "filtered" & stage == "edgelist" ~
+                paste0("Filtered: \n", round(M_reads, 2), " M reads"),
+              type == "filtered" & stage == "aggregate" ~
+                paste0("Aggregated: \n", round(M_reads, 2), " M reads"),
+              type == "filtered" & stage == "graph" ~
+                paste0("Filtered: \n", round(M_reads, 2), " M UEIs"),
+              TRUE ~ ""
+            )),
+          aes(unclass(factor(stage)) - 0.45, label = label),
+          position = position_stack(vjust = 0),
+          size = 3,
+          hjust = 0,
+          vjust = 1.1
+        ) +
+        facet_grid(sample_alias ~ .) +
+        scale_y_continuous(
+          expand = expansion(c(0, 0.2)),
+          limits = c(0, plot_range)
+        ) +
+        scale_fill_manual(values = c(
+          "output" = "#DAD6D7",
+          "filtered" = "#C86584"
+        )) +
+        theme_bw() +
+        theme(
+          axis.text.x = element_text(angle = 60, hjust = 1),
+          panel.border = element_rect(color = "#DAD6D7"),
+          panel.grid = element_blank()
+        ) +
+        labs(x = NULL, y = "Million reads/molecules")
+    })
+
+  tabl <-
+    plot_data %>%
+    mutate(M_reads = round(M_reads, 3)) %>%
+    pivot_wider(names_from = c("type"), values_from = "M_reads") %>%
+    arrange(sample_alias) %>%
+    mutate(
+      `% filtered` = paste0(round(filtered / (output + filtered) * 100, 2), " %")
+    ) %>%
+    style_table(
+      caption = "Reads/Proteins removed per stage",
+      interactive = FALSE
+    )
+
+  return(list(
+    plots = plots,
+    table = tabl
+  ))
+}
+
 #' Create the component reads per cell
 #'
 #' This function creates a component that visualizes the reads per cell per sample.
