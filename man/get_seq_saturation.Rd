@@ -4,12 +4,21 @@
 \alias{get_seq_saturation}
 \title{Get sequencing saturation metrics}
 \usage{
-get_seq_saturation(object, sample_qc_metrics)
+get_seq_saturation(
+  object,
+  sample_qc_metrics,
+  read_stage = "amplicon",
+  collapse_stage = "collapse"
+)
 }
 \arguments{
 \item{object}{A Seurat object.}
 
 \item{sample_qc_metrics}{A list containing quality control metrics for each sample.}
+
+\item{read_stage}{Name of the stage reporting raw input reads (default is \code{"amplicon"}).}
+
+\item{collapse_stage}{Name of the stage reporting molecule collapse counts (default is \code{"collapse"}).}
 }
 \value{
 A tibble containing sequencing saturation metrics for each sample.

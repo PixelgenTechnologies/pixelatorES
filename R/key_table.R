@@ -56,14 +56,23 @@ get_top_markers <-
 #'
 #' @param object A Seurat object.
 #' @param sample_qc_metrics A list containing quality control metrics for each sample.
+#' @param read_stage Name of the stage reporting raw input reads (default is `"amplicon"`).
+#' @param collapse_stage Name of the stage reporting molecule collapse counts (default is `"collapse"`).
 #'
 #' @return A tibble containing sequencing saturation metrics for each sample.
 #'
 #' @export
 #'
 get_seq_saturation <-
-  function(object, sample_qc_metrics) {
+  function(
+    object,
+    sample_qc_metrics,
+    read_stage = "amplicon",
+    collapse_stage = "collapse"
+  ) {
     pixelatorR:::assert_class(sample_qc_metrics, "list")
+    pixelatorR:::assert_single_value(read_stage, type = "string")
+    pixelatorR:::assert_single_value(collapse_stage, type = "string")
 
     if (!is.null(sample_qc_metrics$pool_qc_files)) {
       group_col <- "pool"
@@ -71,11 +80,11 @@ get_seq_saturation <-
       fetched_data <-
         sample_qc_metrics$pool_qc_files %>%
         lapply(function(sample_qc_data) {
-          tibble(
-            total_reads = sample_qc_data$amplicon$input_reads,
-            deduped_valid_reads = sample_qc_data$collapse$output_molecules,
-            valid_reads = sample_qc_data$collapse$input_reads
-          )
+          return(tibble(
+            total_reads = .scalar_qc_count(sample_qc_data[[read_stage]]$input_reads),
+            deduped_valid_reads = .scalar_qc_count(sample_qc_data[[collapse_stage]]$output_molecules),
+            valid_reads = .scalar_qc_count(sample_qc_data[[collapse_stage]]$input_reads)
+          ))
         })
     } else {
       group_col <- "sample_alias"
@@ -83,12 +92,16 @@ get_seq_saturation <-
       fetched_data <-
         sample_qc_metrics$qc_files %>%
         lapply(function(sample_qc_data) {
-          tibble(
-            Q30 = sample_qc_data$amplicon$q30_statistics$total,
-            total_reads = sample_qc_data$amplicon$input_reads,
-            deduped_valid_reads = sample_qc_data$collapse$output_molecules,
-            valid_reads = sample_qc_data$collapse$input_reads
+          row <- tibble(
+            total_reads = .scalar_qc_count(sample_qc_data[[read_stage]]$input_reads),
+            deduped_valid_reads = .scalar_qc_count(sample_qc_data[[collapse_stage]]$output_molecules),
+            valid_reads = .scalar_qc_count(sample_qc_data[[collapse_stage]]$input_reads)
           )
+          q30_val <- sample_qc_data[[read_stage]]$q30_statistics$total
+          if (!is.null(q30_val)) {
+            row <- mutate(row, Q30 = q30_val, .before = 1)
+          }
+          return(row)
         })
     }
 
@@ -102,7 +115,8 @@ get_seq_saturation <-
         graph_reads = sum(reads_in_component)
       )
 
-    fetched_data %>%
+    result <-
+      fetched_data %>%
       bind_rows(.id = group_col) %>%
       inner_join(
         summarised_object_counts,
@@ -124,6 +138,8 @@ get_seq_saturation <-
         fraction_valid_reads = 100 * valid_reads / total_reads,
         fraction_graph_reads = 100 * graph_reads / total_reads
       )
+
+    return(result)
   }
 
 
@@ -382,14 +398,16 @@ get_coreness_data <-
 #' This function retrieves degree distribution data from the sample quality control metrics.
 #'
 #' @param sample_qc_metrics A list containing quality control metrics for each sample.
+#' @param stage Name of the stage reporting UMI degree distributions (default is `"collapse"`).
 #'
 #' @return A tibble containing the degree distribution data for each sample.
 #'
 #' @export
 #'
 get_degree_distribution <-
-  function(sample_qc_metrics) {
+  function(sample_qc_metrics, stage = "collapse") {
     pixelatorR:::assert_class(sample_qc_metrics, "list")
+    pixelatorR:::assert_single_value(stage, type = "string")
 
     if (!is.null(sample_qc_metrics$pool_qc_files)) {
       group_col <- "pool"
@@ -403,18 +421,21 @@ get_degree_distribution <-
         sample_qc_metrics$qc_files
     }
 
-    qc_data %>%
+    result <-
+      qc_data %>%
       lapply(function(sample_qc_data) {
-        list(
-          umi1 = sample_qc_data$collapse$umi1_degree_distribution,
-          umi2 = sample_qc_data$collapse$umi2_degree_distribution
-        ) %>%
-          map(
-            . %>%
-              unlist() %>%
-              enframe("degree", "n")
+        return(
+          list(
+            umi1 = sample_qc_data[[stage]]$umi1_degree_distribution,
+            umi2 = sample_qc_data[[stage]]$umi2_degree_distribution
           ) %>%
-          bind_rows(.id = "umi_type")
+            map(
+              . %>%
+                unlist() %>%
+                enframe("degree", "n")
+            ) %>%
+            bind_rows(.id = "umi_type")
+        )
       }) %>%
       bind_rows(.id = group_col) %>%
       group_by(!!sym(group_col)) %>%
@@ -423,6 +444,8 @@ get_degree_distribution <-
         percent_nodes = 100 * n / sum(n)
       ) %>%
       ungroup()
+
+    return(result)
   }
 
 #' Get read statistics for each sample
@@ -817,7 +840,8 @@ get_qc_metrics <-
           "percent_umis_denoised",
           "graph_node_saturation",
           "graph_edge_saturation",
-          "median_mean_coreness"
+          "median_mean_coreness",
+          "nodes_collapsed_fraction"
         )))
     }
 
@@ -890,7 +914,8 @@ key_metric_table <-
         qc_metrics_tables$sample_hash_stats$pool_stats,
         qc_metrics_tables$coreness$sample_summary,
         qc_metrics_tables$top_markers,
-        crossing_edges
+        crossing_edges,
+        qc_metrics_tables$graph_collapse
       )
 
     if ("sample_hash_stats" %in% names(qc_metrics_tables) && !is.null(qc_metrics_tables$sample_hash_stats)) {
@@ -1096,5 +1121,10 @@ key_metric_definitions <-
     "cells_in_pool", "Number of cells in pool", 1,
     "Number of cells in the pool.",
     "percent_called_cells", "% Sample called cells", 1,
-    "Percentage of cells in the pool that were successfully called in sample calling."
+    "Percentage of cells in the pool that were successfully called in sample calling.",
+    "nodes_collapsed_fraction", "% Nodes collapsed", 1e-2,
+    paste(
+      "Percentage of the nodes considered by graph-collapse that were merged",
+      "into a nearby node with a near-identical sequence."
+    )
   )

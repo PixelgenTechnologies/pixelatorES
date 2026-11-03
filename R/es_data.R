@@ -613,6 +613,49 @@ test_es_data <- function(
   return(.format_qc_metric(metric, object$samplesheet))
 }
 
+#' Extract formatted graph-collapse statistics
+#'
+#' Extracts the fraction of nodes collapsed by `graph-collapse` from raw quality
+#' control metrics. The fraction is relative to the nodes considered for
+#' collapsing by `graph-collapse`. Groups without the stage are omitted, and
+#' `NULL` is returned when no group carries `graph-collapse` data.
+#'
+#' @param object An `es_data` object.
+#'
+#' @return A formatted graph-collapse table, or `NULL`.
+#'
+#' @noRd
+.extract_graph_collapse <- function(object) {
+  sample_qc_metrics <- object$qc_raw
+  pixelatorR:::assert_class(sample_qc_metrics, "list")
+
+  if (!is.null(sample_qc_metrics$pool_qc_files)) {
+    group_col <- "pool"
+    qc_data <- sample_qc_metrics$pool_qc_files
+  } else {
+    group_col <- "sample_alias"
+    qc_data <- sample_qc_metrics$qc_files
+  }
+
+  if (length(qc_data) == 0) {
+    return(NULL)
+  }
+
+  metric <-
+    qc_data %>%
+    lapply(function(sample_qc_data) {
+      return(tibble(
+        nodes_collapsed_fraction = .scalar_qc_count(
+          sample_qc_data$graph_collapse$nodes_collapsed_fraction
+        )
+      ))
+    }) %>%
+    bind_rows(.id = group_col) %>%
+    filter(!is.na(nodes_collapsed_fraction))
+
+  return(.format_qc_metric(metric, object$samplesheet))
+}
+
 #' Extract processed pixel data
 #'
 #' @param object An `es_data` object.
