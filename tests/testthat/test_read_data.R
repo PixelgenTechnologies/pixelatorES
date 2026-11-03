@@ -762,3 +762,103 @@ test_that("File reading works as expected", {
     c("sample_alias", "a", "b")
   )
 })
+
+test_that("Edgelist discovery and multi-FASTQ QC aggregation work as expected", {
+  edgelist_stages <- list(
+    all = c("edgelist", "aggregate", "graph", "layout"),
+    pool = c("edgelist", "aggregate", "graph"),
+    pxl_preference = c("graph", "layout")
+  )
+
+  sample_sheet <- tibble(
+    sample = c("sample1", "sample2"),
+    sample_alias = c("S1", "S2"),
+    condition = c("A", "B"),
+    pool = c("pool1", "pool1")
+  )
+
+  run_dir <- tempfile("pixelatorES_edgelist_test_")
+  dir.create(file.path(run_dir, "edgelist"), recursive = TRUE)
+  dir.create(file.path(run_dir, "aggregate"), recursive = TRUE)
+  on.exit(unlink(run_dir, recursive = TRUE), add = TRUE)
+
+  writeLines(
+    '{"sample_id": "pool1", "report_type": "edgelist", "input_reads": 154689, "output_reads": 150000}',
+    file.path(run_dir, "edgelist", "pool1.report.json")
+  )
+  writeLines(
+    '{"sample_id": "pool1", "report_type": "edgelist", "input_reads": 154908, "output_reads": 149000}',
+    file.path(run_dir, "edgelist", "pool1_reseq.report.json")
+  )
+  writeLines(
+    '{"sample_id": "pool9", "report_type": "edgelist", "input_reads": 100, "output_reads": 100}',
+    file.path(run_dir, "edgelist", "stray.report.json")
+  )
+  writeLines(
+    '{"report_type": "edgelist", "input_reads": 50, "output_reads": 50}',
+    file.path(run_dir, "edgelist", "orphan.report.json")
+  )
+  writeLines(
+    '{"sample_id": "pool1", "report_type": "aggregate", "input_reads": 309597, "output_molecules": 44400}',
+    file.path(run_dir, "aggregate", "pool1.report.json")
+  )
+
+  paths <- get_file_paths(
+    data_folder = run_dir,
+    sample_sheet = sample_sheet,
+    stages = edgelist_stages
+  )
+
+  expect_equal(
+    list(
+      pool_stages = unname(paths$pool_qc_files$stage),
+      pool_files = basename(paths$pool_qc_files$filename),
+      unattributed_files = basename(attr(paths, "unattributed_qc_files")$filename),
+      unattributed_ids = attr(paths, "unattributed_qc_files")$sample_id
+    ),
+    list(
+      pool_stages = c("aggregate", "edgelist", "edgelist"),
+      pool_files = c("pool1.report.json", "pool1.report.json", "pool1_reseq.report.json"),
+      unattributed_files = c("orphan.report.json", "stray.report.json"),
+      unattributed_ids = c(NA_character_, "pool9")
+    )
+  )
+
+  # .read_qc_groups_soft combines multi-FASTQ edgelist reports by summing reads
+  pool_qc <- pixelatorES:::.read_qc_groups_soft(
+    files = paths$pool_qc_files,
+    aliases = "pool1",
+    alias_column = "pool_alias",
+    target_label = "pool"
+  )
+
+  expect_equal(
+    pool_qc$value$pool1$edgelist,
+    list(
+      input_reads = 309597,
+      output_reads = 299000
+    )
+  )
+
+  # .fill_es_data_file_paths records qc_load diagnostics for unattributed edgelist reports
+  object <- pixelatorES:::new_es_data(list(data_folder = run_dir))
+  object$samplesheet <- sample_sheet
+  object$stages <- edgelist_stages
+  warnings <- capture_warnings(
+    object <- pixelatorES:::.fill_es_data_file_paths(object)
+  )
+  expect_length(warnings, 2)
+  expect_equal(
+    lapply(object$diagnostics, function(d) d[c("type", "message")]),
+    list(
+      list(
+        type = "qc_load",
+        message = "its sample_id is missing is not a pool in the samplesheet."
+      ),
+      list(
+        type = "qc_load",
+        message = "its sample_id (pool9) is not a pool in the samplesheet."
+      )
+    )
+  )
+})

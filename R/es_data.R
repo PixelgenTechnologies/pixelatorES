@@ -415,9 +415,7 @@ test_es_data <- function(
 
     parsed <- tryCatch(
       list(
-        value = alias_files$filename %>%
-          set_names(alias_files$stage) %>%
-          lapply(fload),
+        value = .load_stage_qc_files(alias_files),
         error = NULL
       ),
       error = function(error) {
@@ -873,6 +871,30 @@ build_es_data <- function(params) {
       target = filepath,
       message = message
     )
+  }
+
+  unattributed_qc_files <- attr(file_paths, "unattributed_qc_files")
+  if (!is.null(unattributed_qc_files) && nrow(unattributed_qc_files) > 0) {
+    has_pools <- "pool" %in% names(object$samplesheet)
+    target_kind <- if (has_pools) "pool" else "sample"
+    for (i in seq_len(nrow(unattributed_qc_files))) {
+      filepath <- unattributed_qc_files$filename[[i]]
+      sample_id <- unattributed_qc_files$sample_id[[i]]
+      message <- paste0(
+        "its sample_id ",
+        if (is.na(sample_id)) "is missing" else paste0("(", sample_id, ")"),
+        " is not a ", target_kind, " in the samplesheet."
+      )
+      cli::cli_warn(
+        "Skipping edgelist QC file {.file {basename(filepath)}}: {message}"
+      )
+      object <- add_es_data_diagnostic(
+        object,
+        type = "qc_load",
+        target = filepath,
+        message = message
+      )
+    }
   }
 
   object$file_paths <- file_paths

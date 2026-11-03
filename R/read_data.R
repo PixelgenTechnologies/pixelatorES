@@ -43,6 +43,126 @@ find_stage <-
     }
   }
 
+#' One reported count, or `NA` when the report does not carry it
+#'
+#' @param value A report field.
+#'
+#' @return A single numeric.
+#'
+#' @noRd
+.scalar_qc_count <- function(value) {
+  if (length(value) != 1) {
+    return(NA_real_)
+  }
+
+  return(as.numeric(value))
+}
+
+#' Total the reads across the `edgelist` reports belonging to one pool or sample
+#'
+#' A pool or sample sequenced more than once has one `edgelist` report per
+#' fastq. Downstream stages only read `input_reads` and `output_reads` from
+#' `edgelist`, so when multiple `edgelist` reports are combined for a single
+#' group, those counts are summed. When a single `edgelist` report is present,
+#' the full report is kept unchanged.
+#'
+#' @param reports A list of parsed `edgelist` reports for a single pool or
+#'   sample.
+#'
+#' @return A list of the summed `input_reads` and `output_reads` when `reports`
+#'   has multiple elements, or the single parsed report when it has one.
+#'
+#' @noRd
+.total_edgelist_reads <- function(reports) {
+  total <- function(field) {
+    counts <- vapply(
+      reports,
+      function(report) {
+        return(.scalar_qc_count(report[[field]]))
+      },
+      numeric(1)
+    )
+
+    if (all(is.na(counts))) {
+      return(NA_real_)
+    }
+
+    return(sum(counts, na.rm = TRUE))
+  }
+
+  return(list(
+    input_reads = total("input_reads"),
+    output_reads = total("output_reads")
+  ))
+}
+
+#' Load and combine stage QC files for one sample or pool
+#'
+#' Reads every QC report for a single sample or pool, keyed by stage. If a
+#' stage has multiple reports (such as `edgelist` across multiple fastqs), its
+#' reports are combined with `.total_edgelist_reads()`.
+#'
+#' @param sample_files A data frame with columns `stage` and `filename`.
+#'
+#' @return A named list of parsed QC reports keyed by stage.
+#'
+#' @noRd
+.load_stage_qc_files <- function(sample_files) {
+  stages <- unique(sample_files$stage)
+
+  result <-
+    stages %>%
+    set_names() %>%
+    lapply(function(st) {
+      stage_filenames <- sample_files$filename[sample_files$stage == st]
+      reports <- lapply(stage_filenames, fload)
+
+      if (length(reports) == 1 && st != "edgelist") {
+        return(reports[[1]])
+      }
+      if (st == "edgelist" && length(reports) > 1) {
+        return(.total_edgelist_reads(reports))
+      }
+
+      return(reports[[1]])
+    })
+
+  return(result)
+}
+
+#' Resolve `sample_id` from an `edgelist` QC report file
+#'
+#' `edgelist` report files are named after their fastq basename rather than the
+#' pool or sample id, and carry the pool/sample id in their `sample_id` JSON
+#' field. When the file exists on disk, reads `sample_id`; otherwise falls back
+#' to `default_alias` so synthetic paths in unit tests continue to work.
+#'
+#' @param filepath Path to an `edgelist` `.report.json` file.
+#' @param default_alias Fallback alias derived from the filename basename.
+#'
+#' @return A single character string (`NA_character_` if the file exists on
+#'   disk and lacks a scalar `sample_id`).
+#'
+#' @noRd
+.resolve_edgelist_report_alias <- function(filepath, default_alias) {
+  if (!file.exists(filepath)) {
+    return(default_alias)
+  }
+
+  sample_id <- tryCatch(
+    fload(filepath)[["sample_id"]],
+    error = function(error) {
+      return(NULL)
+    }
+  )
+
+  if (length(sample_id) != 1 || is.na(sample_id) || !nzchar(as.character(sample_id))) {
+    return(NA_character_)
+  }
+
+  return(as.character(sample_id))
+}
+
 #' Get file paths for data and QC files
 #'
 #' Retrieve file paths for data and QC files from a specified data folder.
@@ -68,7 +188,9 @@ find_stage <-
 #' @return A list with `data_files`, `qc_files`, and `pool_qc_files` (the last is `NULL` when absent).
 #'   When `on_duplicate_samples = "omit"`, attribute `duplicate_data_samples` is a character
 #'   vector of omitted sample aliases. When `on_unknown_stage = "omit"`, attribute
-#'   `unknown_stage_files` is a character vector of skipped file paths.
+#'   `unknown_stage_files` is a character vector of skipped file paths. When `edgelist` QC
+#'   reports on disk carry a missing or unrecognised `sample_id`, attribute
+#'   `unattributed_qc_files` is a tibble of those skipped reports (`filename` and `sample_id`).
 #'
 #' @export
 #'
@@ -141,6 +263,20 @@ get_file_paths <-
         filter(!is.na(stage))
     }
 
+    is_edgelist_report <-
+      !is.na(all_files$stage) &
+        all_files$stage == "edgelist" &
+        str_detect(all_files$file_basename, "\\.report\\.json$")
+
+    if (any(is_edgelist_report)) {
+      all_files$file_alias[is_edgelist_report] <- mapply(
+        .resolve_edgelist_report_alias,
+        all_files$filename[is_edgelist_report],
+        all_files$file_alias[is_edgelist_report],
+        USE.NAMES = FALSE
+      )
+    }
+
     if ("pool" %in% names(sample_sheet)) {
       pool_ids <- unique(sample_sheet$pool)
     } else {
@@ -152,7 +288,20 @@ get_file_paths <-
       left_join(select(sample_sheet, sample, sample_alias),
         by = c("file_alias" = "sample")
       ) %>%
-      mutate(is_pool = ifelse(file_alias %in% pool_ids, TRUE, FALSE)) %>%
+      mutate(is_pool = ifelse(file_alias %in% pool_ids, TRUE, FALSE))
+
+    unattributed_qc_files <-
+      all_files %>%
+      filter(
+        stage == "edgelist",
+        str_detect(file_basename, "\\.report\\.json$"),
+        !is_pool,
+        is.na(sample_alias)
+      ) %>%
+      select(filename, sample_id = file_alias)
+
+    all_files <-
+      all_files %>%
       filter(is_pool | !is.na(sample_alias))
 
     data_files <-
@@ -220,6 +369,9 @@ get_file_paths <-
     }
     if (on_unknown_stage == "omit") {
       attr(result, "unknown_stage_files") <- unknown_stage_files
+    }
+    if (nrow(unattributed_qc_files) > 0) {
+      attr(result, "unattributed_qc_files") <- unattributed_qc_files
     }
 
     return(result)
@@ -521,12 +673,7 @@ read_qc_files <-
         temp_data %>%
         group_split() %>%
         set_names(group_keys(temp_data)$sample_alias) %>%
-        lapply(function(sample_files) {
-          sample_files %>%
-            select(stage, filename) %>%
-            deframe() %>%
-            lapply(fload)
-        })
+        lapply(.load_stage_qc_files)
 
       if (!all(sample_sheet$sample_alias %in% qc_files$sample_alias)) {
         cli_abort(
@@ -574,12 +721,7 @@ read_qc_files <-
           temp_data %>%
             group_split() %>%
             set_names(group_keys(temp_data)$alias) %>%
-            lapply(function(sample_files) {
-              sample_files %>%
-                select(stage, filename) %>%
-                deframe() %>%
-                lapply(fload)
-            })
+            lapply(.load_stage_qc_files)
         }
       )
 

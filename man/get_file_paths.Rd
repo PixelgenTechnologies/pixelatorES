@@ -43,7 +43,9 @@ records them in attribute \code{unknown_stage_files} on the returned list.}
 A list with \code{data_files}, \code{qc_files}, and \code{pool_qc_files} (the last is \code{NULL} when absent).
 When \code{on_duplicate_samples = "omit"}, attribute \code{duplicate_data_samples} is a character
 vector of omitted sample aliases. When \code{on_unknown_stage = "omit"}, attribute
-\code{unknown_stage_files} is a character vector of skipped file paths.
+\code{unknown_stage_files} is a character vector of skipped file paths. When \code{edgelist} QC
+reports on disk carry a missing or unrecognised \code{sample_id}, attribute
+\code{unattributed_qc_files} is a tibble of those skipped reports (\code{filename} and \code{sample_id}).
 }
 \description{
 Retrieve file paths for data and QC files from a specified data folder.
