@@ -6,7 +6,7 @@ editor_options:
   chunk_output_type: console
 params: 
   sample_sheet: "../extdata/test_samplesheet_hashing.csv"
-  data_folder: "../extdata/"
+  data_folder: "../extdata/qc_jsons_hashing/"
   workflow: "amplicon_demux"
   control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
   norm_method: "CLR"

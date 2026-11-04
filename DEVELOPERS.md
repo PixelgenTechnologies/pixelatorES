@@ -308,11 +308,14 @@ inst/quarto/
     samples.qmd
     run_info.qmd
   workflows/
-    amplicon_demux/               # workflow-owned sections
-      quality_metrics.qmd
+    shared/                       # stage-agnostic workflow sections
       cell_annotation.qmd
       abundance.qmd
       spatial.qmd
+    amplicon_demux/               # workflow-owned sections
+      quality_metrics.qmd
+    edgelist_aggregate/
+      quality_metrics.qmd
 ```
 
 Components return `ggplot` objects and/or `DT::datatables` objects from [`style_table()`](R/tables.R). To place them in the HTML report, `.qmd` chunks call helper functions that emit Quarto markdown via `cat()`.

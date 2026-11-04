@@ -541,17 +541,17 @@ test_that("Workflow report recipes work as expected", {
         list(
           id = "cell_annotation",
           title = "Cell annotation",
-          child = "workflows/amplicon_demux/cell_annotation.qmd"
+          child = "workflows/shared/cell_annotation.qmd"
         ),
         list(
           id = "abundance",
           title = "Abundance",
-          child = "workflows/amplicon_demux/abundance.qmd"
+          child = "workflows/shared/abundance.qmd"
         ),
         list(
           id = "spatial",
           title = "Spatial metrics",
-          child = "workflows/amplicon_demux/spatial.qmd"
+          child = "workflows/shared/spatial.qmd"
         ),
         list(
           id = "run_info",
