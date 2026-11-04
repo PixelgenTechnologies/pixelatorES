@@ -14,9 +14,11 @@ A list with a \code{plots} element, holding one plot per pool or sample
 alias, and a \code{table} element summarising the reads removed per stage.
 }
 \description{
-The funnel has one column per filtering stage in the \code{edgelist_aggregate}
-pipeline (\code{edgelist}, \code{aggregate}, \code{graph}, \code{graph_collapse}, \code{denoise},
-\code{sample_calling}) plus a leading \code{fastQ} column restating what entered the
-first stage. Optional stages that did not run (such as \code{graph_collapse},
-\code{denoise}, or \code{sample_calling}) are omitted automatically.
+The funnel has one column per read-filtering stage in the
+\code{edgelist_aggregate} pipeline (\code{edgelist}, \code{graph}, \code{graph_collapse},
+\code{denoise}, \code{sample_calling}) plus a leading \code{fastQ} column restating what
+entered the first stage. \code{aggregate} is omitted because it collapses reads
+into molecules without filtering reads. Optional stages that did not run
+(such as \code{graph_collapse}, \code{denoise}, or \code{sample_calling}) are omitted
+automatically.
 }

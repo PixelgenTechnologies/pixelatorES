@@ -578,11 +578,13 @@ test_that("component_read_funnel works across all filtering stages and omits mis
   expect_equal(
     levels(component_full$plots$pool1$data$stage),
     c(
-      "fastQ", "edgelist", "aggregate", "graph",
+      "fastQ", "edgelist", "graph",
       "graph_collapse", "denoise", "sample_calling"
     )
   )
-  expect_equal(component_full$plots$pool1$labels$y, "Million reads")
+  expect_equal(component_full$plots$pool1$labels$y, "Reads [millions]")
+  expect_equal(component_full$plots$pool1$labels$title, "Reads per stage")
+  expect_equal(as.character(component_full$plots$pool1$labels$subtitle), "pool1")
   expect_no_error(ggplot2::ggplot_build(component_full$plots$pool1))
 
   expect_equal(
@@ -590,32 +592,32 @@ test_that("component_read_funnel works across all filtering stages and omits mis
     structure(
       list(
         sample_alias = structure(
-          c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 2L),
+          c(1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L),
           levels = c("pool1", "pool2"),
           class = "factor"
         ),
         stage = structure(
-          c(1L, 2L, 3L, 4L, 5L, 6L, 7L, 1L, 2L, 3L, 4L, 5L, 6L, 7L),
+          c(1L, 2L, 3L, 4L, 5L, 6L, 1L, 2L, 3L, 4L, 5L, 6L),
           levels = c(
-            "fastQ", "edgelist", "aggregate", "graph",
+            "fastQ", "edgelist", "graph",
             "graph_collapse", "denoise", "sample_calling"
           ),
           class = "factor"
         ),
         output = c(
-          0.31, 0.31, 0.31, 0.306, 0.306, 0.298, 0.283,
-          0.155, 0.155, 0.155, 0.15, 0.15, 0.144, 0.084
+          0.31, 0.31, 0.306, 0.306, 0.298, 0.283,
+          0.155, 0.155, 0.15, 0.15, 0.144, 0.084
         ),
         filtered = c(
-          NA, 0, 0, 0.004, 0, 0.008, 0.015,
-          NA, 0, 0, 0.005, 0, 0.006, 0.06
+          NA, 0, 0.004, 0, 0.008, 0.015,
+          NA, 0, 0.005, 0, 0.006, 0.06
         ),
         `% filtered` = c(
-          "NA %", "0 %", "0 %", "1.29 %", "0 %", "2.61 %", "5.03 %",
-          "NA %", "0 %", "0 %", "3.23 %", "0 %", "4 %", "41.67 %"
+          "NA %", "0 %", "1.29 %", "0 %", "2.61 %", "5.03 %",
+          "NA %", "0 %", "3.23 %", "0 %", "4 %", "41.67 %"
         )
       ),
-      row.names = c(NA, -14L),
+      row.names = c(NA, -12L),
       class = "data.frame"
     )
   )
@@ -641,6 +643,6 @@ test_that("component_read_funnel works across all filtering stages and omits mis
   )
   expect_equal(
     levels(component_min$plots$pool1$data$stage),
-    c("fastQ", "edgelist", "aggregate", "graph")
+    c("fastQ", "edgelist", "graph")
   )
 })

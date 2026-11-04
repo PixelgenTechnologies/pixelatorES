@@ -458,14 +458,13 @@ component_sequencing_reads_and_molecules <-
 
 #' Stage read-count specification for the edgelist_aggregate funnel
 #'
-#' Maps each filtering stage in the `edgelist_aggregate` pipeline to the
+#' Maps each read-filtering stage in the `edgelist_aggregate` pipeline to the
 #' input and output read-count field names in its QC report JSON.
 #'
 #' @noRd
 .edgelist_aggregate_funnel_spec <- tibble::tribble(
   ~stage, ~input_field, ~output_field,
   "edgelist", "input_reads", "output_reads",
-  "aggregate", "input_reads", "output_reads",
   "graph", "reads_input", "reads_output",
   "graph_collapse", "reads_input", "reads_output",
   "denoise", "input_reads", "output_reads",
@@ -474,11 +473,13 @@ component_sequencing_reads_and_molecules <-
 
 #' Reads per pipeline stage
 #'
-#' The funnel has one column per filtering stage in the `edgelist_aggregate`
-#' pipeline (`edgelist`, `aggregate`, `graph`, `graph_collapse`, `denoise`,
-#' `sample_calling`) plus a leading `fastQ` column restating what entered the
-#' first stage. Optional stages that did not run (such as `graph_collapse`,
-#' `denoise`, or `sample_calling`) are omitted automatically.
+#' The funnel has one column per read-filtering stage in the
+#' `edgelist_aggregate` pipeline (`edgelist`, `graph`, `graph_collapse`,
+#' `denoise`, `sample_calling`) plus a leading `fastQ` column restating what
+#' entered the first stage. `aggregate` is omitted because it collapses reads
+#' into molecules without filtering reads. Optional stages that did not run
+#' (such as `graph_collapse`, `denoise`, or `sample_calling`) are omitted
+#' automatically.
 #'
 #' @param es_data An `es_data` object.
 #'
@@ -562,14 +563,34 @@ component_read_funnel <- function(es_data) {
   plot_data <- set_sample_levels(plot_data, sample_levels)
   plot_data <- group_by(plot_data, sample_alias)
 
-  plot_range <- max(plot_data$M_reads)
+  plot_range <- max(plot_data$M_reads) + 1e-5
 
   plots <-
     plot_data %>%
     group_split() %>%
     set_names(group_keys(plot_data)$sample_alias) %>%
     lapply(function(sample_data) {
-      sample_data %>%
+      n_stages <- length(levels(sample_data$stage))
+      start_reads <- sample_data$M_reads[
+        sample_data$stage == "fastQ" & sample_data$type == "output"
+      ]
+      output_rows <- sample_data[sample_data$type == "output", , drop = FALSE]
+      last_stage_idx <- max(as.integer(output_rows$stage))
+      end_reads <- output_rows$M_reads[
+        as.integer(output_rows$stage) == last_stage_idx
+      ]
+
+      line_x <- n_stages + 0.65
+      tick_w <- 0.08
+      has_summary_line <-
+        length(start_reads) == 1 &&
+          length(end_reads) == 1 &&
+          !is.na(start_reads) &&
+          !is.na(end_reads) &&
+          start_reads > 0
+
+      p <-
+        sample_data %>%
         ggplot(aes(stage, M_reads, fill = type)) +
         geom_col(show.legend = FALSE) +
         geom_text(
@@ -584,8 +605,68 @@ component_read_funnel <- function(es_data) {
           size = 3,
           hjust = 0,
           vjust = 1.1
+        )
+
+      if (has_summary_line) {
+        pct_graph_reads <- round(100 * end_reads / start_reads, 1)
+        summary_segments <- tibble(
+          x = c(
+            line_x, line_x,
+            line_x - tick_w, line_x - tick_w, line_x - tick_w
+          ),
+          xend = c(
+            line_x, line_x,
+            line_x + tick_w, line_x + tick_w, line_x + tick_w
+          ),
+          y = c(
+            0, end_reads,
+            0, end_reads, start_reads
+          ),
+          yend = c(
+            end_reads, start_reads,
+            0, end_reads, start_reads
+          ),
+          seg_color = c(
+            "#DAD6D7", "#C86584",
+            "#DAD6D7", "#DAD6D7", "#C86584"
+          ),
+          seg_lwd = c(1, 1, 1, 1, 1)
+        )
+        summary_label <- tibble(
+          x = line_x + 0.15,
+          y = start_reads / 2,
+          label = paste0(
+            "% Graph reads:\n",
+            pct_graph_reads, "%\n(",
+            round(end_reads, 1), " / ", round(start_reads, 1), " M)"
+          )
+        )
+
+        p <-
+          p +
+          ggplot2::geom_segment(
+            data = summary_segments,
+            aes(x = x, xend = xend, y = y, yend = yend),
+            color = summary_segments$seg_color,
+            linewidth = summary_segments$seg_lwd,
+            inherit.aes = FALSE
+          ) +
+          geom_text(
+            data = summary_label,
+            aes(x = x, y = y, label = label),
+            hjust = 0,
+            vjust = 0.5,
+            size = 3,
+            inherit.aes = FALSE
+          )
+      }
+
+      p <-
+        p +
+        ggplot2::scale_x_discrete(
+          limits = levels(sample_data$stage),
+          expand = expansion(add = c(0.6, if (has_summary_line) 2.1 else 0.6))
         ) +
-        facet_grid(sample_alias ~ .) +
         scale_y_continuous(
           expand = expansion(c(0, 0.2)),
           limits = c(0, plot_range)
@@ -597,10 +678,16 @@ component_read_funnel <- function(es_data) {
         theme_bw() +
         theme(
           axis.text.x = element_text(angle = 60, hjust = 1),
-          panel.border = element_rect(color = "#DAD6D7"),
           panel.grid = element_blank()
         ) +
-        labs(x = NULL, y = "Million reads")
+        labs(
+          x = NULL,
+          y = "Reads [millions]",
+          title = "Reads per stage",
+          subtitle = unique(sample_data$sample_alias)
+        )
+
+      return(p)
     })
 
   tabl <-
