@@ -97,17 +97,16 @@ tabset_plotlist(plots,
 )
 ```
 
-#### Reads and molecules
+#### Reads per stage
 
-Here we review the number of reads per stage of the `pixelator` pipeline, and the number of molecules that they are
-mapped to.
+The number of reads retained and filtered across each stage of the `pixelator` pipeline.
 
 ```{r}
 #| label: qc_metrics_reads
 #| fig-height: 4
 #| results: 'asis'
 component <-
-  component_read_funnel(es_data)
+  component_reads_per_stage(es_data)
 
 tabset_figure_table(
   component$plots,

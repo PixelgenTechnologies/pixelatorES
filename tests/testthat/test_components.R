@@ -536,7 +536,7 @@ for (data_type in data_types) {
   })
 }
 
-test_that("component_read_funnel works across all filtering stages and omits missing optional stages", {
+test_that("component_reads_per_stage works across all filtering stages and omits missing optional stages", {
   samplesheet <- tibble(
     sample = c("sample1", "sample2", "sample3", "sample4"),
     sample_alias = c("S1", "S2", "S3", "S4"),
@@ -566,7 +566,7 @@ test_that("component_read_funnel works across all filtering stages and omits mis
     )
   )
 
-  component_full <- component_read_funnel(
+  component_full <- component_reads_per_stage(
     test_es_data(
       samplesheet = samplesheet,
       qc_raw = qc_raw_full,
@@ -634,7 +634,7 @@ test_that("component_read_funnel works across all filtering stages and omits mis
     )
   )
 
-  component_min <- component_read_funnel(
+  component_min <- component_reads_per_stage(
     test_es_data(
       samplesheet = samplesheet,
       qc_raw = qc_raw_minimal,

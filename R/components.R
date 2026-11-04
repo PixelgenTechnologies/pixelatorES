@@ -456,13 +456,13 @@ component_sequencing_reads_and_molecules <-
     ))
   }
 
-#' Stage read-count specification for the edgelist_aggregate funnel
+#' Stage read-count specification for `component_reads_per_stage()`
 #'
 #' Maps each read-filtering stage in the `edgelist_aggregate` pipeline to the
 #' input and output read-count field names in its QC report JSON.
 #'
 #' @noRd
-.edgelist_aggregate_funnel_spec <- tibble::tribble(
+.edgelist_aggregate_reads_per_stage_spec <- tibble::tribble(
   ~stage, ~input_field, ~output_field,
   "edgelist", "input_reads", "output_reads",
   "graph", "reads_input", "reads_output",
@@ -471,15 +471,10 @@ component_sequencing_reads_and_molecules <-
   "sample_calling", "input_reads", "output_reads"
 )
 
-#' Reads per pipeline stage
+#' Create the reads per stage component
 #'
-#' The funnel has one column per read-filtering stage in the
-#' `edgelist_aggregate` pipeline (`edgelist`, `graph`, `graph_collapse`,
-#' `denoise`, `sample_calling`) plus a leading `fastQ` column restating what
-#' entered the first stage. `aggregate` is omitted because it collapses reads
-#' into molecules without filtering reads. Optional stages that did not run
-#' (such as `graph_collapse`, `denoise`, or `sample_calling`) are omitted
-#' automatically.
+#' Visualizes the sequencing reads retained and filtered at each stage of the
+#' `edgelist_aggregate` pipeline.
 #'
 #' @param es_data An `es_data` object.
 #'
@@ -488,7 +483,7 @@ component_sequencing_reads_and_molecules <-
 #'
 #' @export
 #'
-component_read_funnel <- function(es_data) {
+component_reads_per_stage <- function(es_data) {
   pixelatorR:::assert_class(es_data, "es_data")
 
   sample_qc_metrics <- es_data$qc_raw
@@ -504,7 +499,7 @@ component_read_funnel <- function(es_data) {
     qc_data <- sample_qc_metrics
   }
 
-  spec <- .edgelist_aggregate_funnel_spec
+  spec <- .edgelist_aggregate_reads_per_stage_spec
 
   stage_data <-
     qc_data %>%

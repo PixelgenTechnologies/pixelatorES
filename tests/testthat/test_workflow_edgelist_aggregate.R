@@ -104,7 +104,7 @@ test_that("edgelist_aggregate file discovery and multi-FASTQ qc_raw aggregation 
   )
 })
 
-test_that("edgelist_aggregate QC extractors, key table, and read funnel work as expected", {
+test_that("edgelist_aggregate QC extractors, key table, and reads per stage work as expected", {
   run_dir <- materialise_edgelist_aggregate_run()
   on.exit(unlink(run_dir, recursive = TRUE), add = TRUE)
 
@@ -171,10 +171,10 @@ test_that("edgelist_aggregate QC extractors, key table, and read funnel work as 
     )
   )
 
-  funnel <- component_read_funnel(object)
-  expect_equal(names(funnel$plots), c("pool1", "pool2"))
+  reads_stage <- component_reads_per_stage(object)
+  expect_equal(names(reads_stage$plots), c("pool1", "pool2"))
   expect_equal(
-    levels(funnel$plots$pool1$data$stage),
+    levels(reads_stage$plots$pool1$data$stage),
     c("fastQ", "edgelist", "graph", "graph_collapse", "denoise", "sample_calling")
   )
 })
