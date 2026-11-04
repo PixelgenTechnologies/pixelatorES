@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Experimental `edgelist_aggregate` workflow for nf-core/pixelator edgelist + aggregate runs, including `graph-collapse` (`% Nodes collapsed`) in the key metrics table and an end-to-end pipeline read funnel (`component_read_funnel()`).
+
 ## [0.15.1] 2026-11-02
 
 ### Fixed

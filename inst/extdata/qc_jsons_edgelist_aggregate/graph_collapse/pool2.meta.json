@@ -1,0 +1,18 @@
+{
+    "cli": {
+        "command": "pixelator single-cell-pna graph-collapse",
+        "options": {
+            "--design": "proxiome-v2",
+            "--bfs-distance": 6,
+            "--hamming-threshold": 2,
+            "--report-collapsed-sequences": false,
+            "--max-degree": 1,
+            "--output": ".",
+            "--threads": -1,
+            "--memory": 11520000000
+        },
+        "arguments": {
+            "pxl_file": "pool2.graph.pxl"
+        }
+    }
+}

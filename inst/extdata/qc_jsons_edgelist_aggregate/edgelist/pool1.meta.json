@@ -1,0 +1,19 @@
+{
+    "cli": {
+        "command": "pixelator single-cell-pna edgelist",
+        "options": {
+            "--read-forward": "pool1_R1.fastq.gz",
+            "--read-reverse": "pool1_R2.fastq.gz",
+            "--sample-name": "pool1",
+            "--mismatch-threshold": 1,
+            "--min-avg-quality": 20,
+            "--max-umi-base-freq": 0.8,
+            "--lbs-overlap-max-edits": 6,
+            "--design": "proxiome-v2",
+            "--panel": "proxiome-v2-immuno-155-prerelease",
+            "--output": ".",
+            "--threads": 2
+        },
+        "arguments": {}
+    }
+}

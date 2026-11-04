@@ -4,11 +4,15 @@
 \alias{test_data_folder}
 \title{Get the path to the test data folder}
 \usage{
-test_data_folder(type = c("default", "hashing"), package = "pixelatorES")
+test_data_folder(
+  type = c("default", "hashing", "edgelist_aggregate"),
+  package = "pixelatorES"
+)
 }
 \arguments{
-\item{type}{A character string specifying the type of test data folder to return. Options are "default"
-(the standard test data folder) and "hashing" (a test data folder for hashing experiments). Default is "default".}
+\item{type}{A character string specifying the type of test data folder to return. Options are \code{"default"}
+(the standard test data folder), \code{"hashing"} (a test data folder for hashing experiments), and
+\code{"edgelist_aggregate"} (a test data folder for \code{edgelist_aggregate} runs). Default is \code{"default"}.}
 
 \item{package}{A character string specifying the name of the package where the test data folder is located.
 Default is "pixelatorES".}

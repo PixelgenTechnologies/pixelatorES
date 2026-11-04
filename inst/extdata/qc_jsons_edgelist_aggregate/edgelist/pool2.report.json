@@ -1,0 +1,25 @@
+{
+    "sample_id": "pool2",
+    "product_id": "single-cell-pna",
+    "report_type": "edgelist",
+    "input_reads": 155203,
+    "output_reads": 155203,
+    "q30_statistics": {
+        "total": 1.0,
+        "umi1": 1.0,
+        "pid1": 1.0,
+        "pid2": 1.0,
+        "umi2": 1.0
+    },
+    "dropped_by": {
+        "has_n": 0,
+        "lbs_overlap": 0,
+        "low_complexity": 0,
+        "low_quality": 0,
+        "pid1_ambiguous": 0,
+        "pid1_not_in_panel": 0,
+        "pid2_ambiguous": 0,
+        "pid2_not_in_panel": 0,
+        "too_short": 0
+    }
+}

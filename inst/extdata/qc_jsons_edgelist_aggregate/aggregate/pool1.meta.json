@@ -1,0 +1,17 @@
+{
+    "cli": {
+        "command": "pixelator single-cell-pna aggregate",
+        "options": {
+            "--sample-name": "pool1",
+            "--output": ".",
+            "--threads": 2,
+            "--memory": 11520000000
+        },
+        "arguments": {
+            "edgelist": [
+                "pool1.parquet",
+                "pool1_reseq.parquet"
+            ]
+        }
+    }
+}

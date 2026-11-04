@@ -1,0 +1,13 @@
+{
+    "cli": {
+        "command": "pixelator rnd post-analysis",
+        "options": {
+            "--compute-nbt-probabilities": false,
+            "--compute-average-degree-per-node-type": true,
+            "--output": "."
+        },
+        "arguments": {
+            "pxl_file": "sample1.analysis.pxl"
+        }
+    }
+}

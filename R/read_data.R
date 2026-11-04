@@ -861,8 +861,9 @@ read_samplesheet <-
 #'
 #' Returns the path to the test samplesheet CSV file included in the package.
 #'
-#' @param type A character string specifying the type of test samplesheet to return. Options are "default"
-#' (the standard test samplesheet) and "hashing" (a test samplesheet for hashing experiments). Default is "default".
+#' @param type A character string specifying the type of test samplesheet to return. Options are `"default"`
+#' (the standard test samplesheet), `"hashing"` (a test samplesheet for hashing experiments), and
+#' `"edgelist_aggregate"` (a test samplesheet for `edgelist_aggregate` runs). Default is `"default"`.
 #' @param package A character string specifying the name of the package where the test samplesheet is located.
 #' Default is "pixelatorES".
 #' @return A character string with the path to the test samplesheet CSV file.
@@ -870,15 +871,16 @@ read_samplesheet <-
 #' @export
 #'
 test_samplesheet <-
-  function(type = c("default", "hashing"),
+  function(type = c("default", "hashing", "edgelist_aggregate"),
            package = "pixelatorES") {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
     pixelatorR:::assert_single_value(package, type = "string")
-    type <- match.arg(type, c("default", "hashing"))
+    type <- match.arg(type, c("default", "hashing", "edgelist_aggregate"))
 
     csv_file <- switch(type,
       "default" = "test_samplesheet.csv",
-      "hashing" = "test_samplesheet_hashing.csv"
+      "hashing" = "test_samplesheet_hashing.csv",
+      "edgelist_aggregate" = "test_samplesheet_edgelist_aggregate.csv"
     )
 
     system.file(
@@ -891,8 +893,9 @@ test_samplesheet <-
 #'
 #' Returns the path to the test data folder containing QC JSON files included in the package.
 #'
-#' @param type A character string specifying the type of test data folder to return. Options are "default"
-#' (the standard test data folder) and "hashing" (a test data folder for hashing experiments). Default is "default".
+#' @param type A character string specifying the type of test data folder to return. Options are `"default"`
+#' (the standard test data folder), `"hashing"` (a test data folder for hashing experiments), and
+#' `"edgelist_aggregate"` (a test data folder for `edgelist_aggregate` runs). Default is `"default"`.
 #' @param package A character string specifying the name of the package where the test data folder is located.
 #' Default is "pixelatorES".
 #' @return A character string with the path to the test data folder.
@@ -900,15 +903,16 @@ test_samplesheet <-
 #' @export
 #'
 test_data_folder <-
-  function(type = c("default", "hashing"),
+  function(type = c("default", "hashing", "edgelist_aggregate"),
            package = "pixelatorES") {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
     pixelatorR:::assert_single_value(package, type = "string")
-    type <- match.arg(type, c("default", "hashing"))
+    type <- match.arg(type, c("default", "hashing", "edgelist_aggregate"))
 
     foldr <- switch(type,
       "default" = "qc_jsons",
-      "hashing" = "qc_jsons_hashing"
+      "hashing" = "qc_jsons_hashing",
+      "edgelist_aggregate" = "qc_jsons_edgelist_aggregate"
     )
 
     system.file(
@@ -921,8 +925,9 @@ test_data_folder <-
 #'
 #' Generates a minimal Seurat object for testing purposes.
 #'
-#' @param type A character string specifying the type of test data to generate. Options are "default"
-#' (the standard test data) and "hashing" (test data for hashing experiments).
+#' @param type A character string specifying the type of test data to generate. Options are `"default"`
+#' (the standard test data), `"hashing"` (test data for hashing experiments), and
+#' `"edgelist_aggregate"` (test data for `edgelist_aggregate` runs).
 #' @param package A character string specifying the name of the package where the test data is located.
 #' Default is "pixelatorES".
 #'
@@ -932,21 +937,27 @@ test_data_folder <-
 #'
 get_test_data <-
   function(
-    type = c("default", "hashing"),
+    type = c("default", "hashing", "edgelist_aggregate"),
     package = "pixelatorES"
   ) {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
-    type <- match.arg(type, c("default", "hashing"))
+    type <- match.arg(type, c("default", "hashing", "edgelist_aggregate"))
 
     samplesheet <-
       read_samplesheet(test_samplesheet(type = type, package = package))
 
     data_folder <- test_data_folder(type = type, package = package)
 
+    workflow <- switch(type,
+      "default" = "amplicon_demux",
+      "hashing" = "amplicon_demux",
+      "edgelist_aggregate" = "edgelist_aggregate"
+    )
+
     data_files <- get_file_paths(
       data_folder,
       sample_sheet = samplesheet,
-      stages = get_es_workflow_stages("amplicon_demux")
+      stages = get_es_workflow_stages(workflow)
     )$data_files
 
     # Copy PXL files to a unique tempdir to avoid duckdb
