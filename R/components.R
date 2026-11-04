@@ -456,17 +456,34 @@ component_sequencing_reads_and_molecules <-
     ))
   }
 
-#' Reads and molecules per pipeline stage
+#' Stage read-count specification for the edgelist_aggregate funnel
 #'
-#' The funnel has one column per read-processing stage plus a leading `fastQ`
-#' column restating what entered the first stage. There are three stages rather
-#' than the four a pipeline with a separate demultiplexing step reports, because
-#' `edgelist` covers both.
+#' Maps each filtering stage in the `edgelist_aggregate` pipeline to the
+#' input and output read-count field names in its QC report JSON.
+#'
+#' @noRd
+.edgelist_aggregate_funnel_spec <- tibble::tribble(
+  ~stage, ~input_field, ~output_field,
+  "edgelist", "input_reads", "output_reads",
+  "aggregate", "input_reads", "output_reads",
+  "graph", "reads_input", "reads_output",
+  "graph_collapse", "reads_input", "reads_output",
+  "denoise", "input_reads", "output_reads",
+  "sample_calling", "input_reads", "output_reads"
+)
+
+#' Reads per pipeline stage
+#'
+#' The funnel has one column per filtering stage in the `edgelist_aggregate`
+#' pipeline (`edgelist`, `aggregate`, `graph`, `graph_collapse`, `denoise`,
+#' `sample_calling`) plus a leading `fastQ` column restating what entered the
+#' first stage. Optional stages that did not run (such as `graph_collapse`,
+#' `denoise`, or `sample_calling`) are omitted automatically.
 #'
 #' @param es_data An `es_data` object.
 #'
 #' @return A list with a `plots` element, holding one plot per pool or sample
-#'   alias, and a `table` element summarising the counts removed per stage.
+#'   alias, and a `table` element summarising the reads removed per stage.
 #'
 #' @export
 #'
@@ -486,26 +503,45 @@ component_read_funnel <- function(es_data) {
     qc_data <- sample_qc_metrics
   }
 
-  stage_levels <- c("fastQ", "edgelist", "aggregate", "graph")
+  spec <- .edgelist_aggregate_funnel_spec
 
-  plot_data <-
+  stage_data <-
     qc_data %>%
     lapply(function(sample_qc_data) {
       return(tibble(
-        stage = c("edgelist", "aggregate", "graph"),
-        input = c(
-          .scalar_qc_count(sample_qc_data$edgelist$input_reads),
-          .scalar_qc_count(sample_qc_data$aggregate$input_reads),
-          .scalar_qc_count(sample_qc_data$graph$molecules_input)
+        stage = spec$stage,
+        input = vapply(
+          seq_len(nrow(spec)),
+          function(i) {
+            return(.scalar_qc_count(
+              sample_qc_data[[spec$stage[[i]]]][[spec$input_field[[i]]]]
+            ))
+          },
+          numeric(1)
         ),
-        output = c(
-          .scalar_qc_count(sample_qc_data$edgelist$output_reads),
-          .scalar_qc_count(sample_qc_data$aggregate$output_molecules),
-          .scalar_qc_count(sample_qc_data$graph$molecules_output)
+        output = vapply(
+          seq_len(nrow(spec)),
+          function(i) {
+            return(.scalar_qc_count(
+              sample_qc_data[[spec$stage[[i]]]][[spec$output_field[[i]]]]
+            ))
+          },
+          numeric(1)
         )
       ))
     }) %>%
     bind_rows(.id = "sample_alias") %>%
+    group_by(stage) %>%
+    filter(!all(is.na(input) & is.na(output))) %>%
+    ungroup()
+
+  stage_levels <- c(
+    "fastQ",
+    spec$stage[spec$stage %in% unique(stage_data$stage)]
+  )
+
+  plot_data <-
+    stage_data %>%
     mutate(filtered = input - output) %>%
     bind_rows(
       filter(., stage == "edgelist") %>%
@@ -538,14 +574,10 @@ component_read_funnel <- function(es_data) {
         geom_col(show.legend = FALSE) +
         geom_text(
           data = . %>%
-            mutate(label = case_when(
-              type == "filtered" & stage == "edgelist" ~
-                paste0("Filtered: \n", round(M_reads, 2), " M reads"),
-              type == "filtered" & stage == "aggregate" ~
-                paste0("Aggregated: \n", round(M_reads, 2), " M reads"),
-              type == "filtered" & stage == "graph" ~
-                paste0("Filtered: \n", round(M_reads, 2), " M UEIs"),
-              TRUE ~ ""
+            mutate(label = ifelse(
+              type == "filtered" & M_reads > 0,
+              paste0("Filtered: \n", round(M_reads, 2), " M reads"),
+              ""
             )),
           aes(unclass(factor(stage)) - 0.45, label = label),
           position = position_stack(vjust = 0),
@@ -568,7 +600,7 @@ component_read_funnel <- function(es_data) {
           panel.border = element_rect(color = "#DAD6D7"),
           panel.grid = element_blank()
         ) +
-        labs(x = NULL, y = "Million reads/molecules")
+        labs(x = NULL, y = "Million reads")
     })
 
   tabl <-
@@ -580,7 +612,7 @@ component_read_funnel <- function(es_data) {
       `% filtered` = paste0(round(filtered / (output + filtered) * 100, 2), " %")
     ) %>%
     style_table(
-      caption = "Reads/Proteins removed per stage",
+      caption = "Reads removed per stage",
       interactive = FALSE
     )
 

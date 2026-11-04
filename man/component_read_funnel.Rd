@@ -2,7 +2,7 @@
 % Please edit documentation in R/components.R
 \name{component_read_funnel}
 \alias{component_read_funnel}
-\title{Reads and molecules per pipeline stage}
+\title{Reads per pipeline stage}
 \usage{
 component_read_funnel(es_data)
 }
@@ -11,11 +11,12 @@ component_read_funnel(es_data)
 }
 \value{
 A list with a \code{plots} element, holding one plot per pool or sample
-alias, and a \code{table} element summarising the counts removed per stage.
+alias, and a \code{table} element summarising the reads removed per stage.
 }
 \description{
-The funnel has one column per read-processing stage plus a leading \code{fastQ}
-column restating what entered the first stage. There are three stages rather
-than the four a pipeline with a separate demultiplexing step reports, because
-\code{edgelist} covers both.
+The funnel has one column per filtering stage in the \code{edgelist_aggregate}
+pipeline (\code{edgelist}, \code{aggregate}, \code{graph}, \code{graph_collapse}, \code{denoise},
+\code{sample_calling}) plus a leading \code{fastQ} column restating what entered the
+first stage. Optional stages that did not run (such as \code{graph_collapse},
+\code{denoise}, or \code{sample_calling}) are omitted automatically.
 }
