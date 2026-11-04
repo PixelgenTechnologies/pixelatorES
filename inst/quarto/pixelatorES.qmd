@@ -5,9 +5,10 @@ date: "`r Sys.Date()`"
 editor_options: 
   chunk_output_type: console
 params: 
-  sample_sheet: "../extdata/test_samplesheet_hashing.csv"
-  data_folder: "../extdata/qc_jsons_hashing/"
-  workflow: "amplicon_demux"
+  sample_sheet: "../extdata/test_samplesheet_edgelist_aggregate.csv"
+  # One run's output folder only: extdata holds fixtures for several stage vocabularies
+  data_folder: "../extdata/qc_jsons_edgelist_aggregate/"
+  workflow: "edgelist_aggregate"
   control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
   norm_method: "CLR"
   clustering_resolution: 1

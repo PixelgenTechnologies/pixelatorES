@@ -41,7 +41,7 @@ or \code{NULL} to derive from \code{samplesheet} when possible.}
 \item{file_paths}{Discovered input file paths, or \code{NULL}.}
 
 \item{params}{Experiment Summary parameters passed to \code{\link[=new_es_data]{new_es_data()}}.
-Defaults to an empty list (\code{workflow} defaults to \code{"amplicon_demux"}).}
+Defaults to an empty list (\code{workflow} defaults to \code{"edgelist_aggregate"}).}
 
 \item{diagnostics}{List of diagnostics. Defaults to an empty list.}
 

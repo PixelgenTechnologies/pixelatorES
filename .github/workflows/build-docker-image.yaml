@@ -115,8 +115,8 @@ jobs:
               cd inst/quarto/ && \
               quarto render pixelatorES.qmd \
                 --profile ci \
-                -P sample_sheet='../extdata/test_samplesheet.csv' \
-                -P data_folder='../extdata/qc_jsons/' \
+                -P sample_sheet='../extdata/test_samplesheet_edgelist_aggregate.csv' \
+                -P data_folder='../extdata/qc_jsons_edgelist_aggregate/' \
                 -P debug_mode=true \
                 -P test_mode=true \
                 --output testrun.html"

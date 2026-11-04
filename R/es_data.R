@@ -49,7 +49,7 @@
 #' at construction time.
 #'
 #' @param params A list of Experiment Summary parameters. If `workflow` is
-#'   absent, it defaults to `"amplicon_demux"`.
+#'   absent, it defaults to `"edgelist_aggregate"`.
 #'
 #' @return An `es_data` object with the workflow's stage vocabulary and
 #'   extractors attached but data slots unfilled. `sample_aliases`,
@@ -62,7 +62,7 @@ new_es_data <- function(params) {
 
   workflow <- params$workflow
   if (is.null(workflow)) {
-    workflow <- "amplicon_demux"
+    workflow <- "edgelist_aggregate"
     params$workflow <- workflow
   }
   pixelatorR:::assert_single_value(workflow, "string")
@@ -113,7 +113,7 @@ new_es_data <- function(params) {
 #' @param proximity Proximity scores, or `NULL`.
 #' @param file_paths Discovered input file paths, or `NULL`.
 #' @param params Experiment Summary parameters passed to [new_es_data()].
-#'   Defaults to an empty list (`workflow` defaults to `"amplicon_demux"`).
+#'   Defaults to an empty list (`workflow` defaults to `"edgelist_aggregate"`).
 #' @param diagnostics List of diagnostics. Defaults to an empty list.
 #' @param ... Named overrides for any other existing `es_data` slot (for
 #'   example `stages` or `extractors`). Unknown names are an error.
