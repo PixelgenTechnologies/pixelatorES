@@ -642,8 +642,24 @@ component_read_funnel <- function(es_data) {
           )
         )
 
+        guide_segments <- tibble(
+          x = c(1 + 0.45, last_stage_idx + 0.45, 1 + 0.45),
+          xend = c(line_x - tick_w, line_x - tick_w, line_x - tick_w),
+          y = c(start_reads, end_reads, 0),
+          yend = c(start_reads, end_reads, 0),
+          seg_color = c("#C86584", "#DAD6D7", "#DAD6D7")
+        )
+
         p <-
           p +
+          ggplot2::geom_segment(
+            data = guide_segments,
+            aes(x = x, xend = xend, y = y, yend = yend),
+            color = guide_segments$seg_color,
+            linewidth = 0.4,
+            linetype = "dashed",
+            inherit.aes = FALSE
+          ) +
           ggplot2::geom_segment(
             data = summary_segments,
             aes(x = x, xend = xend, y = y, yend = yend),
