@@ -49,7 +49,7 @@
 #' at construction time.
 #'
 #' @param params A list of Experiment Summary parameters. If `workflow` is
-#'   absent, it defaults to `"amplicon_demux"`.
+#'   absent, it defaults to `"edgelist_aggregate"`.
 #'
 #' @return An `es_data` object with the workflow's stage vocabulary and
 #'   extractors attached but data slots unfilled. `sample_aliases`,
@@ -62,7 +62,7 @@ new_es_data <- function(params) {
 
   workflow <- params$workflow
   if (is.null(workflow)) {
-    workflow <- "amplicon_demux"
+    workflow <- "edgelist_aggregate"
     params$workflow <- workflow
   }
   pixelatorR:::assert_single_value(workflow, "string")
@@ -113,7 +113,7 @@ new_es_data <- function(params) {
 #' @param proximity Proximity scores, or `NULL`.
 #' @param file_paths Discovered input file paths, or `NULL`.
 #' @param params Experiment Summary parameters passed to [new_es_data()].
-#'   Defaults to an empty list (`workflow` defaults to `"amplicon_demux"`).
+#'   Defaults to an empty list (`workflow` defaults to `"edgelist_aggregate"`).
 #' @param diagnostics List of diagnostics. Defaults to an empty list.
 #' @param ... Named overrides for any other existing `es_data` slot (for
 #'   example `stages` or `extractors`). Unknown names are an error.
@@ -415,9 +415,7 @@ test_es_data <- function(
 
     parsed <- tryCatch(
       list(
-        value = alias_files$filename %>%
-          set_names(alias_files$stage) %>%
-          lapply(fload),
+        value = .load_stage_qc_files(alias_files),
         error = NULL
       ),
       error = function(error) {
@@ -611,6 +609,49 @@ test_es_data <- function(
     "sample_alias",
     n_markers = c(3, 5)
   )
+
+  return(.format_qc_metric(metric, object$samplesheet))
+}
+
+#' Extract formatted graph-collapse statistics
+#'
+#' Extracts the fraction of nodes collapsed by `graph-collapse` from raw quality
+#' control metrics. The fraction is relative to the nodes considered for
+#' collapsing by `graph-collapse`. Groups without the stage are omitted, and
+#' `NULL` is returned when no group carries `graph-collapse` data.
+#'
+#' @param object An `es_data` object.
+#'
+#' @return A formatted graph-collapse table, or `NULL`.
+#'
+#' @noRd
+.extract_graph_collapse <- function(object) {
+  sample_qc_metrics <- object$qc_raw
+  pixelatorR:::assert_class(sample_qc_metrics, "list")
+
+  if (!is.null(sample_qc_metrics$pool_qc_files)) {
+    group_col <- "pool"
+    qc_data <- sample_qc_metrics$pool_qc_files
+  } else {
+    group_col <- "sample_alias"
+    qc_data <- sample_qc_metrics$qc_files
+  }
+
+  if (length(qc_data) == 0) {
+    return(NULL)
+  }
+
+  metric <-
+    qc_data %>%
+    lapply(function(sample_qc_data) {
+      return(tibble(
+        nodes_collapsed_fraction = .scalar_qc_count(
+          sample_qc_data$graph_collapse$nodes_collapsed_fraction
+        )
+      ))
+    }) %>%
+    bind_rows(.id = group_col) %>%
+    filter(!is.na(nodes_collapsed_fraction))
 
   return(.format_qc_metric(metric, object$samplesheet))
 }
@@ -873,6 +914,30 @@ build_es_data <- function(params) {
       target = filepath,
       message = message
     )
+  }
+
+  unattributed_qc_files <- attr(file_paths, "unattributed_qc_files")
+  if (!is.null(unattributed_qc_files) && nrow(unattributed_qc_files) > 0) {
+    has_pools <- "pool" %in% names(object$samplesheet)
+    target_kind <- if (has_pools) "pool" else "sample"
+    for (i in seq_len(nrow(unattributed_qc_files))) {
+      filepath <- unattributed_qc_files$filename[[i]]
+      sample_id <- unattributed_qc_files$sample_id[[i]]
+      message <- if (is.na(sample_id)) {
+        "its sample_id is missing."
+      } else {
+        paste0("its sample_id (", sample_id, ") is not a ", target_kind, " in the samplesheet.")
+      }
+      cli::cli_warn(
+        "Skipping edgelist QC file {.file {basename(filepath)}}: {message}"
+      )
+      object <- add_es_data_diagnostic(
+        object,
+        type = "qc_load",
+        target = filepath,
+        message = message
+      )
+    }
   }
 
   object$file_paths <- file_paths

@@ -841,3 +841,120 @@ test_that("Key metric tables handle missing metrics as expected", {
     list(pool = NULL, sample = NULL)
   )
 })
+
+test_that("Parameterized QC extractors and graph_collapse key table work as expected", {
+  qc_raw_pool <- list(
+    qc_files = list(S1 = list(analysis = list(a = 1))),
+    pool_qc_files = list(
+      pool1 = list(
+        edgelist = list(input_reads = 309597),
+        aggregate = list(
+          input_reads = 309597,
+          output_molecules = 44400,
+          umi1_degree_distribution = list(`1` = 3, `2` = 1),
+          umi2_degree_distribution = list(`1` = 4)
+        ),
+        graph_collapse = list(nodes_collapsed_fraction = 61 / 140)
+      ),
+      pool2 = list(
+        edgelist = list(input_reads = 155203),
+        aggregate = list(
+          input_reads = 155203,
+          output_molecules = 22200,
+          umi1_degree_distribution = list(`1` = 2),
+          umi2_degree_distribution = list(`1` = 2)
+        ),
+        graph_collapse = list(nodes_collapsed_fraction = 27 / 208)
+      )
+    )
+  )
+
+  deg <- get_degree_distribution(qc_raw_pool, stage = "aggregate")
+  expect_equal(
+    deg,
+    structure(
+      list(
+        pool = c("pool1", "pool1", "pool1", "pool2", "pool2"),
+        umi_type = c("umi1", "umi1", "umi2", "umi1", "umi2"),
+        degree = c(1L, 2L, 1L, 1L, 1L),
+        n = c(3, 1, 4, 2, 2),
+        percent_nodes = c(37.5, 12.5, 50, 50, 50)
+      ),
+      row.names = c(NA, -5L),
+      class = c("tbl_df", "tbl", "data.frame")
+    )
+  )
+
+  samplesheet_pool <- tibble(
+    sample = c("sample1", "sample2"),
+    sample_alias = c("S1", "S2"),
+    condition = c("A", "B"),
+    pool = c("pool1", "pool2")
+  )
+
+  gc_res <- pixelatorES:::.extract_graph_collapse(
+    test_es_data(samplesheet = samplesheet_pool, qc_raw = qc_raw_pool)
+  )
+  expect_equal(
+    gc_res,
+    structure(
+      list(
+        pool = factor(c("pool1", "pool2"), levels = c("pool1", "pool2")),
+        nodes_collapsed_fraction = c(61 / 140, 27 / 208)
+      ),
+      row.names = c(NA, -2L),
+      class = c("tbl_df", "tbl", "data.frame")
+    )
+  )
+
+  expect_null(
+    pixelatorES:::.extract_graph_collapse(
+      test_es_data(
+        samplesheet = samplesheet_pool,
+        qc_raw = list(
+          qc_files = list(S1 = list(analysis = list(a = 1))),
+          pool_qc_files = list(pool1 = list(edgelist = list(input_reads = 10)))
+        )
+      )
+    )
+  )
+
+  es_with_gc <- test_es_data(
+    qc = list(
+      read_stats = tibble(
+        sample_alias = factor(c("S1", "S2")),
+        n_cells = c(10, 20)
+      ),
+      seq_saturation = tibble(
+        pool = factor(c("pool1", "pool2")),
+        total_reads = c(1e6, 2e6),
+        graph_node_saturation = c(51.234, 62.345)
+      ),
+      graph_collapse = tibble(
+        pool = factor(c("pool1", "pool2")),
+        nodes_collapsed_fraction = c(61 / 140, 27 / 208)
+      )
+    )
+  )
+
+  tables_detailed <- key_metric_table(es_with_gc, detailed = TRUE, return_data = TRUE)
+  tables_short <- key_metric_table(es_with_gc, detailed = FALSE, return_data = TRUE)
+
+  expect_equal(
+    tables_detailed$pool,
+    structure(
+      list(
+        `Pool ID` = c("pool1", "pool2"),
+        `Total reads [M]` = c("1", "2"),
+        `Graph node saturation [%]` = c("51.23", "62.34"),
+        `% Nodes collapsed` = c("43.57", "12.98")
+      ),
+      row.names = c(NA, -2L),
+      class = c("tbl_df", "tbl", "data.frame")
+    )
+  )
+  expect_equal(tables_short$pool, tables_detailed$pool)
+
+  styled <- key_metric_table(es_with_gc)
+  expect_true(any(startsWith(names(styled$pool$x$data), "% Nodes collapsed <i")))
+})

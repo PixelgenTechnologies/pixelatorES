@@ -26,11 +26,11 @@ test_that("es_data construction works as expected", {
   object <- pixelatorES:::new_es_data(list())
 
   expect_s3_class(object, "es_data")
-  expect_equal(object$stages, get_es_workflow_stages("amplicon_demux"))
+  expect_equal(object$stages, get_es_workflow_stages("edgelist_aggregate"))
   expect_equal(
     object[setdiff(names(object), c("stages", "extractors"))],
     list(
-      params = list(workflow = "amplicon_demux"),
+      params = list(workflow = "edgelist_aggregate"),
       diagnostics = list(),
       samplesheet = NULL,
       sample_aliases = NULL,
@@ -61,7 +61,7 @@ test_that("es_data construction works as expected", {
     list(
       params = list(
         sample_sheet = test_samplesheet(),
-        workflow = "amplicon_demux"
+        workflow = "edgelist_aggregate"
       ),
       samplesheet = structure(
         list(
@@ -144,7 +144,7 @@ test_that("es_data printing works as expected", {
     c(
       "",
       "-- es_data ---------------------------------------------------------------------",
-      'Workflow: "amplicon_demux"',
+      'Workflow: "edgelist_aggregate"',
       "* params: 1 parameter",
       "* diagnostics: 1 diagnostic",
       "* samplesheet: tibble with 2 samples and 3 columns",
@@ -157,7 +157,7 @@ test_that("es_data printing works as expected", {
       "* pxl_data_processed: Seurat object with 3 cells and 2 features",
       "* proximity: tibble with 4 proximity scores",
       "* stages: workflow vocabulary with 9 stages",
-      "* extractors: workflow registry with 15 extractors"
+      "* extractors: workflow registry with 16 extractors"
     )
   )
 })
@@ -335,7 +335,7 @@ test_that("es_data workflow registration works as expected", {
 
   expect_equal(
     list_es_data_workflows(),
-    c("amplicon_demux", "test_workflow")
+    c("amplicon_demux", "edgelist_aggregate", "test_workflow")
   )
   expect_equal(
     pixelatorES:::new_es_data(
@@ -385,7 +385,10 @@ test_that("Workflow stage vocabularies work as expected", {
       pxl_preference = c("graph", "analysis", "post_analysis", "layout")
     )
   )
-  expect_equal(pixelatorES:::new_es_data(list())$stages, amplicon_vocabulary)
+  expect_equal(
+    pixelatorES:::new_es_data(list())$stages,
+    get_es_workflow_stages("edgelist_aggregate")
+  )
   expect_error(get_es_workflow_stages("unknown_workflow"))
 
   report <- list(
@@ -481,7 +484,8 @@ test_that("Workflow stage vocabularies work as expected", {
 test_that("File discovery uses the object's stage vocabulary", {
   object <- pixelatorES:::new_es_data(list(
     sample_sheet = test_samplesheet(),
-    data_folder = test_data_folder(type = "default")
+    data_folder = test_data_folder(type = "default"),
+    workflow = "amplicon_demux"
   ))
   object$samplesheet <- object$extractors$samplesheet(object)
 
@@ -541,17 +545,17 @@ test_that("Workflow report recipes work as expected", {
         list(
           id = "cell_annotation",
           title = "Cell annotation",
-          child = "workflows/amplicon_demux/cell_annotation.qmd"
+          child = "workflows/shared/cell_annotation.qmd"
         ),
         list(
           id = "abundance",
           title = "Abundance",
-          child = "workflows/amplicon_demux/abundance.qmd"
+          child = "workflows/shared/abundance.qmd"
         ),
         list(
           id = "spatial",
           title = "Spatial metrics",
-          child = "workflows/amplicon_demux/spatial.qmd"
+          child = "workflows/shared/spatial.qmd"
         ),
         list(
           id = "run_info",
@@ -724,7 +728,8 @@ test_that("Partial input failures work as expected", {
 
   object <- pixelatorES:::new_es_data(list(
     sample_sheet = test_samplesheet(),
-    data_folder = data_folder
+    data_folder = data_folder,
+    workflow = "amplicon_demux"
   ))
   object$samplesheet <- object$extractors$samplesheet(object)
   object <- pixelatorES:::.fill_es_data_file_paths(object)
@@ -927,7 +932,8 @@ test_that("QC-only builds work as expected", {
     list(
       sample_sheet = test_samplesheet(),
       data_folder = data_folder,
-      test_mode = TRUE
+      test_mode = TRUE,
+      workflow = "amplicon_demux"
     )
   )
   object <- suppressWarnings(build_es_data(params))

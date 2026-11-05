@@ -111,7 +111,7 @@ component <-
 
 tabset_figure_table(
   component$plots,
-  component$tabl,
+  component$table,
   level = 5
 )
 close_tabset()
@@ -180,7 +180,7 @@ component <-
 
 tabset_figure_table(
   component$plots[[1]],
-  component$tabl,
+  component$table,
   level = 5,
   mode = "title"
 )

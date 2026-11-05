@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [0.16.0] 2026-11-05
+
+### Added
+
+- `edgelist_aggregate` workflow (now the default workflow) for nf-core/pixelator edgelist + aggregate runs, including `graph-collapse` (`% Nodes collapsed`) in the key metrics table and `component_reads_per_stage()`.
 
 ## [0.15.1] 2026-11-02
 

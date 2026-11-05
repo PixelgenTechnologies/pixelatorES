@@ -8,7 +8,7 @@ new_es_data(params)
 }
 \arguments{
 \item{params}{A list of Experiment Summary parameters. If \code{workflow} is
-absent, it defaults to \code{"amplicon_demux"}.}
+absent, it defaults to \code{"edgelist_aggregate"}.}
 }
 \value{
 An \code{es_data} object with the workflow's stage vocabulary and

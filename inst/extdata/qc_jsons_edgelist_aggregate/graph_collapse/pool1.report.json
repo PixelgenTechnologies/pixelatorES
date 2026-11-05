@@ -1,0 +1,21 @@
+{
+    "sample_id": "pool1",
+    "product_id": "single-cell-pna",
+    "report_type": "graph-collapse",
+    "component_count": 48,
+    "umis_input": 9649,
+    "umis_output": 9588,
+    "reads_input": 115149,
+    "reads_output": 115149,
+    "nodes_considered": 140,
+    "targets_found": 61,
+    "bfs_distance_distribution": {
+        "2": 61
+    },
+    "hamming_distance_distribution": {
+        "1": 61
+    },
+    "nodes_collapsed": 61,
+    "collapsed_sequences_file": null,
+    "nodes_collapsed_fraction": 0.4357142857142857
+}

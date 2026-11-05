@@ -1,0 +1,222 @@
+
+### Key metrics
+
+```{r}
+#| label: key_metrics
+#| results: 'asis'
+key_tables <-
+  key_metric_table(es_data, detailed = FALSE)
+
+is_hashed_experiment <- "pool" %in% names(es_data$samplesheet)
+has_key_metrics <-
+  !is.null(key_tables$pool) || !is.null(key_tables$sample)
+eval_hashed_key_metrics <- is_hashed_experiment && has_key_metrics
+eval_standard_key_metrics <-
+  !is_hashed_experiment && !is.null(key_tables$sample)
+```
+
+```{r}
+#| label: key_metrics_pool
+#| eval: !expr eval_hashed_key_metrics
+#| results: 'asis'
+open_tabset()
+if (!is.null(key_tables$pool)) {
+  section_table(key_tables$pool, "Hash pool metrics", 3)
+}
+if (!is.null(key_tables$sample)) {
+  section_table(key_tables$sample, "Sample metrics", 3)
+}
+close_tabset()
+```
+
+```{r}
+#| label: key_metrics_sample
+#| eval: !expr eval_standard_key_metrics
+#| results: 'asis'
+section_table(key_tables$sample, "Sample metrics", 3)
+```
+
+```{r}
+#| label: sample_hashing_section_intro
+#| eval: !expr is_hashed_experiment
+#| results: 'asis'
+section_intro(
+  "Sample hashing",
+  glue::glue(
+    "The hash purity for an antibody is defined as the number of UMIs from the most common ",
+    "antibody hash divided by the sum of UMIs for all antibody hashes. For instance, if B2M-1 ",
+    "is the most common hash, the hash purity for B2M is the number of UMIs for B2M-1 divided ",
+    "by the sum of UMIs for all B2M hashes.\n\n"
+  ),
+  3
+)
+```
+
+```{r}
+#| label: sample_hashing
+#| eval: !expr is_hashed_experiment
+#| results: 'asis'
+component <-
+  component_hashing(es_data, colors = cherry_gradient)
+
+tabset_figure_table(
+  component$plot,
+  component$table,
+  level = 4
+)
+close_tabset()
+
+tabset_plotlist(component$sample_confidence_plots, level = 4)
+```
+
+### Sequencing
+
+#### Sequencing saturation
+
+Sequencing saturation is the fraction of a library's complexity that has been
+captured through sequencing.
+
+```{r}
+#| label: qc_metrics_sequencing_saturation
+#| results: 'asis'
+if (params$debug_mode) {
+  seqsat_comps <- 5L
+} else {
+  seqsat_comps <- 100L
+}
+set.seed(123)
+
+plots <-
+  component_sequencing_saturation_curve(
+    es_data,
+    seqsat_comps = seqsat_comps
+  )
+
+tabset_plotlist(plots,
+  level = 5
+)
+```
+
+#### Reads per stage
+
+The number of reads retained and filtered across each stage of the `pixelator` pipeline.
+
+```{r}
+#| label: qc_metrics_reads
+#| fig-height: 4
+#| results: 'asis'
+component <-
+  component_reads_per_stage(es_data)
+
+tabset_figure_table(
+  component$plots,
+  component$table,
+  level = 5
+)
+close_tabset()
+```
+
+#### Reads per cell
+
+```{r}
+#| label: qc_metrics_reads_per_cell
+#| results: 'asis'
+component <-
+  component_sequencing_reads_per_cell(es_data)
+
+tabset_figure_table(
+  component$plot,
+  component$table,
+  level = 5
+)
+close_tabset()
+```
+
+### Cell recovery
+
+#### Number of components
+
+The molecule rank plot below ranks the components of a sample from the most to the fewest molecules. Cells appear as
+the plateau of large components to the left, and the curve drops where cells give way to background components such as
+debris. A sharp drop means that cells are well separated from background, while a gradual slope means that the two are
+harder to tell apart. The dashed lines mark the minimum and maximum component size thresholds, and only components
+between them are kept as cells.
+
+```{r}
+#| label: qc_metrics_molrank_plot
+#| results: 'asis'
+
+component <-
+  component_cell_recovery(es_data)
+
+tabset_figure_table(
+  component$plots[[2]],
+  component$table[[2]],
+  level = 5, mode = "tabset_nested"
+)
+close_tabset()
+```
+
+```{r}
+#| label: qc_metrics_molecule_count
+#| results: 'asis'
+component_molecule_plot(es_data, sample_palette)
+```
+
+### Graph metrics
+
+#### k-coreness
+
+k-coreness is a measure of the connectivity of a node in a graph. A node with a
+high k-coreness is well connected to
+other nodes in the graph.
+
+```{r}
+#| label: qc_metrics_nodes_kcore
+#| results: 'asis'
+component <-
+  component_coreness(es_data)
+
+tabset_figure_table(
+  component$plots[[1]],
+  component$table,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```
+
+#### Denoising
+
+Denoising removes low-connectivity graph nodes to improve data quality.
+
+```{r}
+#| label: qc_metrics_denoising
+#| results: 'asis'
+component <-
+  component_denoising(es_data)
+
+tabset_figure_table(
+  component$plots$removed_umis,
+  component$tables$removed_umis,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```
+
+### Isotype control markers
+
+```{r}
+#| label: qc_metrics_frac_control
+#| results: 'asis'
+component <- component_control_markers(es_data)
+
+tabset_figure_table(
+  component$p1,
+  component$tabl,
+  level = 5,
+  mode = "title"
+)
+close_tabset()
+```

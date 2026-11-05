@@ -535,3 +535,114 @@ for (data_type in data_types) {
     }
   })
 }
+
+test_that("component_reads_per_stage works across all filtering stages and omits missing optional stages", {
+  samplesheet <- tibble(
+    sample = c("sample1", "sample2", "sample3", "sample4"),
+    sample_alias = c("S1", "S2", "S3", "S4"),
+    condition = c("A", "B", "A", "B"),
+    pool = c("pool1", "pool1", "pool2", "pool2")
+  )
+
+  qc_raw_full <- list(
+    qc_files = list(),
+    pool_qc_files = list(
+      pool1 = list(
+        edgelist = list(input_reads = 309597, output_reads = 309597),
+        aggregate = list(input_reads = 309597, output_reads = 309597, output_molecules = 44400),
+        graph = list(reads_input = 309597, reads_output = 305974),
+        graph_collapse = list(reads_input = 305974, reads_output = 305974),
+        denoise = list(input_reads = 305974, output_reads = 297538),
+        sample_calling = list(input_reads = 297538, output_reads = 282745)
+      ),
+      pool2 = list(
+        edgelist = list(input_reads = 155203, output_reads = 155203),
+        aggregate = list(input_reads = 155203, output_reads = 155203, output_molecules = 22200),
+        graph = list(reads_input = 155203, reads_output = 150211),
+        graph_collapse = list(reads_input = 150211, reads_output = 150211),
+        denoise = list(input_reads = 150211, output_reads = 143808),
+        sample_calling = list(input_reads = 143808, output_reads = 83934)
+      )
+    )
+  )
+
+  component_full <- component_reads_per_stage(
+    test_es_data(
+      samplesheet = samplesheet,
+      qc_raw = qc_raw_full,
+      params = list(workflow = "edgelist_aggregate")
+    )
+  )
+
+  expect_equal(names(component_full$plots), c("pool1", "pool2"))
+  expect_equal(
+    levels(component_full$plots$pool1$data$stage),
+    c(
+      "fastQ", "edgelist", "graph",
+      "denoise", "sample_calling"
+    )
+  )
+  expect_equal(component_full$plots$pool1$labels$y, "Reads [millions]")
+  expect_equal(component_full$plots$pool1$labels$title, "Reads per stage")
+  expect_equal(as.character(component_full$plots$pool1$labels$subtitle), "pool1")
+  expect_no_error(ggplot2::ggplot_build(component_full$plots$pool1))
+
+  expect_equal(
+    component_full$table$x$data,
+    structure(
+      list(
+        sample_alias = structure(
+          c(1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L),
+          levels = c("pool1", "pool2"),
+          class = "factor"
+        ),
+        stage = structure(
+          c(1L, 2L, 3L, 4L, 5L, 1L, 2L, 3L, 4L, 5L),
+          levels = c(
+            "fastQ", "edgelist", "graph",
+            "denoise", "sample_calling"
+          ),
+          class = "factor"
+        ),
+        output = c(
+          0.31, 0.31, 0.306, 0.298, 0.283,
+          0.155, 0.155, 0.15, 0.144, 0.084
+        ),
+        filtered = c(
+          NA, 0, 0.004, 0.008, 0.015,
+          NA, 0, 0.005, 0.006, 0.06
+        ),
+        `% filtered` = c(
+          "NA %", "0 %", "1.29 %", "2.61 %", "5.03 %",
+          "NA %", "0 %", "3.23 %", "4 %", "41.67 %"
+        )
+      ),
+      row.names = c(NA, -10L),
+      class = "data.frame"
+    )
+  )
+
+  # Optional stages (e.g. graph_collapse, sample_calling) are omitted when absent
+  qc_raw_minimal <- list(
+    qc_files = list(),
+    pool_qc_files = list(
+      pool1 = list(
+        edgelist = list(input_reads = 309597, output_reads = 309597),
+        aggregate = list(input_reads = 309597, output_reads = 309597),
+        graph = list(reads_input = 309597, reads_output = 305974)
+      )
+    )
+  )
+
+  component_min <- component_reads_per_stage(
+    test_es_data(
+      samplesheet = samplesheet,
+      qc_raw = qc_raw_minimal,
+      params = list(workflow = "edgelist_aggregate")
+    )
+  )
+  expect_equal(
+    levels(component_min$plots$pool1$data$stage),
+    c("fastQ", "edgelist", "graph")
+  )
+})

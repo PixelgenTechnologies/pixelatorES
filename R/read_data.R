@@ -43,6 +43,126 @@ find_stage <-
     }
   }
 
+#' One reported count, or `NA` when the report does not carry it
+#'
+#' @param value A report field.
+#'
+#' @return A single numeric.
+#'
+#' @noRd
+.scalar_qc_count <- function(value) {
+  if (length(value) != 1) {
+    return(NA_real_)
+  }
+
+  return(as.numeric(value))
+}
+
+#' Total the reads across the `edgelist` reports belonging to one pool or sample
+#'
+#' A pool or sample sequenced more than once has one `edgelist` report per
+#' fastq. Downstream stages only read `input_reads` and `output_reads` from
+#' `edgelist`, so when multiple `edgelist` reports are combined for a single
+#' group, those counts are summed. When a single `edgelist` report is present,
+#' the full report is kept unchanged.
+#'
+#' @param reports A list of parsed `edgelist` reports for a single pool or
+#'   sample.
+#'
+#' @return A list of the summed `input_reads` and `output_reads` when `reports`
+#'   has multiple elements, or the single parsed report when it has one.
+#'
+#' @noRd
+.total_edgelist_reads <- function(reports) {
+  total <- function(field) {
+    counts <- vapply(
+      reports,
+      function(report) {
+        return(.scalar_qc_count(report[[field]]))
+      },
+      numeric(1)
+    )
+
+    if (all(is.na(counts))) {
+      return(NA_real_)
+    }
+
+    return(sum(counts, na.rm = TRUE))
+  }
+
+  return(list(
+    input_reads = total("input_reads"),
+    output_reads = total("output_reads")
+  ))
+}
+
+#' Load and combine stage QC files for one sample or pool
+#'
+#' Reads every QC report for a single sample or pool, keyed by stage. If a
+#' stage has multiple reports (such as `edgelist` across multiple fastqs), its
+#' reports are combined with `.total_edgelist_reads()`.
+#'
+#' @param sample_files A data frame with columns `stage` and `filename`.
+#'
+#' @return A named list of parsed QC reports keyed by stage.
+#'
+#' @noRd
+.load_stage_qc_files <- function(sample_files) {
+  stages <- unique(sample_files$stage)
+
+  result <-
+    stages %>%
+    set_names() %>%
+    lapply(function(st) {
+      stage_filenames <- sample_files$filename[sample_files$stage == st]
+      reports <- lapply(stage_filenames, fload)
+
+      if (length(reports) == 1 && st != "edgelist") {
+        return(reports[[1]])
+      }
+      if (st == "edgelist" && length(reports) > 1) {
+        return(.total_edgelist_reads(reports))
+      }
+
+      return(reports[[1]])
+    })
+
+  return(result)
+}
+
+#' Resolve `sample_id` from an `edgelist` QC report file
+#'
+#' `edgelist` report files are named after their fastq basename rather than the
+#' pool or sample id, and carry the pool/sample id in their `sample_id` JSON
+#' field. When the file exists on disk, reads `sample_id`; otherwise falls back
+#' to `default_alias` so synthetic paths in unit tests continue to work.
+#'
+#' @param filepath Path to an `edgelist` `.report.json` file.
+#' @param default_alias Fallback alias derived from the filename basename.
+#'
+#' @return A single character string (`NA_character_` if the file exists on
+#'   disk and lacks a scalar `sample_id`).
+#'
+#' @noRd
+.resolve_edgelist_report_alias <- function(filepath, default_alias) {
+  if (!file.exists(filepath)) {
+    return(default_alias)
+  }
+
+  sample_id <- tryCatch(
+    fload(filepath)[["sample_id"]],
+    error = function(error) {
+      return(NULL)
+    }
+  )
+
+  if (length(sample_id) != 1 || is.na(sample_id) || !nzchar(as.character(sample_id))) {
+    return(NA_character_)
+  }
+
+  return(as.character(sample_id))
+}
+
 #' Get file paths for data and QC files
 #'
 #' Retrieve file paths for data and QC files from a specified data folder.
@@ -68,7 +188,9 @@ find_stage <-
 #' @return A list with `data_files`, `qc_files`, and `pool_qc_files` (the last is `NULL` when absent).
 #'   When `on_duplicate_samples = "omit"`, attribute `duplicate_data_samples` is a character
 #'   vector of omitted sample aliases. When `on_unknown_stage = "omit"`, attribute
-#'   `unknown_stage_files` is a character vector of skipped file paths.
+#'   `unknown_stage_files` is a character vector of skipped file paths. When `edgelist` QC
+#'   reports on disk carry a missing or unrecognised `sample_id`, attribute
+#'   `unattributed_qc_files` is a tibble of those skipped reports (`filename` and `sample_id`).
 #'
 #' @export
 #'
@@ -141,6 +263,20 @@ get_file_paths <-
         filter(!is.na(stage))
     }
 
+    is_edgelist_report <-
+      !is.na(all_files$stage) &
+        all_files$stage == "edgelist" &
+        str_detect(all_files$file_basename, "\\.report\\.json$")
+
+    if (any(is_edgelist_report)) {
+      all_files$file_alias[is_edgelist_report] <- mapply(
+        .resolve_edgelist_report_alias,
+        all_files$filename[is_edgelist_report],
+        all_files$file_alias[is_edgelist_report],
+        USE.NAMES = FALSE
+      )
+    }
+
     if ("pool" %in% names(sample_sheet)) {
       pool_ids <- unique(sample_sheet$pool)
     } else {
@@ -152,7 +288,20 @@ get_file_paths <-
       left_join(select(sample_sheet, sample, sample_alias),
         by = c("file_alias" = "sample")
       ) %>%
-      mutate(is_pool = ifelse(file_alias %in% pool_ids, TRUE, FALSE)) %>%
+      mutate(is_pool = ifelse(file_alias %in% pool_ids, TRUE, FALSE))
+
+    unattributed_qc_files <-
+      all_files %>%
+      filter(
+        stage == "edgelist",
+        str_detect(file_basename, "\\.report\\.json$"),
+        !is_pool,
+        is.na(sample_alias)
+      ) %>%
+      select(filename, sample_id = file_alias)
+
+    all_files <-
+      all_files %>%
       filter(is_pool | !is.na(sample_alias))
 
     data_files <-
@@ -220,6 +369,9 @@ get_file_paths <-
     }
     if (on_unknown_stage == "omit") {
       attr(result, "unknown_stage_files") <- unknown_stage_files
+    }
+    if (nrow(unattributed_qc_files) > 0) {
+      attr(result, "unattributed_qc_files") <- unattributed_qc_files
     }
 
     return(result)
@@ -387,11 +539,17 @@ downsample_data <-
     pixelatorR:::assert_single_value(n_cells, "integer")
     pixelatorR:::assert_single_value(n_markers, "integer")
 
-    if (length(control_markers) > 0) {
-      pixelatorR:::assert_x_in_y(control_markers, rownames(pg_data))
-    }
-
     control_markers <- unique(control_markers)
+    missing_control <- setdiff(control_markers, rownames(pg_data))
+    if (length(missing_control) > 0) {
+      cli::cli_warn(
+        c(
+          "Some requested {.arg control_markers} are not present in {.arg pg_data}: {.val {missing_control}}.",
+          "i" = "Keeping only control markers present in the data."
+        )
+      )
+      control_markers <- intersect(control_markers, rownames(pg_data))
+    }
 
     # Downsample cells
     cell_data <-
@@ -521,12 +679,7 @@ read_qc_files <-
         temp_data %>%
         group_split() %>%
         set_names(group_keys(temp_data)$sample_alias) %>%
-        lapply(function(sample_files) {
-          sample_files %>%
-            select(stage, filename) %>%
-            deframe() %>%
-            lapply(fload)
-        })
+        lapply(.load_stage_qc_files)
 
       if (!all(sample_sheet$sample_alias %in% qc_files$sample_alias)) {
         cli_abort(
@@ -574,12 +727,7 @@ read_qc_files <-
           temp_data %>%
             group_split() %>%
             set_names(group_keys(temp_data)$alias) %>%
-            lapply(function(sample_files) {
-              sample_files %>%
-                select(stage, filename) %>%
-                deframe() %>%
-                lapply(fload)
-            })
+            lapply(.load_stage_qc_files)
         }
       )
 
@@ -719,8 +867,9 @@ read_samplesheet <-
 #'
 #' Returns the path to the test samplesheet CSV file included in the package.
 #'
-#' @param type A character string specifying the type of test samplesheet to return. Options are "default"
-#' (the standard test samplesheet) and "hashing" (a test samplesheet for hashing experiments). Default is "default".
+#' @param type A character string specifying the type of test samplesheet to return. Options are `"default"`
+#' (the standard test samplesheet), `"hashing"` (a test samplesheet for hashing experiments), and
+#' `"edgelist_aggregate"` (a test samplesheet for `edgelist_aggregate` runs). Default is `"default"`.
 #' @param package A character string specifying the name of the package where the test samplesheet is located.
 #' Default is "pixelatorES".
 #' @return A character string with the path to the test samplesheet CSV file.
@@ -728,15 +877,16 @@ read_samplesheet <-
 #' @export
 #'
 test_samplesheet <-
-  function(type = c("default", "hashing"),
+  function(type = c("default", "hashing", "edgelist_aggregate"),
            package = "pixelatorES") {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
     pixelatorR:::assert_single_value(package, type = "string")
-    type <- match.arg(type, c("default", "hashing"))
+    type <- match.arg(type, c("default", "hashing", "edgelist_aggregate"))
 
     csv_file <- switch(type,
       "default" = "test_samplesheet.csv",
-      "hashing" = "test_samplesheet_hashing.csv"
+      "hashing" = "test_samplesheet_hashing.csv",
+      "edgelist_aggregate" = "test_samplesheet_edgelist_aggregate.csv"
     )
 
     system.file(
@@ -749,8 +899,9 @@ test_samplesheet <-
 #'
 #' Returns the path to the test data folder containing QC JSON files included in the package.
 #'
-#' @param type A character string specifying the type of test data folder to return. Options are "default"
-#' (the standard test data folder) and "hashing" (a test data folder for hashing experiments). Default is "default".
+#' @param type A character string specifying the type of test data folder to return. Options are `"default"`
+#' (the standard test data folder), `"hashing"` (a test data folder for hashing experiments), and
+#' `"edgelist_aggregate"` (a test data folder for `edgelist_aggregate` runs). Default is `"default"`.
 #' @param package A character string specifying the name of the package where the test data folder is located.
 #' Default is "pixelatorES".
 #' @return A character string with the path to the test data folder.
@@ -758,15 +909,16 @@ test_samplesheet <-
 #' @export
 #'
 test_data_folder <-
-  function(type = c("default", "hashing"),
+  function(type = c("default", "hashing", "edgelist_aggregate"),
            package = "pixelatorES") {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
     pixelatorR:::assert_single_value(package, type = "string")
-    type <- match.arg(type, c("default", "hashing"))
+    type <- match.arg(type, c("default", "hashing", "edgelist_aggregate"))
 
     foldr <- switch(type,
       "default" = "qc_jsons",
-      "hashing" = "qc_jsons_hashing"
+      "hashing" = "qc_jsons_hashing",
+      "edgelist_aggregate" = "qc_jsons_edgelist_aggregate"
     )
 
     system.file(
@@ -779,8 +931,9 @@ test_data_folder <-
 #'
 #' Generates a minimal Seurat object for testing purposes.
 #'
-#' @param type A character string specifying the type of test data to generate. Options are "default"
-#' (the standard test data) and "hashing" (test data for hashing experiments).
+#' @param type A character string specifying the type of test data to generate. Options are `"default"`
+#' (the standard test data), `"hashing"` (test data for hashing experiments), and
+#' `"edgelist_aggregate"` (test data for `edgelist_aggregate` runs).
 #' @param package A character string specifying the name of the package where the test data is located.
 #' Default is "pixelatorES".
 #'
@@ -790,21 +943,27 @@ test_data_folder <-
 #'
 get_test_data <-
   function(
-    type = c("default", "hashing"),
+    type = c("default", "hashing", "edgelist_aggregate"),
     package = "pixelatorES"
   ) {
     pixelatorR:::assert_vector(type, type = "character", n = 1)
-    type <- match.arg(type, c("default", "hashing"))
+    type <- match.arg(type, c("default", "hashing", "edgelist_aggregate"))
 
     samplesheet <-
       read_samplesheet(test_samplesheet(type = type, package = package))
 
     data_folder <- test_data_folder(type = type, package = package)
 
+    workflow <- switch(type,
+      "default" = "amplicon_demux",
+      "hashing" = "amplicon_demux",
+      "edgelist_aggregate" = "edgelist_aggregate"
+    )
+
     data_files <- get_file_paths(
       data_folder,
       sample_sheet = samplesheet,
-      stages = get_es_workflow_stages("amplicon_demux")
+      stages = get_es_workflow_stages(workflow)
     )$data_files
 
     # Copy PXL files to a unique tempdir to avoid duckdb

@@ -4,11 +4,15 @@
 \alias{get_test_data}
 \title{Get test data}
 \usage{
-get_test_data(type = c("default", "hashing"), package = "pixelatorES")
+get_test_data(
+  type = c("default", "hashing", "edgelist_aggregate"),
+  package = "pixelatorES"
+)
 }
 \arguments{
-\item{type}{A character string specifying the type of test data to generate. Options are "default"
-(the standard test data) and "hashing" (test data for hashing experiments).}
+\item{type}{A character string specifying the type of test data to generate. Options are \code{"default"}
+(the standard test data), \code{"hashing"} (test data for hashing experiments), and
+\code{"edgelist_aggregate"} (test data for \code{edgelist_aggregate} runs).}
 
 \item{package}{A character string specifying the name of the package where the test data is located.
 Default is "pixelatorES".}

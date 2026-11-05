@@ -1,0 +1,15 @@
+{
+    "cli": {
+        "command": "pixelator single-cell-pna sample-calling",
+        "options": {
+            "--samplesheet": "samplesheet_proxiome_v2.csv",
+            "--remove-incompatible": true,
+            "--save-undetermined": false,
+            "--enrichment-threshold": 10.0,
+            "--output": "."
+        },
+        "arguments": {
+            "input_pxl_file": "pool1.denoised_graph.pxl"
+        }
+    }
+}

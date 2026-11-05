@@ -4,11 +4,15 @@
 \alias{test_samplesheet}
 \title{Get the path to the test samplesheet}
 \usage{
-test_samplesheet(type = c("default", "hashing"), package = "pixelatorES")
+test_samplesheet(
+  type = c("default", "hashing", "edgelist_aggregate"),
+  package = "pixelatorES"
+)
 }
 \arguments{
-\item{type}{A character string specifying the type of test samplesheet to return. Options are "default"
-(the standard test samplesheet) and "hashing" (a test samplesheet for hashing experiments). Default is "default".}
+\item{type}{A character string specifying the type of test samplesheet to return. Options are \code{"default"}
+(the standard test samplesheet), \code{"hashing"} (a test samplesheet for hashing experiments), and
+\code{"edgelist_aggregate"} (a test samplesheet for \code{edgelist_aggregate} runs). Default is \code{"default"}.}
 
 \item{package}{A character string specifying the name of the package where the test samplesheet is located.
 Default is "pixelatorES".}

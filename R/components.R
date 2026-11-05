@@ -456,6 +456,302 @@ component_sequencing_reads_and_molecules <-
     ))
   }
 
+#' Stage read-count specification for `component_reads_per_stage()`
+#'
+#' Maps each read-filtering stage in the `edgelist_aggregate` pipeline to the
+#' input and output read-count field names in its QC report JSON.
+#'
+#' @noRd
+.edgelist_aggregate_reads_per_stage_spec <- tibble::tribble(
+  ~stage, ~input_field, ~output_field,
+  "edgelist", "input_reads", "output_reads",
+  "graph", "reads_input", "reads_output",
+  "denoise", "input_reads", "output_reads",
+  "sample_calling", "input_reads", "output_reads"
+)
+
+#' Create the reads per stage component
+#'
+#' Visualizes the sequencing reads retained and filtered at each stage of the
+#' `edgelist_aggregate` pipeline.
+#'
+#' @param es_data An `es_data` object.
+#'
+#' @return A list with a `plots` element, holding one plot per pool or sample
+#'   alias, and a `table` element summarising the reads removed per stage.
+#'
+#' @export
+#'
+component_reads_per_stage <- function(es_data) {
+  pixelatorR:::assert_class(es_data, "es_data")
+
+  sample_qc_metrics <- es_data$qc_raw
+  sample_levels <- es_data$sample_aliases
+
+  if ("qc_files" %in% names(sample_qc_metrics)) {
+    qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
+      sample_qc_metrics$qc_files
+    } else {
+      sample_qc_metrics$pool_qc_files
+    }
+  } else {
+    qc_data <- sample_qc_metrics
+  }
+
+  spec <- .edgelist_aggregate_reads_per_stage_spec
+
+  stage_data <-
+    qc_data %>%
+    lapply(function(sample_qc_data) {
+      return(tibble(
+        stage = spec$stage,
+        input = vapply(
+          seq_len(nrow(spec)),
+          function(i) {
+            return(.scalar_qc_count(
+              sample_qc_data[[spec$stage[[i]]]][[spec$input_field[[i]]]]
+            ))
+          },
+          numeric(1)
+        ),
+        output = vapply(
+          seq_len(nrow(spec)),
+          function(i) {
+            return(.scalar_qc_count(
+              sample_qc_data[[spec$stage[[i]]]][[spec$output_field[[i]]]]
+            ))
+          },
+          numeric(1)
+        )
+      ))
+    }) %>%
+    bind_rows(.id = "sample_alias") %>%
+    group_by(stage) %>%
+    filter(!all(is.na(input) & is.na(output))) %>%
+    ungroup()
+
+  stage_levels <- c(
+    "fastQ",
+    spec$stage[spec$stage %in% unique(stage_data$stage)]
+  )
+
+  plot_data <-
+    stage_data %>%
+    mutate(filtered = input - output) %>%
+    bind_rows(
+      filter(., stage == "edgelist") %>%
+        mutate(stage = "fastQ", output = input, filtered = NA_real_)
+    ) %>%
+    pivot_longer(
+      cols = c("output", "filtered"),
+      names_to = "type", values_to = "value"
+    ) %>%
+    filter(!is.na(value)) %>%
+    mutate(
+      stage = factor(stage, levels = stage_levels),
+      M_reads = value / 1e6
+    ) %>%
+    arrange(stage, type) %>%
+    select("sample_alias", "stage", "type", "M_reads")
+
+  plot_data <- set_sample_levels(plot_data, sample_levels)
+  plot_data <- group_by(plot_data, sample_alias)
+
+  plot_range <- max(plot_data$M_reads) + 1e-5
+
+  seq_saturation <- es_data$qc$seq_saturation
+
+  plots <-
+    plot_data %>%
+    group_split() %>%
+    set_names(group_keys(plot_data)$sample_alias) %>%
+    lapply(function(sample_data) {
+      current_alias <- as.character(unique(sample_data$sample_alias))
+      n_stages <- length(levels(sample_data$stage))
+      start_reads <- sample_data$M_reads[
+        sample_data$stage == "fastQ" & sample_data$type == "output"
+      ]
+      output_rows <- sample_data[sample_data$type == "output", , drop = FALSE]
+      last_stage_idx <- max(as.integer(output_rows$stage))
+      end_reads <- output_rows$M_reads[
+        as.integer(output_rows$stage) == last_stage_idx
+      ]
+
+      precomputed_pct <- NA_real_
+      if (is.data.frame(seq_saturation) && nrow(seq_saturation) > 0) {
+        id_col <- intersect(c("pool", "sample_alias"), names(seq_saturation))
+        if (
+          length(id_col) == 1 &&
+            all(c("total_reads", "graph_reads", "fraction_graph_reads") %in% names(seq_saturation))
+        ) {
+          ss_row <- seq_saturation[
+            as.character(seq_saturation[[id_col]]) == current_alias,
+            ,
+            drop = FALSE
+          ]
+          if (nrow(ss_row) == 1) {
+            if (!is.na(ss_row$total_reads)) {
+              start_reads <- ss_row$total_reads / 1e6
+            }
+            if (!is.na(ss_row$graph_reads)) {
+              end_reads <- ss_row$graph_reads / 1e6
+            }
+            if (!is.na(ss_row$fraction_graph_reads)) {
+              precomputed_pct <- ss_row$fraction_graph_reads
+            }
+          }
+        }
+      }
+
+      line_x <- n_stages + 0.65
+      tick_w <- 0.08
+      has_summary_line <-
+        length(start_reads) == 1 &&
+          length(end_reads) == 1 &&
+          !is.na(start_reads) &&
+          !is.na(end_reads) &&
+          start_reads > 0
+
+      p <-
+        sample_data %>%
+        ggplot(aes(stage, M_reads, fill = type)) +
+        geom_col(show.legend = FALSE) +
+        geom_text(
+          data = . %>%
+            mutate(label = ifelse(
+              type == "filtered" & M_reads > 0,
+              paste0("Filtered: \n", round(M_reads, 2), " M reads"),
+              ""
+            )),
+          aes(unclass(factor(stage)) - 0.45, label = label),
+          position = position_stack(vjust = 0),
+          size = 3,
+          hjust = 0,
+          vjust = 1.1
+        )
+
+      if (has_summary_line) {
+        pct_graph_reads <- if (!is.na(precomputed_pct)) {
+          round(precomputed_pct, 1)
+        } else {
+          round(100 * end_reads / start_reads, 1)
+        }
+        summary_segments <- tibble(
+          x = c(
+            line_x, line_x,
+            line_x - tick_w, line_x - tick_w, line_x - tick_w
+          ),
+          xend = c(
+            line_x, line_x,
+            line_x + tick_w, line_x + tick_w, line_x + tick_w
+          ),
+          y = c(
+            0, end_reads,
+            0, end_reads, start_reads
+          ),
+          yend = c(
+            end_reads, start_reads,
+            0, end_reads, start_reads
+          ),
+          seg_color = c(
+            "#DAD6D7", "#C86584",
+            "#DAD6D7", "#DAD6D7", "#C86584"
+          ),
+          seg_lwd = c(1, 1, 1, 1, 1)
+        )
+        summary_label <- tibble(
+          x = line_x + 0.15,
+          y = start_reads / 2,
+          label = paste0(
+            "% Graph reads:\n",
+            pct_graph_reads, "%\n(",
+            round(end_reads, 1), " / ", round(start_reads, 1), " M)"
+          )
+        )
+
+        guide_segments <- tibble(
+          x = c(1 + 0.45, last_stage_idx + 0.45, 1 + 0.45),
+          xend = c(line_x - tick_w, line_x - tick_w, line_x - tick_w),
+          y = c(start_reads, end_reads, 0),
+          yend = c(start_reads, end_reads, 0),
+          seg_color = c("#C86584", "#DAD6D7", "#DAD6D7")
+        )
+
+        p <-
+          p +
+          ggplot2::geom_segment(
+            data = guide_segments,
+            aes(x = x, xend = xend, y = y, yend = yend),
+            color = guide_segments$seg_color,
+            linewidth = 0.4,
+            linetype = "dashed",
+            inherit.aes = FALSE
+          ) +
+          ggplot2::geom_segment(
+            data = summary_segments,
+            aes(x = x, xend = xend, y = y, yend = yend),
+            color = summary_segments$seg_color,
+            linewidth = summary_segments$seg_lwd,
+            inherit.aes = FALSE
+          ) +
+          geom_text(
+            data = summary_label,
+            aes(x = x, y = y, label = label),
+            hjust = 0,
+            vjust = 0.5,
+            size = 3,
+            inherit.aes = FALSE
+          )
+      }
+
+      p <-
+        p +
+        ggplot2::scale_x_discrete(
+          limits = levels(sample_data$stage),
+          expand = expansion(add = c(0.6, if (has_summary_line) 1.9 else 0.6))
+        ) +
+        scale_y_continuous(
+          expand = expansion(c(0, 0.2)),
+          limits = c(0, plot_range)
+        ) +
+        scale_fill_manual(values = c(
+          "output" = "#DAD6D7",
+          "filtered" = "#C86584"
+        )) +
+        theme_bw() +
+        theme(
+          axis.text.x = element_text(angle = 60, hjust = 1),
+          panel.grid = element_blank()
+        ) +
+        labs(
+          x = NULL,
+          y = "Reads [millions]",
+          title = "Reads per stage",
+          subtitle = unique(sample_data$sample_alias)
+        )
+
+      return(p)
+    })
+
+  tabl <-
+    plot_data %>%
+    mutate(M_reads = round(M_reads, 3)) %>%
+    pivot_wider(names_from = c("type"), values_from = "M_reads") %>%
+    arrange(sample_alias) %>%
+    mutate(
+      `% filtered` = paste0(round(filtered / (output + filtered) * 100, 2), " %")
+    ) %>%
+    style_table(
+      caption = "Reads removed per stage",
+      interactive = FALSE
+    )
+
+  return(list(
+    plots = plots,
+    table = tabl
+  ))
+}
+
 #' Create the component reads per cell
 #'
 #' This function creates a component that visualizes the reads per cell per sample.
