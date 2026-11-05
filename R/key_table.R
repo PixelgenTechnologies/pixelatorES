@@ -58,6 +58,10 @@ get_top_markers <-
 #' @param sample_qc_metrics A list containing quality control metrics for each sample.
 #' @param read_stage Name of the stage reporting raw input reads (default is `"amplicon"`).
 #' @param collapse_stage Name of the stage reporting molecule collapse counts (default is `"collapse"`).
+#' @param final_stage Optional name of the final stage reporting retained output reads
+#'   (e.g. `"sample_calling"`). When supplied, `graph_reads` and pre-calculated
+#'   `graph` summary counts are read from the QC reports for `final_stage` and
+#'   `graph`, falling back to summing from `object` when absent.
 #'
 #' @return A tibble containing sequencing saturation metrics for each sample.
 #'
@@ -68,11 +72,25 @@ get_seq_saturation <-
     object,
     sample_qc_metrics,
     read_stage = "amplicon",
-    collapse_stage = "collapse"
+    collapse_stage = "collapse",
+    final_stage = NULL
   ) {
     pixelatorR:::assert_class(sample_qc_metrics, "list")
     pixelatorR:::assert_single_value(read_stage, type = "string")
     pixelatorR:::assert_single_value(collapse_stage, type = "string")
+    pixelatorR:::assert_single_value(final_stage, type = "string", allow_null = TRUE)
+
+    .read_final_stage_reads <- function(sample_qc_data) {
+      if (is.null(final_stage)) {
+        return(NA_real_)
+      }
+      stage_report <- sample_qc_data[[final_stage]]
+      count <- .scalar_qc_count(stage_report$output_reads)
+      if (is.na(count)) {
+        count <- .scalar_qc_count(stage_report$reads_output)
+      }
+      return(count)
+    }
 
     if (!is.null(sample_qc_metrics$pool_qc_files)) {
       group_col <- "pool"
@@ -83,7 +101,12 @@ get_seq_saturation <-
           return(tibble(
             total_reads = .scalar_qc_count(sample_qc_data[[read_stage]]$input_reads),
             deduped_valid_reads = .scalar_qc_count(sample_qc_data[[collapse_stage]]$output_molecules),
-            valid_reads = .scalar_qc_count(sample_qc_data[[collapse_stage]]$input_reads)
+            valid_reads = .scalar_qc_count(sample_qc_data[[collapse_stage]]$input_reads),
+            reported_graph_edges = .scalar_qc_count(sample_qc_data$graph$edge_count_post_recovery),
+            reported_graph_proteins = .scalar_qc_count(sample_qc_data$graph$node_count_post_recovery),
+            reported_graph_reads = .read_final_stage_reads(sample_qc_data),
+            reported_edge_saturation = .scalar_qc_count(sample_qc_data$graph$edge_saturation),
+            reported_node_saturation = .scalar_qc_count(sample_qc_data$graph$node_saturation)
           ))
         })
     } else {
@@ -95,7 +118,12 @@ get_seq_saturation <-
           row <- tibble(
             total_reads = .scalar_qc_count(sample_qc_data[[read_stage]]$input_reads),
             deduped_valid_reads = .scalar_qc_count(sample_qc_data[[collapse_stage]]$output_molecules),
-            valid_reads = .scalar_qc_count(sample_qc_data[[collapse_stage]]$input_reads)
+            valid_reads = .scalar_qc_count(sample_qc_data[[collapse_stage]]$input_reads),
+            reported_graph_edges = .scalar_qc_count(sample_qc_data$graph$edge_count_post_recovery),
+            reported_graph_proteins = .scalar_qc_count(sample_qc_data$graph$node_count_post_recovery),
+            reported_graph_reads = .read_final_stage_reads(sample_qc_data),
+            reported_edge_saturation = .scalar_qc_count(sample_qc_data$graph$edge_saturation),
+            reported_node_saturation = .scalar_qc_count(sample_qc_data$graph$node_saturation)
           )
           q30_val <- sample_qc_data[[read_stage]]$q30_statistics$total
           if (!is.null(q30_val)) {
@@ -105,38 +133,65 @@ get_seq_saturation <-
         })
     }
 
+    fetched_df <- bind_rows(fetched_data, .id = group_col)
+
     summarised_object_counts <-
       object[[]] %>%
       as_tibble() %>%
       group_by(!!sym(group_col)) %>%
       summarise(
-        graph_edges = sum(n_edges),
-        graph_proteins = sum(n_umi),
-        graph_reads = sum(reads_in_component)
+        pxl_graph_edges = sum(n_edges),
+        pxl_graph_proteins = sum(n_umi),
+        pxl_graph_reads = sum(reads_in_component)
       )
+    fetched_df <- inner_join(fetched_df, summarised_object_counts, by = group_col)
+
+    use_reported_summary <- !is.null(final_stage)
 
     result <-
-      fetched_data %>%
-      bind_rows(.id = group_col) %>%
-      inner_join(
-        summarised_object_counts,
-        by = group_col
-      ) %>%
+      fetched_df %>%
       mutate(
+        graph_edges = ifelse(
+          use_reported_summary & !is.na(reported_graph_edges),
+          reported_graph_edges,
+          pxl_graph_edges
+        ),
+        graph_proteins = ifelse(
+          use_reported_summary & !is.na(reported_graph_proteins),
+          reported_graph_proteins,
+          pxl_graph_proteins
+        ),
+        graph_reads = ifelse(
+          use_reported_summary & !is.na(reported_graph_reads),
+          reported_graph_reads,
+          pxl_graph_reads
+        ),
         valid_reads_saturation = sequencing_saturation(
           deduped_valid_reads,
           valid_reads
         ),
-        graph_edge_saturation = sequencing_saturation(
-          graph_edges,
-          graph_reads
+        graph_edge_saturation = ifelse(
+          use_reported_summary & !is.na(reported_edge_saturation),
+          100 * reported_edge_saturation,
+          sequencing_saturation(graph_edges, graph_reads)
         ),
-        graph_node_saturation = sequencing_saturation(
-          graph_proteins,
-          graph_reads
+        graph_node_saturation = ifelse(
+          use_reported_summary & !is.na(reported_node_saturation),
+          100 * reported_node_saturation,
+          sequencing_saturation(graph_proteins, graph_reads)
         ),
         fraction_valid_reads = 100 * valid_reads / total_reads,
         fraction_graph_reads = 100 * graph_reads / total_reads
+      ) %>%
+      select(
+        -reported_graph_edges,
+        -reported_graph_proteins,
+        -reported_graph_reads,
+        -reported_edge_saturation,
+        -reported_node_saturation,
+        -pxl_graph_edges,
+        -pxl_graph_proteins,
+        -pxl_graph_reads
       )
 
     return(result)
@@ -225,25 +280,32 @@ get_denoising_data <-
             pool_qc_files = "pool"
           )[slot]
 
+        if (length(sample_qc_metrics[[slot]]) == 0) {
+          return(NULL)
+        }
+
         # Get denoising data for the current slot and format it into a tibble
         res <-
           lapply(names(sample_qc_metrics[[slot]]), function(nm) {
-            tibble(
+            return(tibble(
               id = nm,
               percent_umis_denoised =
-                sample_qc_metrics[[slot]][[nm]]$denoise$ratio_of_umis_removed * 100,
+                .scalar_qc_count(sample_qc_metrics[[slot]][[nm]]$denoise$ratio_of_umis_removed) * 100,
               number_of_umis_removed =
-                sample_qc_metrics[[slot]][[nm]]$denoise$number_of_umis_removed
-            )
+                .scalar_qc_count(sample_qc_metrics[[slot]][[nm]]$denoise$number_of_umis_removed)
+            ))
           }) %>%
-          bind_rows()
+          bind_rows() %>%
+          filter(!is.na(percent_umis_denoised) | !is.na(number_of_umis_removed))
 
         if (nrow(res) == 0) {
           return(NULL)
         }
         # Rename the id column to either sample_alias or pool depending on the slot
-        res %>%
-          rename(!!sym(id_name) := id)
+        return(
+          res %>%
+            rename(!!sym(id_name) := id)
+        )
       })
 
     null_res <- sapply(denoise_res, is.null)

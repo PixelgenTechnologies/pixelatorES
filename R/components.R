@@ -560,11 +560,14 @@ component_reads_per_stage <- function(es_data) {
 
   plot_range <- max(plot_data$M_reads) + 1e-5
 
+  seq_saturation <- es_data$qc$seq_saturation
+
   plots <-
     plot_data %>%
     group_split() %>%
     set_names(group_keys(plot_data)$sample_alias) %>%
     lapply(function(sample_data) {
+      current_alias <- as.character(unique(sample_data$sample_alias))
       n_stages <- length(levels(sample_data$stage))
       start_reads <- sample_data$M_reads[
         sample_data$stage == "fastQ" & sample_data$type == "output"
@@ -574,6 +577,32 @@ component_reads_per_stage <- function(es_data) {
       end_reads <- output_rows$M_reads[
         as.integer(output_rows$stage) == last_stage_idx
       ]
+
+      precomputed_pct <- NA_real_
+      if (is.data.frame(seq_saturation) && nrow(seq_saturation) > 0) {
+        id_col <- intersect(c("pool", "sample_alias"), names(seq_saturation))
+        if (
+          length(id_col) == 1 &&
+            all(c("total_reads", "graph_reads", "fraction_graph_reads") %in% names(seq_saturation))
+        ) {
+          ss_row <- seq_saturation[
+            as.character(seq_saturation[[id_col]]) == current_alias,
+            ,
+            drop = FALSE
+          ]
+          if (nrow(ss_row) == 1) {
+            if (!is.na(ss_row$total_reads)) {
+              start_reads <- ss_row$total_reads / 1e6
+            }
+            if (!is.na(ss_row$graph_reads)) {
+              end_reads <- ss_row$graph_reads / 1e6
+            }
+            if (!is.na(ss_row$fraction_graph_reads)) {
+              precomputed_pct <- ss_row$fraction_graph_reads
+            }
+          }
+        }
+      }
 
       line_x <- n_stages + 0.65
       tick_w <- 0.08
@@ -603,7 +632,11 @@ component_reads_per_stage <- function(es_data) {
         )
 
       if (has_summary_line) {
-        pct_graph_reads <- round(100 * end_reads / start_reads, 1)
+        pct_graph_reads <- if (!is.na(precomputed_pct)) {
+          round(precomputed_pct, 1)
+        } else {
+          round(100 * end_reads / start_reads, 1)
+        }
         summary_segments <- tibble(
           x = c(
             line_x, line_x,
@@ -676,7 +709,7 @@ component_reads_per_stage <- function(es_data) {
         p +
         ggplot2::scale_x_discrete(
           limits = levels(sample_data$stage),
-          expand = expansion(add = c(0.6, if (has_summary_line) 2.1 else 0.6))
+          expand = expansion(add = c(0.6, if (has_summary_line) 1.9 else 0.6))
         ) +
         scale_y_continuous(
           expand = expansion(c(0, 0.2)),

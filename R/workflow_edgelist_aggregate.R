@@ -10,7 +10,8 @@
     object$pxl_data,
     object$qc_raw,
     read_stage = "edgelist",
-    collapse_stage = "aggregate"
+    collapse_stage = "aggregate",
+    final_stage = "sample_calling"
   )
 
   return(.format_qc_metric(metric, object$samplesheet))

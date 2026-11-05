@@ -8,7 +8,8 @@ get_seq_saturation(
   object,
   sample_qc_metrics,
   read_stage = "amplicon",
-  collapse_stage = "collapse"
+  collapse_stage = "collapse",
+  final_stage = NULL
 )
 }
 \arguments{
@@ -19,6 +20,11 @@ get_seq_saturation(
 \item{read_stage}{Name of the stage reporting raw input reads (default is \code{"amplicon"}).}
 
 \item{collapse_stage}{Name of the stage reporting molecule collapse counts (default is \code{"collapse"}).}
+
+\item{final_stage}{Optional name of the final stage reporting retained output reads
+(e.g. \code{"sample_calling"}). When supplied, \code{graph_reads} and pre-calculated
+\code{graph} summary counts are read from the QC reports for \code{final_stage} and
+\code{graph}, falling back to summing from \code{object} when absent.}
 }
 \value{
 A tibble containing sequencing saturation metrics for each sample.

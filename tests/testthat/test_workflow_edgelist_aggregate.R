@@ -128,14 +128,46 @@ test_that("edgelist_aggregate QC extractors, key table, and reads per stage work
         total_reads = c(309597, 155203),
         deduped_valid_reads = c(44400, 22200),
         valid_reads = c(309597, 155203),
-        graph_edges = c(66575L, 84144L),
-        graph_proteins = c(40627L, 48052L),
-        graph_reads = c(154863L, 203615L),
+        graph_edges = c(43880, 21476),
+        graph_proteins = c(24000, 12000),
+        graph_reads = c(282745, 83934),
         valid_reads_saturation = c(85.658775763331, 85.6961527805519),
-        graph_edge_saturation = c(57.010389828429, 58.6749502738011),
-        graph_node_saturation = c(73.7658446497872, 76.400559880166),
+        graph_edge_saturation = c(85.6589121951538, 85.7027780921504),
+        graph_node_saturation = c(92.1561962781151, 92.0112375258803),
         fraction_valid_reads = c(100, 100),
-        fraction_graph_reads = c(50.0208335352087, 131.192696017474)
+        fraction_graph_reads = c(91.326789342274, 54.0801402034754)
+      ),
+      row.names = c(NA, -2L),
+      class = c("tbl_df", "tbl", "data.frame")
+    )
+  )
+
+  # Falls back to summing off pxl_data when final_stage output_reads is absent
+  qc_raw_no_summary <- qc_raw
+  for (pool in names(qc_raw_no_summary$pool_qc_files)) {
+    qc_raw_no_summary$pool_qc_files[[pool]]$sample_calling$output_reads <- NULL
+  }
+  seq_sat_fallback <- pixelatorES:::.extract_edgelist_aggregate_seq_saturation(
+    test_es_data(
+      samplesheet = samplesheet,
+      qc_raw = qc_raw_no_summary,
+      pxl_data = pxl_data,
+      params = list(workflow = "edgelist_aggregate")
+    )
+  )
+  expect_equal(
+    seq_sat_fallback$graph_reads,
+    c(154863L, 203615L)
+  )
+
+  denoise_res <- pixelatorES:::.extract_denoising(object)
+  expect_equal(
+    denoise_res,
+    structure(
+      list(
+        pool = structure(1:2, levels = c("pool1", "pool2"), class = "factor"),
+        percent_umis_denoised = c(2.75132703918311, 4.39770554493308),
+        number_of_umis_removed = c(679, 552)
       ),
       row.names = c(NA, -2L),
       class = c("tbl_df", "tbl", "data.frame")

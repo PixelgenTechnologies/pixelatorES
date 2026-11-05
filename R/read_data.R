@@ -539,11 +539,17 @@ downsample_data <-
     pixelatorR:::assert_single_value(n_cells, "integer")
     pixelatorR:::assert_single_value(n_markers, "integer")
 
-    if (length(control_markers) > 0) {
-      pixelatorR:::assert_x_in_y(control_markers, rownames(pg_data))
-    }
-
     control_markers <- unique(control_markers)
+    missing_control <- setdiff(control_markers, rownames(pg_data))
+    if (length(missing_control) > 0) {
+      cli::cli_warn(
+        c(
+          "Some requested {.arg control_markers} are not present in {.arg pg_data}: {.val {missing_control}}.",
+          "i" = "Keeping only control markers present in the data."
+        )
+      )
+      control_markers <- intersect(control_markers, rownames(pg_data))
+    }
 
     # Downsample cells
     cell_data <-
