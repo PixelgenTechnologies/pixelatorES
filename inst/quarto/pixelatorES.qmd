@@ -1,6 +1,6 @@
 ---
 title: "PROXIOME EXPERIMENT SUMMARY"
-subtitle: "v0.15.1"
+subtitle: "v0.16.0"
 date: "`r Sys.Date()`"
 editor_options: 
   chunk_output_type: console
