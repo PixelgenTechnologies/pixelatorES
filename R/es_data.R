@@ -923,11 +923,11 @@ build_es_data <- function(params) {
     for (i in seq_len(nrow(unattributed_qc_files))) {
       filepath <- unattributed_qc_files$filename[[i]]
       sample_id <- unattributed_qc_files$sample_id[[i]]
-      message <- paste0(
-        "its sample_id ",
-        if (is.na(sample_id)) "is missing" else paste0("(", sample_id, ")"),
-        " is not a ", target_kind, " in the samplesheet."
-      )
+      message <- if (is.na(sample_id)) {
+        "its sample_id is missing."
+      } else {
+        paste0("its sample_id (", sample_id, ") is not a ", target_kind, " in the samplesheet.")
+      }
       cli::cli_warn(
         "Skipping edgelist QC file {.file {basename(filepath)}}: {message}"
       )

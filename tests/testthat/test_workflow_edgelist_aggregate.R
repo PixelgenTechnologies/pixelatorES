@@ -207,6 +207,6 @@ test_that("edgelist_aggregate QC extractors, key table, and reads per stage work
   expect_equal(names(reads_stage$plots), c("pool1", "pool2"))
   expect_equal(
     levels(reads_stage$plots$pool1$data$stage),
-    c("fastQ", "edgelist", "graph", "graph_collapse", "denoise", "sample_calling")
+    c("fastQ", "edgelist", "graph", "denoise", "sample_calling")
   )
 })

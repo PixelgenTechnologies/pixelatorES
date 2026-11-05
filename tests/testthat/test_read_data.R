@@ -853,7 +853,7 @@ test_that("Edgelist discovery and multi-FASTQ QC aggregation work as expected", 
     list(
       list(
         type = "qc_load",
-        message = "its sample_id is missing is not a pool in the samplesheet."
+        message = "its sample_id is missing."
       ),
       list(
         type = "qc_load",

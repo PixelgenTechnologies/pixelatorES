@@ -579,7 +579,7 @@ test_that("component_reads_per_stage works across all filtering stages and omits
     levels(component_full$plots$pool1$data$stage),
     c(
       "fastQ", "edgelist", "graph",
-      "graph_collapse", "denoise", "sample_calling"
+      "denoise", "sample_calling"
     )
   )
   expect_equal(component_full$plots$pool1$labels$y, "Reads [millions]")
@@ -592,32 +592,32 @@ test_that("component_reads_per_stage works across all filtering stages and omits
     structure(
       list(
         sample_alias = structure(
-          c(1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L),
+          c(1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L),
           levels = c("pool1", "pool2"),
           class = "factor"
         ),
         stage = structure(
-          c(1L, 2L, 3L, 4L, 5L, 6L, 1L, 2L, 3L, 4L, 5L, 6L),
+          c(1L, 2L, 3L, 4L, 5L, 1L, 2L, 3L, 4L, 5L),
           levels = c(
             "fastQ", "edgelist", "graph",
-            "graph_collapse", "denoise", "sample_calling"
+            "denoise", "sample_calling"
           ),
           class = "factor"
         ),
         output = c(
-          0.31, 0.31, 0.306, 0.306, 0.298, 0.283,
-          0.155, 0.155, 0.15, 0.15, 0.144, 0.084
+          0.31, 0.31, 0.306, 0.298, 0.283,
+          0.155, 0.155, 0.15, 0.144, 0.084
         ),
         filtered = c(
-          NA, 0, 0.004, 0, 0.008, 0.015,
-          NA, 0, 0.005, 0, 0.006, 0.06
+          NA, 0, 0.004, 0.008, 0.015,
+          NA, 0, 0.005, 0.006, 0.06
         ),
         `% filtered` = c(
-          "NA %", "0 %", "1.29 %", "0 %", "2.61 %", "5.03 %",
-          "NA %", "0 %", "3.23 %", "0 %", "4 %", "41.67 %"
+          "NA %", "0 %", "1.29 %", "2.61 %", "5.03 %",
+          "NA %", "0 %", "3.23 %", "4 %", "41.67 %"
         )
       ),
-      row.names = c(NA, -12L),
+      row.names = c(NA, -10L),
       class = "data.frame"
     )
   )

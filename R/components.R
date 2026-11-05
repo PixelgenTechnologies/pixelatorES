@@ -466,7 +466,6 @@ component_sequencing_reads_and_molecules <-
   ~stage, ~input_field, ~output_field,
   "edgelist", "input_reads", "output_reads",
   "graph", "reads_input", "reads_output",
-  "graph_collapse", "reads_input", "reads_output",
   "denoise", "input_reads", "output_reads",
   "sample_calling", "input_reads", "output_reads"
 )
