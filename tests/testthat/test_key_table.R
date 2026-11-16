@@ -17,7 +17,10 @@ for (data_type in data_types) {
       )
 
     sample_qc_metrics <-
-      read_qc_files(data_paths, sample_sheet)
+      pixelatorES:::.extract_qc_raw(list(
+        file_paths = data_paths,
+        samplesheet = sample_sheet
+      ))$value
 
     # Top markers
     expect_no_error(res <- get_top_markers(seur, group = "sample_alias"))

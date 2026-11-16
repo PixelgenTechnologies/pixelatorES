@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Split the shared report preamble `preprocessing.qmd` into `initiation.qmd` (setup), `validation.qmd` (input checks), and `processing.qmd` (`es_data` build), so each step can be replaced independently.
 
+### Removed
+
+- Breaking: `load_pxl_data_list()` and `read_qc_files()`. PXL files and QC reports are loaded by `build_es_data()`.
+
 ## [0.16.0] 2026-11-05
 
 ### Added

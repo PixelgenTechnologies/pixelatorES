@@ -378,60 +378,6 @@ get_file_paths <-
   }
 
 
-#' Load pxl files into a list
-#'
-#' Load pxl files into a list as specified by identified data paths and sample sheet.
-#'
-#' @param data_folder Path to the folder containing the data files.
-#' @param data_files Paths to data files.
-#' @param sample_sheet Sample sheet.
-#'
-#' @return A list of Seurat objects
-#'
-#' @export
-#'
-load_pxl_data_list <-
-  function(data_folder, data_files, sample_sheet) {
-    # Check that all expected data files exist
-    missing_samples <-
-      sample_sheet %>%
-      filter(!sample_alias %in% data_files$sample_alias) %>%
-      pull(sample)
-
-    if (length(missing_samples) > 0) {
-      found_samples <-
-        list.files(data_folder, recursive = TRUE, pattern = ".pxl") %>%
-        basename() %>%
-        unique() %>%
-        str_remove("\\..*")
-
-      cli_abort("The following samples are missing data files: {missing_samples}\n
-                The following samples were found: {found_samples}")
-    }
-
-
-    # Create a list of Seurat objects
-    pg_data <-
-      data_files %>%
-      select(sample_alias, filename) %>%
-      deframe() %>%
-      lapply(ReadPNA_Seurat,
-        load_proximity_scores = FALSE,
-        # k-core, denoising, and sample-hashing columns sit outside
-        # pixelatorR's default cell-metadata subset.
-        detailed_meta_data = TRUE
-      )
-
-    if (length(pg_data) != nrow(sample_sheet)) {
-      cli_abort("The number of loaded samples do not match the expected number.\n
-                {length(pg_data)} samples are loaded: {names(pg_data)}.\n
-                The samplesheet contains {nrow(sample_sheet)} samples: {sample_sheet$sample_alias}")
-    }
-
-    return(pg_data)
-  }
-
-
 #' Merge data from multiple samples into a single Seurat object
 #'
 #' Merges data from list of multiple samples into a single Seurat object, adding metadata and ranks based on UMI counts.
@@ -652,107 +598,14 @@ add_pct_of_pool_to_samplesheet <-
     return(sample_sheet)
   }
 
-#' Read QC files and return metrics
-#'
-#' Reads QC files and returns a nested list suitable for [get_qc_metrics()].
-#'
-#' @param qc_input Either a data frame of per-sample QC paths (legacy), or the list returned by
-#'   [get_file_paths()] (with `qc_files` and optionally `pool_qc_files`).
-#' @param sample_sheet A data frame containing sample metadata, including `sample_alias`.
-#'
-#' @return A list with `qc_files` (named list per sample) and `pool_qc_files` (`NULL` or named list per pool).
-#'
-#' @export
-read_qc_files <-
-  function(qc_input,
-           sample_sheet) {
-    if (is.data.frame(qc_input)) {
-      qc_files <- qc_input
-      pixelatorR:::assert_within_limits(nrow(qc_files), c(1, Inf))
-      for (f in qc_files$filename) pixelatorR:::assert_file_exists(f)
-
-      temp_data <-
-        qc_files %>%
-        group_by(sample_alias)
-
-      sample_qc_metrics <-
-        temp_data %>%
-        group_split() %>%
-        set_names(group_keys(temp_data)$sample_alias) %>%
-        lapply(.load_stage_qc_files)
-
-      if (!all(sample_sheet$sample_alias %in% qc_files$sample_alias)) {
-        cli_abort(
-          "Some samples are missing .json files containing QC metrics.
-        Please check the following samples:
-        {sample_sheet$sample_alias[!sample_sheet$sample_alias %in%
-        qc_files$sample_alias]}"
-        )
-      }
-
-      return(list(qc_files = sample_qc_metrics, pool_qc_files = NULL))
-    }
-
-    pixelatorR:::assert_class(qc_input, "list")
-    pixelatorR:::assert_x_in_y(
-      c("qc_files", "pool_qc_files"),
-      names(qc_input)
-    )
-
-    files_to_read <-
-      qc_input[c("qc_files", "pool_qc_files")]
-
-    for (f in files_to_read$qc_files$filename) {
-      pixelatorR:::assert_file_exists(f)
-    }
-    if (!is.null(files_to_read$pool_qc_files)) {
-      for (f in files_to_read$pool_qc_files$filename) {
-        pixelatorR:::assert_file_exists(f)
-      }
-    }
-
-    sample_qc_metrics <-
-      lapply(
-        files_to_read,
-        function(files) {
-          if (is.null(files)) {
-            return(NULL)
-          }
-
-          temp_data <-
-            files %>%
-            rename(alias = any_of(c("sample_alias", "pool_alias"))) %>%
-            group_by(alias)
-
-          temp_data %>%
-            group_split() %>%
-            set_names(group_keys(temp_data)$alias) %>%
-            lapply(.load_stage_qc_files)
-        }
-      )
-
-
-    samples_in_data <- c(names(sample_qc_metrics$qc_files), names(sample_qc_metrics$pool_qc_files))
-    if (!all(sample_sheet$sample_alias %in% samples_in_data)) {
-      cli_abort(
-        "Some samples are missing .json files containing QC metrics.
-        Please check the following samples:
-        {sample_sheet$sample_alias[!sample_sheet$sample_alias %in%
-        samples_in_data]}"
-      )
-    }
-
-    return(sample_qc_metrics)
-  }
-
 #' Extract sample QC metrics from a list of sample QC data
 #'
-#' This function extracts specific quality control metrics from a list of sample
-#' QC data (as generated by `read_qc_files`). It returns a tibble with the
-#' sample alias and the specified metrics.
+#' Extracts specific quality control metrics from raw QC data and returns a
+#' tibble with the sample alias and the specified metrics.
 #'
-#' @param sample_qc_metrics A list of sample QC data, where each element is a named list
-#' containing QC metrics for a sample.
+#' @param sample_qc_metrics Either the nested QC list stored in `es_data$qc_raw`
+#'   (`qc_files` and optionally `pool_qc_files`), or a named list of per-sample
+#'   stage reports.
 #' @param vars A character vector of variable names to extract from the sample QC data.
 #' @param stage A character string specifying the stage from which to extract the metrics.
 #' @param stages A stage vocabulary list with `all`, `pool`, and `pxl_preference`, as returned by
@@ -991,10 +844,15 @@ get_test_data <-
       )
 
     seur <-
-      load_pxl_data_list(
-        data_folder = tmp_dir,
-        data_files = data_files,
-        sample_sheet = samplesheet
+      data_files %>%
+      select(sample_alias, filename) %>%
+      deframe() %>%
+      lapply(
+        ReadPNA_Seurat,
+        load_proximity_scores = FALSE,
+        # k-core, denoising, and sample-hashing columns sit outside
+        # pixelatorR's default cell-metadata subset.
+        detailed_meta_data = TRUE
       ) %>%
       merge_data(sample_sheet = samplesheet)
 
