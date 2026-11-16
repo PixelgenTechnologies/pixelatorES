@@ -598,25 +598,28 @@ add_pct_of_pool_to_samplesheet <-
     return(sample_sheet)
   }
 
-#' Extract sample QC metrics from a list of sample QC data
+#' Extract scalar QC metrics for one stage
 #'
-#' Extracts specific quality control metrics from raw QC data and returns a
-#' tibble with the sample alias and the specified metrics.
+#' Pulls scalar fields from one QC stage into a tibble with one row per sample
+#' or pool. A nested `es_data$qc_raw` list is read from `pool_qc_files` when
+#' `stage` is a pool stage and pool QC is present, and from `qc_files` otherwise.
 #'
 #' @param sample_qc_metrics Either the nested QC list stored in `es_data$qc_raw`
 #'   (`qc_files` and optionally `pool_qc_files`), or a named list of per-sample
 #'   stage reports.
-#' @param vars A character vector of variable names to extract from the sample QC data.
-#' @param stage A character string specifying the stage from which to extract the metrics.
-#' @param stages A stage vocabulary list with `all`, `pool`, and `pxl_preference`, as returned by
-#'   [get_es_workflow_stages()], required. `all` decides which stages are legal, and `pool` decides
-#'   whether `stage` is read from pool-level QC. Inside a build pass `es_data$stages`.
+#' @param vars A character vector of variable names to extract. A named vector
+#'   renames the extracted columns.
+#' @param stage Stage to read. Must be one of `stages$all`.
+#' @param stages A stage vocabulary list with `all`, `pool`, and `pxl_preference`,
+#'   as returned by [get_es_workflow_stages()]. `all` decides which stages are
+#'   legal, and `pool` decides whether `stage` is read from pool-level QC.
+#'   Inside a build pass `es_data$stages`.
 #'
-#' @return A tibble with the sample alias and the specified metrics.
+#' @return A tibble with `sample_alias` and the requested metrics.
 #'
-#' @export
+#' @noRd
 #'
-extract_sample_qc_metrics <-
+.extract_sample_qc_metrics <-
   function(sample_qc_metrics, vars, stage = "graph", stages) {
     pixelatorR:::assert_vector(vars, "character", n = 1)
     pixelatorR:::assert_single_value(stage, type = "string")

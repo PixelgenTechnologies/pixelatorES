@@ -995,7 +995,7 @@ component_cell_recovery <-
     # Number of components before and after filtering, and size thresholds
 
     plot_data1 <-
-      extract_sample_qc_metrics(
+      .extract_sample_qc_metrics(
         qc_data,
         c(
           component_n_pre_filtering =
@@ -1053,7 +1053,7 @@ component_cell_recovery <-
     # Molecule Rank Plots
 
     plot_data_thresholds <-
-      extract_sample_qc_metrics(
+      .extract_sample_qc_metrics(
         qc_data,
         c(
           min_size_theshold =
@@ -1280,7 +1280,7 @@ component_node_edge_count <-
     sample_levels <- es_data$sample_aliases
 
     plot_data <-
-      extract_sample_qc_metrics(
+      .extract_sample_qc_metrics(
         sample_qc_metrics,
         c(
           node_count_pre_recovery = "node_count_pre_recovery",

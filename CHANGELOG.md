@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Breaking: `load_pxl_data_list()` and `read_qc_files()`. PXL files and QC reports are loaded by `build_es_data()`.
+- Breaking: `load_pxl_data_list()`, `read_qc_files()`, and `extract_sample_qc_metrics()`. PXL files and QC reports are loaded by `build_es_data()`. Report components read scalar QC fields internally.
 
 ## [0.16.0] 2026-11-05
 

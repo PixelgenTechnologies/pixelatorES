@@ -274,7 +274,7 @@ Built-in workflows use paths relative to `inst/quarto/`. Extension packages shou
 
 The stage vocabulary is the source of truth for file discovery: `all` lists every stage the pipeline can emit, `pool` marks the stages whose QC files are pool-level, and `pxl_preference` orders the stages when several produce a PXL file for the same sample. `pool` may be empty, but both it and `pxl_preference` must be subsets of `all`.
 
-`find_stage()`, `get_file_paths()`, and `extract_sample_qc_metrics()` all take a **required** `stages` argument — there is no package-level default, so no caller can silently inherit another workflow's vocabulary. Inside a build, pass `es_data$stages` (`find_stage()` takes just `es_data$stages$all`); elsewhere, ask the registry with `get_es_workflow_stages(workflow)`.
+`find_stage()` and `get_file_paths()` take a **required** `stages` argument — there is no package-level default, so no caller can silently inherit another workflow's vocabulary. Inside a build, pass `es_data$stages` (`find_stage()` takes just `es_data$stages$all`); elsewhere, ask the registry with `get_es_workflow_stages(workflow)`. The internal `.extract_sample_qc_metrics()` follows the same rule.
 
 Use `list_es_data_workflows()` to see what is registered, `get_es_workflow_report(name)` to inspect a report recipe, and `get_es_workflow_stages(name)` to inspect a stage vocabulary.
 

@@ -306,7 +306,7 @@ test_that("Custom stage vocabularies drive QC extraction as expected", {
   )
 
   expect_equal(
-    extract_sample_qc_metrics(
+    .extract_sample_qc_metrics(
       qc_metrics,
       vars = "n",
       stage = "build",
@@ -317,7 +317,7 @@ test_that("Custom stage vocabularies drive QC extraction as expected", {
 
   # `pool` routes the stage to pool-level QC instead.
   expect_equal(
-    extract_sample_qc_metrics(
+    .extract_sample_qc_metrics(
       qc_metrics,
       vars = "n",
       stage = "tally",
@@ -327,7 +327,7 @@ test_that("Custom stage vocabularies drive QC extraction as expected", {
   )
 
   expect_error(
-    extract_sample_qc_metrics(
+    .extract_sample_qc_metrics(
       qc_metrics,
       vars = "n",
       stage = "graph",
@@ -335,14 +335,14 @@ test_that("Custom stage vocabularies drive QC extraction as expected", {
     )
   )
   expect_error(
-    extract_sample_qc_metrics(
+    .extract_sample_qc_metrics(
       qc_metrics,
       vars = "n",
       stage = "build",
       stages = get_es_workflow_stages("amplicon_demux")
     )
   )
-  expect_error(extract_sample_qc_metrics(qc_metrics, vars = "n", stage = "build"))
+  expect_error(.extract_sample_qc_metrics(qc_metrics, vars = "n", stage = "build"))
 })
 
 
@@ -558,7 +558,7 @@ test_that("File reading works as expected", {
 
   expect_no_error(
     extracted_qc_metrics <-
-      extract_sample_qc_metrics(qc_metrics, "amplicon",
+      .extract_sample_qc_metrics(qc_metrics, "amplicon",
         vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads"),
         stages = get_es_workflow_stages("amplicon_demux")
       )
@@ -582,14 +582,14 @@ test_that("File reading works as expected", {
       row.names = c(NA, -2L)
     )
   )
-  expect_error(extract_sample_qc_metrics(qc_metrics, "amplicon",
+  expect_error(.extract_sample_qc_metrics(qc_metrics, "amplicon",
     vars = c("q30_statistics"),
     stages = get_es_workflow_stages("amplicon_demux")
   ))
 
   expect_no_error(
     extracted_qc_metrics <-
-      extract_sample_qc_metrics(qc_metrics, "amplicon",
+      .extract_sample_qc_metrics(qc_metrics, "amplicon",
         vars = c(
           "a" = "total_failed_reads",
           "b" = "failed_partial_upi1_umi1_reads"
@@ -720,7 +720,7 @@ test_that("File reading works as expected", {
 
   expect_no_error(
     extracted_qc_metrics <-
-      extract_sample_qc_metrics(qc_metrics,
+      .extract_sample_qc_metrics(qc_metrics,
         stage = "amplicon",
         vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads"),
         stages = get_es_workflow_stages("amplicon_demux")
@@ -737,14 +737,14 @@ test_that("File reading works as expected", {
       -2L
     ), class = c("tbl_df", "tbl", "data.frame"))
   )
-  expect_error(extract_sample_qc_metrics(qc_metrics, "amplicon",
+  expect_error(.extract_sample_qc_metrics(qc_metrics, "amplicon",
     vars = c("q30_statistics"),
     stages = get_es_workflow_stages("amplicon_demux")
   ))
 
   expect_no_error(
     extracted_qc_metrics <-
-      extract_sample_qc_metrics(qc_metrics, "amplicon",
+      .extract_sample_qc_metrics(qc_metrics, "amplicon",
         vars = c(
           "a" = "total_failed_reads",
           "b" = "failed_partial_upi1_umi1_reads"
