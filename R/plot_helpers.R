@@ -113,7 +113,7 @@ close_tabset <- function() {
 #' This hook restores the tabset depth from the start of the chunk by appending
 #' the missing `:::` fences so later sections of the report still parse.
 #'
-#' Call once during report setup (see `inst/quarto/shared/preprocessing.qmd`).
+#' Call once during report setup (see `inst/quarto/shared/initiation.qmd`).
 #'
 #' @return `NULL`, invisibly.
 #'

@@ -39,25 +39,3 @@ options(
   pixelatorES.mc_cores = if (!is.null(params$mc_cores)) as.integer(params$mc_cores) else 1L
 )
 ```
-
-```{r}
-#| label: build_es_data
-#| include: false
-#| message: false
-#| warning: false
-
-es_data <- build_es_data(params)
-```
-
-```{r}
-#| label: theme
-#| include: false
-heatmap_gradient <-
-  PixelgenGradient(100, "BluesCherry")
-
-cherry_gradient <-
-  PixelgenGradient(100, "Cherry")
-
-sample_palette <- create_sample_palette(es_data$samplesheet$condition)
-```
-
