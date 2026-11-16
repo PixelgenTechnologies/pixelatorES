@@ -71,3 +71,20 @@ test_that("Downsampling keeps detected control markers", {
     c("mIgG1", "rIgG1")
   )
 })
+
+test_that("Downsampling works when the panel has no control markers", {
+  object <- .test_control_object(
+    markers = c("CD3", "CD4", "CD8"),
+    control = c("no", "no", "no")
+  )
+  object$sample_alias <- "S1"
+
+  expect_equal(
+    nrow(downsample_data(object, n_cells = 2, n_markers = 2)),
+    2
+  )
+  expect_equal(
+    nrow(downsample_data(object, control_markers = character(), n_cells = 2, n_markers = 2)),
+    2
+  )
+})

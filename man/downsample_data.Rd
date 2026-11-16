@@ -10,7 +10,8 @@ downsample_data(pg_data, control_markers = NULL, n_cells = 50, n_markers = 20)
 \item{pg_data}{A Seurat object containing the data to be downsampled.}
 
 \item{control_markers}{A character vector of control markers to always include in the downsampled data.
-If \code{NULL} (default), control markers are detected from the panel metadata of \code{pg_data}.}
+If \code{NULL} (default), control markers are detected from the panel metadata of \code{pg_data}.
+An empty vector means that there are no control markers.}
 
 \item{n_cells}{An integer specifying the number of cells to keep in each sample.}
 
@@ -26,6 +27,6 @@ If a sample has fewer than \code{n_cells}, all available cells are kept for that
 If fewer non-control markers are available than requested, all available non-control markers are kept.
 \code{control_markers} are always kept.
 If \code{control_markers} is \code{NULL}, they are detected from the panel metadata
-with \code{\link[=get_control_markers]{get_control_markers()}}.
+with \code{\link[=get_control_markers]{get_control_markers()}}. An empty vector means that there are no control markers.
 In these cases, the function warns and proceeds instead of failing.
 }

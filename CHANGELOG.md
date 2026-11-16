@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `filter_proximity_scores()` now takes an `es_data` object and reads the processed data, control markers, and sample order from it.
 - `downsample_data()` detects control markers from the data when `control_markers = NULL`.
 
+### Fixed
+
+- `downsample_data()` no longer fails in debug mode for panels without control markers.
+
 ### Removed
 
 - The `control_markers` parameter. Control markers are now detected from the panel.
