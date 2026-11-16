@@ -23,6 +23,15 @@ test_that("`order_cd_markers` works as expected", {
     )
   )
 
+  # no control markers
+  expect_equal(
+    order_cd_markers(c("CD4", "ABC", "CD3"), control_markers = NULL),
+    c("CD3", "CD4", "ABC")
+  )
+  expect_equal(
+    order_cd_markers(c("CD4", "ABC", "CD3"), control_markers = character()),
+    c("CD3", "CD4", "ABC")
+  )
 
   labels <-
     c(

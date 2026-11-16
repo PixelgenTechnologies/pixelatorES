@@ -462,10 +462,13 @@ merge_data <-
 #' If a sample has fewer than `n_cells`, all available cells are kept for that sample.
 #' If fewer non-control markers are available than requested, all available non-control markers are kept.
 #' `control_markers` are always kept.
+#' If `control_markers` is `NULL`, they are detected from the panel metadata
+#' with [get_control_markers()].
 #' In these cases, the function warns and proceeds instead of failing.
 #'
 #' @param pg_data A Seurat object containing the data to be downsampled.
 #' @param control_markers A character vector of control markers to always include in the downsampled data.
+#'   If `NULL` (default), control markers are detected from the panel metadata of `pg_data`.
 #' @param n_cells An integer specifying the number of cells to keep in each sample.
 #' @param n_markers An integer specifying the total number of markers to keep in the downsampled data.
 #'
@@ -485,6 +488,9 @@ downsample_data <-
     pixelatorR:::assert_single_value(n_cells, "integer")
     pixelatorR:::assert_single_value(n_markers, "integer")
 
+    if (is.null(control_markers)) {
+      control_markers <- get_control_markers(pg_data)
+    }
     control_markers <- unique(control_markers)
     missing_control <- setdiff(control_markers, rownames(pg_data))
     if (length(missing_control) > 0) {

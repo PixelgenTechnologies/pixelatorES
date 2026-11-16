@@ -4,7 +4,8 @@
 #' in alphabetic order, and control markers last.
 #'
 #' @param markers A character vector of marker names.
-#' @param control_markers A character vector of control marker names.
+#' @param control_markers A character vector of control marker names. `NULL` or an empty vector
+#'   means that there are no control markers.
 #'
 #' @return A character vector of markers ordered as described above.
 #'
@@ -15,7 +16,9 @@ order_cd_markers <-
       markers <- as.character(markers)
     }
     pixelatorR:::assert_vector(markers, "character", n = 1)
-    pixelatorR:::assert_vector(control_markers, "character", n = 1)
+    if (length(control_markers) > 0) {
+      pixelatorR:::assert_vector(control_markers, "character", n = 1)
+    }
 
     cd_markers <- str_detect(markers, "^CD\\d")
     control_markers <- markers %in% control_markers

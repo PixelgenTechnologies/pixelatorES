@@ -6,17 +6,19 @@
 #' Create an extractor result with diagnostics
 #'
 #' Allows an extractor to return a partial value together with non-fatal
-#' diagnostics collected while producing it.
+#' diagnostics collected while producing it. It can also fill additional
+#' top-level `es_data` slots that are only available while the extractor runs.
 #'
 #' @param value The extracted slot value.
 #' @param diagnostics A list of diagnostics.
+#' @param slots A named list of additional top-level `es_data` slots to fill.
 #'
 #' @return An internal extractor result.
 #'
 #' @noRd
-.new_es_data_extractor_result <- function(value, diagnostics = list()) {
+.new_es_data_extractor_result <- function(value, diagnostics = list(), slots = list()) {
   result <- structure(
-    list(value = value, diagnostics = diagnostics),
+    list(value = value, diagnostics = diagnostics, slots = slots),
     class = "es_data_extractor_result"
   )
 
@@ -76,6 +78,7 @@ new_es_data <- function(params) {
       effective_samplesheet = NULL,
       file_paths = NULL,
       pxl_data = NULL,
+      control_markers = NULL,
       qc_raw = NULL,
       qc = list(),
       pxl_data_processed = NULL,
@@ -109,6 +112,8 @@ new_es_data <- function(params) {
 #' @param qc Nested list of formatted QC tables. Defaults to an empty list.
 #' @param qc_raw Raw QC data, or `NULL`.
 #' @param pxl_data Merged raw PXL data, or `NULL`.
+#' @param control_markers Character vector of control marker names detected from
+#'   the panel metadata, or `NULL`.
 #' @param pxl_data_processed Processed Seurat object, or `NULL`.
 #' @param proximity Proximity scores, or `NULL`.
 #' @param file_paths Discovered input file paths, or `NULL`.
@@ -134,6 +139,7 @@ test_es_data <- function(
   qc = list(),
   qc_raw = NULL,
   pxl_data = NULL,
+  control_markers = NULL,
   pxl_data_processed = NULL,
   proximity = NULL,
   file_paths = NULL,
@@ -164,6 +170,7 @@ test_es_data <- function(
   object$qc <- qc
   object$qc_raw <- qc_raw
   object$pxl_data <- pxl_data
+  object["control_markers"] <- list(control_markers)
   object$pxl_data_processed <- pxl_data_processed
   object$proximity <- proximity
   object$file_paths <- file_paths
@@ -286,18 +293,27 @@ test_es_data <- function(
     object$samplesheet %>%
     filter(sample_alias %in% names(pxl_data))
 
+  # Detected per sample, since merging may not keep the panel's feature metadata
+  control_markers <- .get_control_markers_union(pxl_data)
+
   pxl_data <- merge_data(pxl_data, effective_samplesheet)
 
   if (isTRUE(object$params$debug_mode)) {
     pxl_data <- downsample_data(
       pxl_data,
-      control_markers = object$params$control_markers,
+      control_markers = control_markers,
       n_cells = 50,
       n_markers = 21
     )
   }
 
-  return(.new_es_data_extractor_result(pxl_data, diagnostics))
+  return(
+    .new_es_data_extractor_result(
+      pxl_data,
+      diagnostics,
+      slots = list(control_markers = control_markers)
+    )
+  )
 }
 
 #' Extract the effective samplesheet
@@ -705,7 +721,7 @@ test_es_data <- function(
 .extract_proximity <- function(object) {
   proximity <- filter_proximity_scores(
     object$pxl_data_processed,
-    object$params,
+    object$control_markers,
     sample_levels = object$sample_aliases
   )
 
@@ -814,6 +830,13 @@ run_es_data_extractors <- function(
         )
       }
       result$value <- extractor_result$value
+      for (slot_name in names(extractor_result$slots)) {
+        object <- .set_es_data_slot(
+          object,
+          slot_name,
+          extractor_result$slots[[slot_name]]
+        )
+      }
     }
 
     object <- .set_es_data_slot(object, node_path, result$value)
@@ -1017,6 +1040,14 @@ build_es_data <- function(params) {
       "and",
       n_columns,
       if (n_columns == 1) "column" else "columns"
+    ))
+  }
+
+  if (slot == "control_markers") {
+    n_markers <- length(value)
+    return(paste(
+      n_markers,
+      if (n_markers == 1) "control marker" else "control markers"
     ))
   }
 

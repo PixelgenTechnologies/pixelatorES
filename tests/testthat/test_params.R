@@ -2,7 +2,6 @@ test_that("Parameter tables work as expected", {
   params <- structure(list(
     sample_sheet = "../../../ES_test_data/test_samplesheet.csv",
     data_folder = "../../../ES_test_data",
-    control_markers = "c('mIgG1', 'mIgG2a', 'mIgG2b')",
     molecule_rank_cutoff = 10000L,
     gini_dispersion_cutoff = 0.7,
     control_score_cutoff = 1.5,
@@ -40,7 +39,6 @@ test_that("Parameter tables work as expected", {
     default_params,
     list(
       workflow = "edgelist_aggregate",
-      control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
       norm_method = "CLR",
       clustering_resolution = 1,
       proximity_count_cutoff = 25,

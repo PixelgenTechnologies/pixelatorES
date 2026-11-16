@@ -6,14 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [0.17.0] 2026-11-16
+
+### Added
+
+- `get_control_markers()` detects control (isotype) antibodies from the panel metadata in the PXL files, so new panels with other isotypes work without configuration.
+- `es_data` has a new `control_markers` slot with the detected control markers.
 
 ### Changed
 
 - Split the shared report preamble `preprocessing.qmd` into `initiation.qmd` (setup), `validation.qmd` (input checks), and `processing.qmd` (`es_data` build), so each step can be replaced independently.
+- `filter_proximity_scores()` now takes an `es_data` object and reads the processed data, control markers, and sample order from it.
+- `downsample_data()` detects control markers from the data when `control_markers = NULL`.
 
 ### Removed
 
+- The `control_markers` parameter. Control markers are now detected from the panel.
 - Breaking: `load_pxl_data_list()`, `read_qc_files()`, and `extract_sample_qc_metrics()`. PXL files and QC reports are loaded by `build_es_data()`. Report components read scalar QC fields internally.
 
 ## [0.16.0] 2026-11-05

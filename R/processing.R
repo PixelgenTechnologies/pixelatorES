@@ -86,7 +86,8 @@ process_data <-
 #' This function filters the proximity scores from the `pg_data_processed` object.
 #'
 #' @param pg_data_processed A Seurat object.
-#' @param params A list of parameters for filtering, including control markers.
+#' @param control_markers A character vector of control marker names, used to order the markers
+#'   with control markers last. See [get_control_markers()]. `NULL` means no control markers.
 #' @param sample_levels Optional vector of sample levels to order the samples in the plots.
 #'
 #' @return A data frame of filtered proximity scores with additional metadata.
@@ -95,7 +96,7 @@ process_data <-
 #'
 filter_proximity_scores <- function(
   pg_data_processed,
-  params,
+  control_markers = NULL,
   sample_levels = NULL
 ) {
   # Set proximity score cutoff
@@ -133,11 +134,11 @@ filter_proximity_scores <- function(
     mutate(
       marker_1 = factor(marker_1, order_cd_markers(
         unique(marker_1),
-        params$control_markers
+        control_markers
       )),
       marker_2 = factor(marker_2, order_cd_markers(
         unique(marker_2),
-        params$control_markers
+        control_markers
       ))
     )
 

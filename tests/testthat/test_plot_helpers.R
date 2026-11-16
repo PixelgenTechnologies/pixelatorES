@@ -320,7 +320,7 @@ test_that("PSOCK parallel rendering in tabset_plotlist matches sequential output
   sample_sheet <- read_samplesheet(test_samplesheet(type = "default"))
   proximity_scores <- suppressWarnings(filter_proximity_scores(
     pg_data,
-    list(control_markers = c("mIgG1", "mIgG2a", "mIgG2b"))
+    control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
   ))
 
   es_seq <- test_es_data(

@@ -4,12 +4,17 @@
 \alias{filter_proximity_scores}
 \title{Filter Proximity Scores}
 \usage{
-filter_proximity_scores(pg_data_processed, params, sample_levels = NULL)
+filter_proximity_scores(
+  pg_data_processed,
+  control_markers = NULL,
+  sample_levels = NULL
+)
 }
 \arguments{
 \item{pg_data_processed}{A Seurat object.}
 
-\item{params}{A list of parameters for filtering, including control markers.}
+\item{control_markers}{A character vector of control marker names, used to order the markers
+with control markers last. See \code{\link[=get_control_markers]{get_control_markers()}}. \code{NULL} means no control markers.}
 
 \item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
 }
