@@ -1043,9 +1043,11 @@ test_that("build_es_data matches direct extractors", {
     set.seed(37)
     pg_data_processed <- process_data(pg_data, params)
     proximity_scores <- filter_proximity_scores(
-      pg_data_processed,
-      control_markers,
-      sample_levels = sample_aliases
+      test_es_data(
+        pxl_data_processed = pg_data_processed,
+        control_markers = control_markers,
+        sample_aliases = sample_aliases
+      )
     )
 
     return(list(

@@ -719,13 +719,7 @@ test_es_data <- function(
 #'
 #' @noRd
 .extract_proximity <- function(object) {
-  proximity <- filter_proximity_scores(
-    object$pxl_data_processed,
-    object$control_markers,
-    sample_levels = object$sample_aliases
-  )
-
-  return(proximity)
+  return(filter_proximity_scores(object))
 }
 
 #' Add a diagnostic to an `es_data` object

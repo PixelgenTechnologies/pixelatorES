@@ -273,8 +273,10 @@ for (data_type in data_types) {
 
     proximity_scores <-
       filter_proximity_scores(
-        temp,
-        control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
+        test_es_data(
+          pxl_data_processed = temp,
+          control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
+        )
       )
 
     proximity_es_data <- es_data
