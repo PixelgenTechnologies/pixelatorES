@@ -32,9 +32,7 @@ for (data_type in data_types) {
     get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)
 
   es_data <- test_es_data(
-    params = list(
-      control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
-    ),
+    control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
     samplesheet = sample_sheet,
     effective_samplesheet = sample_sheet,
     file_paths = file_paths,
@@ -275,8 +273,8 @@ for (data_type in data_types) {
 
     proximity_scores <-
       filter_proximity_scores(
-        temp,
-        list(
+        test_es_data(
+          pxl_data_processed = temp,
           control_markers = c("mIgG1", "mIgG2a", "mIgG2b")
         )
       )

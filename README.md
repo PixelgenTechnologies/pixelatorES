@@ -16,7 +16,6 @@ Parameters are defined in the YAML header of the Quarto file:
 params:
   sample_sheet: "../../../ES_test_data/test_samplesheet.csv"
   data_folder: "../../../ES_test_data/"
-  control_markers: ["mIgG1", "mIgG2a", "mIgG2b"]
   norm_method: "CLR"
   clustering_resolution: 1
   annotation_method: "Seurat"
@@ -29,7 +28,6 @@ Users can modify parameters in the YAML header or pass them as arguments when re
 
 - **`sample_sheet`**: Path to the sample sheet `.csv` file. Must contain the columns `sample`, `sample_alias`, and `condition`.
 - **`data_folder`**: Path to the input data folder.
-- **`control_markers`**: Markers for control samples (e.g., `c('mIgG1', 'mIgG2a', 'mIgG2b')`).
 - **`norm_method`**: Normalization method (`'CLR'`).
 - **`clustering_resolution`**: Resolution for clustering analysis.
 - **`annotation_method`**: Method for cell type annotation (`'Seurat'` or `'nmf'`).

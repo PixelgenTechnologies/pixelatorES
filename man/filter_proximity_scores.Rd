@@ -4,18 +4,17 @@
 \alias{filter_proximity_scores}
 \title{Filter Proximity Scores}
 \usage{
-filter_proximity_scores(pg_data_processed, params, sample_levels = NULL)
+filter_proximity_scores(es_data)
 }
 \arguments{
-\item{pg_data_processed}{A Seurat object.}
-
-\item{params}{A list of parameters for filtering, including control markers.}
-
-\item{sample_levels}{Optional vector of sample levels to order the samples in the plots.}
+\item{es_data}{An \code{es_data} object. Proximity scores are computed from
+\code{pxl_data_processed}, markers are ordered with \code{control_markers} last, and
+samples are ordered by \code{sample_aliases}.}
 }
 \value{
 A data frame of filtered proximity scores with additional metadata.
 }
 \description{
-This function filters the proximity scores from the \code{pg_data_processed} object.
+This function filters the proximity scores from the processed PXL data in an
+\code{es_data} object.
 }

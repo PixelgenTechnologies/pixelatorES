@@ -11,6 +11,7 @@ test_es_data(
   qc = list(),
   qc_raw = NULL,
   pxl_data = NULL,
+  control_markers = NULL,
   pxl_data_processed = NULL,
   proximity = NULL,
   file_paths = NULL,
@@ -33,6 +34,9 @@ or \code{NULL} to derive from \code{samplesheet} when possible.}
 \item{qc_raw}{Raw QC data, or \code{NULL}.}
 
 \item{pxl_data}{Merged raw PXL data, or \code{NULL}.}
+
+\item{control_markers}{Character vector of control marker names detected from
+the panel metadata, or \code{NULL}.}
 
 \item{pxl_data_processed}{Processed Seurat object, or \code{NULL}.}
 

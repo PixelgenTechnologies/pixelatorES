@@ -214,3 +214,24 @@ test_that("edgelist_aggregate QC extractors, key table, and reads per stage work
     c("fastQ", "edgelist", "graph", "denoise", "sample_calling")
   )
 })
+
+test_that("edgelist_aggregate debug mode works for panels without control markers", {
+  params <- modifyList(
+    default_params,
+    list(
+      sample_sheet = test_samplesheet("edgelist_aggregate"),
+      data_folder = test_data_folder("edgelist_aggregate"),
+      debug_mode = TRUE,
+      test_mode = TRUE
+    )
+  )
+
+  object <- suppressMessages(suppressWarnings(build_es_data(params)))
+
+  expect_equal(object$control_markers, character())
+  expect_s4_class(object$pxl_data_processed, "Seurat")
+  expect_equal(
+    Filter(function(diagnostic) diagnostic$target == "pxl_data", object$diagnostics),
+    list()
+  )
+})

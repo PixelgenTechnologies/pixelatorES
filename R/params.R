@@ -5,7 +5,6 @@
 default_params <-
   list(
     workflow = "edgelist_aggregate",
-    control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
     norm_method = "CLR",
     clustering_resolution = 1,
     proximity_count_cutoff = 25,

@@ -9,7 +9,8 @@ order_cd_markers(markers, control_markers)
 \arguments{
 \item{markers}{A character vector of marker names.}
 
-\item{control_markers}{A character vector of control marker names.}
+\item{control_markers}{A character vector of control marker names. \code{NULL} or an empty vector
+means that there are no control markers.}
 }
 \value{
 A character vector of markers ordered as described above.

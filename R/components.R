@@ -1710,7 +1710,7 @@ component_abundance_per_marker <- function(
   if (test_mode) {
     mat <- mat[seq_len(min(10L, nrow(mat))), , drop = FALSE]
   }
-  ordered_markers <- order_cd_markers(rownames(mat), params$control_markers)
+  ordered_markers <- order_cd_markers(rownames(mat), es_data$control_markers)
   ordered_markers <- ordered_markers[ordered_markers %in% rownames(mat)]
 
   meta <-

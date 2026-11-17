@@ -83,21 +83,23 @@ process_data <-
 
 #' Filter Proximity Scores
 #'
-#' This function filters the proximity scores from the `pg_data_processed` object.
+#' This function filters the proximity scores from the processed PXL data in an
+#' `es_data` object.
 #'
-#' @param pg_data_processed A Seurat object.
-#' @param params A list of parameters for filtering, including control markers.
-#' @param sample_levels Optional vector of sample levels to order the samples in the plots.
+#' @param es_data An `es_data` object. Proximity scores are computed from
+#'   `pxl_data_processed`, markers are ordered with `control_markers` last, and
+#'   samples are ordered by `sample_aliases`.
 #'
 #' @return A data frame of filtered proximity scores with additional metadata.
 #'
 #' @export
 #'
-filter_proximity_scores <- function(
-  pg_data_processed,
-  params,
-  sample_levels = NULL
-) {
+filter_proximity_scores <- function(es_data) {
+  pixelatorR:::assert_class(es_data, "es_data")
+  pg_data_processed <- es_data$pxl_data_processed
+  control_markers <- es_data$control_markers
+  sample_levels <- es_data$sample_aliases
+
   # Set proximity score cutoff
   background_threshold_pct <-
     stats::quantile(pg_data_processed$isotype_fraction, 0.9)
@@ -133,11 +135,11 @@ filter_proximity_scores <- function(
     mutate(
       marker_1 = factor(marker_1, order_cd_markers(
         unique(marker_1),
-        params$control_markers
+        control_markers
       )),
       marker_2 = factor(marker_2, order_cd_markers(
         unique(marker_2),
-        params$control_markers
+        control_markers
       ))
     )
 

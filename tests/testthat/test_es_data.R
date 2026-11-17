@@ -37,6 +37,7 @@ test_that("es_data construction works as expected", {
       effective_samplesheet = NULL,
       file_paths = NULL,
       pxl_data = NULL,
+      control_markers = NULL,
       qc_raw = NULL,
       qc = list(),
       pxl_data_processed = NULL,
@@ -152,6 +153,7 @@ test_that("es_data printing works as expected", {
       "* effective_samplesheet: tibble with 1 sample and 3 columns",
       "* file_paths: list with 4 discovered files",
       "* pxl_data: Seurat object with 3 cells and 2 features",
+      "* control_markers: not filled",
       "* qc_raw: raw QC data for 2 samples and 0 pools",
       "* qc: list with 2 formatted metrics",
       "* pxl_data_processed: Seurat object with 3 cells and 2 features",
@@ -198,6 +200,10 @@ test_that("test_es_data fixtures work as expected", {
 
   prox <- data.frame(marker = "CD3")
   expect_equal(test_es_data(proximity = prox)$proximity, prox)
+  expect_equal(
+    test_es_data(control_markers = c("mIgG1", "rIgG1"))$control_markers,
+    c("mIgG1", "rIgG1")
+  )
 
   qc <- list(read_stats = data.frame(n = 1))
   expect_equal(test_es_data(qc = qc)$qc, qc)
@@ -291,6 +297,27 @@ test_that("Running es_data extractors works as expected", {
         )
       )
     )
+  )
+})
+
+test_that("Extractor results can fill additional slots", {
+  object <- pixelatorES:::new_es_data(list())
+  object$extractors <- list(
+    pxl_data = function(object) {
+      return(
+        pixelatorES:::.new_es_data_extractor_result(
+          "raw pxl",
+          slots = list(control_markers = c("mIgG1", "rIgG1"))
+        )
+      )
+    }
+  )
+
+  object <- pixelatorES:::run_es_data_extractors(object)
+
+  expect_equal(
+    object[c("pxl_data", "control_markers")],
+    list(pxl_data = "raw pxl", control_markers = c("mIgG1", "rIgG1"))
   )
 })
 
@@ -1003,7 +1030,9 @@ test_that("build_es_data matches direct extractors", {
       samplesheet = sample_sheet,
       params = params
     )
-    pg_data <- pixelatorES:::.extract_pxl_data(object)$value
+    pxl_result <- pixelatorES:::.extract_pxl_data(object)
+    pg_data <- pxl_result$value
+    control_markers <- pxl_result$slots$control_markers
     sample_qc_metrics <- pixelatorES:::.extract_qc_raw(object)$value
     qc_metrics_tables <- get_qc_metrics(
       pg_data,
@@ -1014,15 +1043,18 @@ test_that("build_es_data matches direct extractors", {
     set.seed(37)
     pg_data_processed <- process_data(pg_data, params)
     proximity_scores <- filter_proximity_scores(
-      pg_data_processed,
-      params,
-      sample_levels = sample_aliases
+      test_es_data(
+        pxl_data_processed = pg_data_processed,
+        control_markers = control_markers,
+        sample_aliases = sample_aliases
+      )
     )
 
     return(list(
       samplesheet = sample_sheet,
       sample_aliases = sample_aliases,
       pxl_data = pg_data,
+      control_markers = control_markers,
       qc_raw = sample_qc_metrics,
       qc = qc_metrics_tables,
       pxl_data_processed = pg_data_processed,
@@ -1072,6 +1104,10 @@ test_that("build_es_data matches direct extractors", {
     set.seed(37)
     built <- suppressWarnings(build_es_data(params))
 
+    if (data_type == "default") {
+      expect_equal(built$control_markers, c("mIgG1", "mIgG2a", "mIgG2b"))
+    }
+
     expect_equal(
       list(
         samplesheet = built$samplesheet,
@@ -1081,6 +1117,7 @@ test_that("build_es_data matches direct extractors", {
         qc_raw = built$qc_raw,
         qc = built$qc,
         proximity = built$proximity,
+        control_markers = built$control_markers,
         pxl_data = built$pxl_data,
         pxl_data_processed = .seurat_parity_structure(built$pxl_data_processed)
       ),
@@ -1092,6 +1129,7 @@ test_that("build_es_data matches direct extractors", {
         qc_raw = direct$qc_raw,
         qc = direct$qc,
         proximity = direct$proximity,
+        control_markers = direct$control_markers,
         pxl_data = NULL,
         pxl_data_processed = .seurat_parity_structure(direct$pxl_data_processed)
       )
