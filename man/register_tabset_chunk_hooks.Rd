@@ -16,5 +16,5 @@ This hook restores the tabset depth from the start of the chunk by appending
 the missing \code{:::} fences so later sections of the report still parse.
 }
 \details{
-Call once during report setup (see \code{inst/quarto/shared/preprocessing.qmd}).
+Call once during report setup (see \code{inst/quarto/shared/initiation.qmd}).
 }

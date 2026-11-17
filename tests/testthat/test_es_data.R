@@ -319,7 +319,7 @@ test_that("es_data diagnostics work as expected", {
 
 test_that("es_data workflow registration works as expected", {
   report <- list(
-    preamble = c("shared/preprocessing.qmd"),
+    preamble = c("shared/processing.qmd"),
     sections = list(
       list(id = "samples", title = "Samples", child = "shared/samples.qmd")
     )
@@ -392,7 +392,7 @@ test_that("Workflow stage vocabularies work as expected", {
   expect_error(get_es_workflow_stages("unknown_workflow"))
 
   report <- list(
-    preamble = c("shared/preprocessing.qmd"),
+    preamble = c("shared/processing.qmd"),
     sections = list(
       list(id = "samples", title = "Samples", child = "shared/samples.qmd")
     )
@@ -505,7 +505,7 @@ test_that("File discovery uses the object's stage vocabulary", {
 
 test_that("Workflow report recipes work as expected", {
   report <- list(
-    preamble = c("shared/preprocessing.qmd"),
+    preamble = c("shared/processing.qmd"),
     sections = list(
       list(
         id = "samples",
@@ -534,7 +534,11 @@ test_that("Workflow report recipes work as expected", {
   expect_equal(
     get_es_workflow_report("amplicon_demux"),
     list(
-      preamble = c("shared/preprocessing.qmd"),
+      preamble = c(
+        "shared/initiation.qmd",
+        "shared/validation.qmd",
+        "shared/processing.qmd"
+      ),
       sections = list(
         list(id = "samples", title = "Samples", child = "shared/samples.qmd"),
         list(
@@ -586,7 +590,7 @@ test_that("Workflow report recipes work as expected", {
       function() return(list()),
       report = function() {
         return(list(
-          preamble = "shared/preprocessing.qmd",
+          preamble = "shared/processing.qmd",
           sections = list(
             list(
               id = "samples",
@@ -636,7 +640,7 @@ test_that("Workflow report recipes work as expected", {
       function() return(list()),
       report = function() {
         return(list(
-          preamble = "preprocessing.qmd",
+          preamble = "processing.qmd",
           sections = list()
         ))
       },
@@ -650,7 +654,7 @@ test_that("Workflow report recipes work as expected", {
       function() return(list()),
       report = function() {
         return(list(
-          preamble = "preprocessing.qmd",
+          preamble = "processing.qmd",
           sections = list(
             list(id = "samples", title = "Samples")
           )
@@ -666,7 +670,7 @@ test_that("Workflow report recipes work as expected", {
       function() return(list()),
       report = function() {
         return(list(
-          preamble = "shared/preprocessing.qmd",
+          preamble = "shared/processing.qmd",
           sections = list(
             list(
               id = "samples",

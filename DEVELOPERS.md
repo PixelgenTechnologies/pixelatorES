@@ -241,7 +241,11 @@ register_es_data_workflow(
   },
   report = function() {
     list(
-      preamble = .register_child("shared", "preprocessing.qmd"),
+      preamble = c(
+        .register_child("shared", "initiation.qmd"),
+        .register_child("shared", "validation.qmd"),
+        .register_child("shared", "processing.qmd")
+      ),
       sections = list(
         list(
           id = "samples",
@@ -300,11 +304,15 @@ The ES report is built with Quarto (see `inst/quarto/`). `pixelatorES.qmd` is a 
 
 ### Quarto layout
 
+The built-in workflows use a three-step preamble: `initiation.qmd` (load packages, register hooks, set options), `validation.qmd` (check that `sample_sheet` and `data_folder` exist), and `processing.qmd` (build `es_data` and set up palettes). Because each step is a separate child document, a workflow can replace one without touching the others.
+
 ```text
 inst/quarto/
   pixelatorES.qmd                 # dispatcher shell
   shared/                         # reused across workflows
-    preprocessing.qmd
+    initiation.qmd                # load packages, register hooks, set options
+    validation.qmd                # check that the report inputs exist
+    processing.qmd                # build es_data and set up palettes
     samples.qmd
     run_info.qmd
   workflows/

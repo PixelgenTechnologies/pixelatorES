@@ -75,7 +75,11 @@
 #' @noRd
 .edgelist_aggregate_report <- function() {
   return(list(
-    preamble = c("shared/preprocessing.qmd"),
+    preamble = c(
+      "shared/initiation.qmd",
+      "shared/validation.qmd",
+      "shared/processing.qmd"
+    ),
     sections = list(
       list(id = "samples", title = "Samples", child = "shared/samples.qmd"),
       list(

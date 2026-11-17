@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+### Changed
+
+- Split the shared report preamble `preprocessing.qmd` into `initiation.qmd` (setup), `validation.qmd` (input checks), and `processing.qmd` (`es_data` build), so each step can be replaced independently.
+
 ## [0.16.0] 2026-11-05
 
 ### Added

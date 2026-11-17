@@ -1,0 +1,22 @@
+
+```{r}
+#| label: validate_inputs
+#| include: false
+
+# Fail early with a clear message when the report inputs are missing, before
+# any data is loaded
+if (!is.character(params$sample_sheet) || !file.exists(params$sample_sheet)) {
+  stop(
+    "`sample_sheet` does not point to an existing file: ",
+    paste(params$sample_sheet, collapse = ", "),
+    call. = FALSE
+  )
+}
+if (!is.null(params$data_folder) && !dir.exists(params$data_folder)) {
+  stop(
+    "`data_folder` does not point to an existing directory: ",
+    paste(params$data_folder, collapse = ", "),
+    call. = FALSE
+  )
+}
+```
