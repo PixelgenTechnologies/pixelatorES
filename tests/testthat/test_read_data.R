@@ -306,7 +306,7 @@ test_that("Custom stage vocabularies drive QC extraction as expected", {
   )
 
   expect_equal(
-    extract_sample_qc_metrics(
+    .extract_sample_qc_metrics(
       qc_metrics,
       vars = "n",
       stage = "build",
@@ -317,7 +317,7 @@ test_that("Custom stage vocabularies drive QC extraction as expected", {
 
   # `pool` routes the stage to pool-level QC instead.
   expect_equal(
-    extract_sample_qc_metrics(
+    .extract_sample_qc_metrics(
       qc_metrics,
       vars = "n",
       stage = "tally",
@@ -327,7 +327,7 @@ test_that("Custom stage vocabularies drive QC extraction as expected", {
   )
 
   expect_error(
-    extract_sample_qc_metrics(
+    .extract_sample_qc_metrics(
       qc_metrics,
       vars = "n",
       stage = "graph",
@@ -335,14 +335,14 @@ test_that("Custom stage vocabularies drive QC extraction as expected", {
     )
   )
   expect_error(
-    extract_sample_qc_metrics(
+    .extract_sample_qc_metrics(
       qc_metrics,
       vars = "n",
       stage = "build",
       stages = get_es_workflow_stages("amplicon_demux")
     )
   )
-  expect_error(extract_sample_qc_metrics(qc_metrics, vars = "n", stage = "build"))
+  expect_error(.extract_sample_qc_metrics(qc_metrics, vars = "n", stage = "build"))
 })
 
 
@@ -362,10 +362,6 @@ test_that("File reading works as expected", {
       row.names = c(NA, -2L), class = c("tbl_df", "tbl", "data.frame")
     )
 
-  data_folder <-
-    data_files$filename[1] %>%
-    dirname()
-
   sample_sheet <-
     structure(list(
       sample = c("S01_PBMC_unstimulated_S1", "S02_PHA_S2"), design = c("pna-2", "pna-2"), panel = c(
@@ -383,11 +379,16 @@ test_that("File reading works as expected", {
       "data.frame"
     ))
 
-  expect_no_error(seur_list <- load_pxl_data_list(data_folder, data_files, sample_sheet))
+  seur_list <-
+    data_files %>%
+    select(sample_alias, filename) %>%
+    deframe() %>%
+    lapply(
+      ReadPNA_Seurat,
+      load_proximity_scores = FALSE,
+      detailed_meta_data = TRUE
+    )
   expect_s4_class(seur_list[[1]], "Seurat")
-
-  expect_error(load_pxl_data_list(data_files, sample_sheet[1, ]))
-  expect_error(load_pxl_data_list(data_files[1, ], sample_sheet))
 
   # Data merging
   expect_no_error(seur_comb <- merge_data(seur_list, sample_sheet))
@@ -520,7 +521,10 @@ test_that("File reading works as expected", {
   )
 
   # QC data reading
-  expect_no_error(qc_metrics <- read_qc_files(data_paths, sample_sheet))
+  expect_no_error(qc_metrics <- pixelatorES:::.extract_qc_raw(list(
+    file_paths = data_paths,
+    samplesheet = sample_sheet
+  ))$value)
   expect_equal(
     names(qc_metrics),
     c("qc_files", "pool_qc_files")
@@ -554,7 +558,7 @@ test_that("File reading works as expected", {
 
   expect_no_error(
     extracted_qc_metrics <-
-      extract_sample_qc_metrics(qc_metrics, "amplicon",
+      .extract_sample_qc_metrics(qc_metrics, "amplicon",
         vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads"),
         stages = get_es_workflow_stages("amplicon_demux")
       )
@@ -578,14 +582,14 @@ test_that("File reading works as expected", {
       row.names = c(NA, -2L)
     )
   )
-  expect_error(extract_sample_qc_metrics(qc_metrics, "amplicon",
+  expect_error(.extract_sample_qc_metrics(qc_metrics, "amplicon",
     vars = c("q30_statistics"),
     stages = get_es_workflow_stages("amplicon_demux")
   ))
 
   expect_no_error(
     extracted_qc_metrics <-
-      extract_sample_qc_metrics(qc_metrics, "amplicon",
+      .extract_sample_qc_metrics(qc_metrics, "amplicon",
         vars = c(
           "a" = "total_failed_reads",
           "b" = "failed_partial_upi1_umi1_reads"
@@ -679,20 +683,11 @@ test_that("File reading works as expected", {
     ), class = c("tbl_df", "tbl", "data.frame"))
   )
 
-  expect_error(
-    read_qc_files(
-      data_paths,
-      structure(
-        list(
-          sample = c("S01_PBMC_unstimulated_S1", "S02_PHA_S2", "S3"),
-          sample_alias = c("S1", "S2", "S3"), condition = c("PBMC", "PHA", "S3")
-        ),
-        row.names = c(NA, -3L), class = c("tbl_df", "tbl", "data.frame")
-      )
-    )
-  )
   # QC data reading
-  expect_no_error(qc_metrics <- read_qc_files(data_paths, sample_sheet_hashing))
+  expect_no_error(qc_metrics <- pixelatorES:::.extract_qc_raw(list(
+    file_paths = data_paths,
+    samplesheet = sample_sheet_hashing
+  ))$value)
   expect_equal(
     names(qc_metrics),
     c("qc_files", "pool_qc_files")
@@ -725,7 +720,7 @@ test_that("File reading works as expected", {
 
   expect_no_error(
     extracted_qc_metrics <-
-      extract_sample_qc_metrics(qc_metrics,
+      .extract_sample_qc_metrics(qc_metrics,
         stage = "amplicon",
         vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads"),
         stages = get_es_workflow_stages("amplicon_demux")
@@ -742,14 +737,14 @@ test_that("File reading works as expected", {
       -2L
     ), class = c("tbl_df", "tbl", "data.frame"))
   )
-  expect_error(extract_sample_qc_metrics(qc_metrics, "amplicon",
+  expect_error(.extract_sample_qc_metrics(qc_metrics, "amplicon",
     vars = c("q30_statistics"),
     stages = get_es_workflow_stages("amplicon_demux")
   ))
 
   expect_no_error(
     extracted_qc_metrics <-
-      extract_sample_qc_metrics(qc_metrics, "amplicon",
+      .extract_sample_qc_metrics(qc_metrics, "amplicon",
         vars = c(
           "a" = "total_failed_reads",
           "b" = "failed_partial_upi1_umi1_reads"

@@ -22,7 +22,10 @@ for (data_type in data_types) {
       stages = get_es_workflow_stages("amplicon_demux")
     )
 
-  sample_qc_metrics <- read_qc_files(file_paths, sample_sheet)
+  sample_qc_metrics <- pixelatorES:::.extract_qc_raw(list(
+    file_paths = file_paths,
+    samplesheet = sample_sheet
+  ))$value
 
 
   qc_metrics_tables <-

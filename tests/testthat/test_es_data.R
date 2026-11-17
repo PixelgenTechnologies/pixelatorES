@@ -986,8 +986,8 @@ test_that("QC-only builds work as expected", {
   )
 })
 
-test_that("es_data parity with legacy preprocessing works as expected", {
-  .legacy_preprocessing <- function(params) {
+test_that("build_es_data matches direct extractors", {
+  .direct_preprocessing <- function(params) {
     sample_sheet <- read_samplesheet(params$sample_sheet)
     sample_aliases <-
       pixelatorES:::.sample_aliases_from_samplesheet(sample_sheet)
@@ -998,15 +998,13 @@ test_that("es_data parity with legacy preprocessing works as expected", {
       stages = get_es_workflow_stages("amplicon_demux")
     )
 
-    pg_data <-
-      load_pxl_data_list(
-        params$data_folder,
-        file_paths$data_files,
-        sample_sheet
-      ) %>%
-      merge_data(sample_sheet)
-
-    sample_qc_metrics <- read_qc_files(file_paths, sample_sheet)
+    object <- list(
+      file_paths = file_paths,
+      samplesheet = sample_sheet,
+      params = params
+    )
+    pg_data <- pixelatorES:::.extract_pxl_data(object)$value
+    sample_qc_metrics <- pixelatorES:::.extract_qc_raw(object)$value
     qc_metrics_tables <- get_qc_metrics(
       pg_data,
       sample_qc_metrics,
@@ -1068,7 +1066,7 @@ test_that("es_data parity with legacy preprocessing works as expected", {
       )
     )
 
-    legacy <- suppressWarnings(.legacy_preprocessing(params))
+    direct <- suppressWarnings(.direct_preprocessing(params))
 
     params$data_folder <- .copy_es_data_test_folder(data_type)
     set.seed(37)
@@ -1087,15 +1085,15 @@ test_that("es_data parity with legacy preprocessing works as expected", {
         pxl_data_processed = .seurat_parity_structure(built$pxl_data_processed)
       ),
       list(
-        samplesheet = legacy$samplesheet,
-        sample_aliases = legacy$sample_aliases,
-        effective_samplesheet = legacy$samplesheet,
+        samplesheet = direct$samplesheet,
+        sample_aliases = direct$sample_aliases,
+        effective_samplesheet = direct$samplesheet,
         diagnostics = list(),
-        qc_raw = legacy$qc_raw,
-        qc = legacy$qc,
-        proximity = legacy$proximity,
+        qc_raw = direct$qc_raw,
+        qc = direct$qc,
+        proximity = direct$proximity,
         pxl_data = NULL,
-        pxl_data_processed = .seurat_parity_structure(legacy$pxl_data_processed)
+        pxl_data_processed = .seurat_parity_structure(direct$pxl_data_processed)
       )
     )
   }
