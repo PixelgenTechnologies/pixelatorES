@@ -865,3 +865,82 @@ test_that("Edgelist discovery and multi-FASTQ QC aggregation work as expected", 
     )
   )
 })
+
+test_that("Unhashed data with a samplesheet pool column stays sample-level", {
+  stages <- get_es_workflow_stages("amplicon_demux")
+  plain_sheet <- read_samplesheet(test_samplesheet())
+  plain_paths <- get_file_paths(
+    data_folder = test_data_folder(),
+    sample_sheet = plain_sheet,
+    stages = stages
+  )
+
+  named_sheet <- plain_sheet %>%
+    mutate(pool = "not_a_real_pool")
+  named_paths <- get_file_paths(
+    data_folder = test_data_folder(),
+    sample_sheet = named_sheet,
+    stages = stages
+  )
+  expect_null(named_paths$pool_qc_files)
+  expect_equal(named_paths$qc_files, plain_paths$qc_files)
+  expect_equal(named_paths$data_files, plain_paths$data_files)
+
+  # An empty pool column used to make is_pool NA and drop every file
+  empty_sheet <- plain_sheet %>%
+    mutate(pool = NA_character_)
+  expect_no_error(
+    empty_paths <- get_file_paths(
+      data_folder = test_data_folder(),
+      sample_sheet = empty_sheet,
+      stages = stages
+    )
+  )
+  expect_null(empty_paths$pool_qc_files)
+  expect_equal(empty_paths$qc_files, plain_paths$qc_files)
+
+  expect_no_warning(
+    qc_result <- pixelatorES:::.extract_qc_raw(list(
+      file_paths = named_paths,
+      samplesheet = named_sheet
+    ))
+  )
+  expect_null(qc_result$value$pool_qc_files)
+  expect_equal(qc_result$diagnostics, list())
+
+  seur <- get_test_data()
+  expect_no_error(seqsat <- get_seq_saturation(seur, qc_result$value))
+  expect_true("sample_alias" %in% names(seqsat))
+  expect_false("pool" %in% names(seqsat))
+
+  expect_no_error(edges <- get_crossing_edges(qc_result$value))
+  expect_true("sample_alias" %in% names(edges))
+
+  expect_no_error(degree <- get_degree_distribution(qc_result$value))
+  expect_true("sample_alias" %in% names(degree))
+
+  expect_null(
+    pixelatorES:::.extract_sample_hash_stats(list(
+      pxl_data = seur,
+      qc_raw = qc_result$value,
+      samplesheet = named_sheet
+    ))
+  )
+
+  # An empty pool list must not switch components onto the hashed path
+  empty_pool_qc <- qc_result$value
+  empty_pool_qc$pool_qc_files <- list()
+  expect_false(pixelatorES:::.has_pool_qc(empty_pool_qc))
+  expect_no_error(seqsat_empty <- get_seq_saturation(seur, empty_pool_qc))
+  expect_true("sample_alias" %in% names(seqsat_empty))
+
+  es_data <- test_es_data(
+    samplesheet = named_sheet,
+    qc_raw = empty_pool_qc,
+    qc = list(sample_hash_stats = NULL, seq_saturation = seqsat_empty),
+    pxl_data_processed = seur,
+    stages = stages
+  )
+  expect_no_error(component_cell_recovery(es_data))
+  expect_no_error(component_sequencing_reads_and_molecules(es_data))
+})
