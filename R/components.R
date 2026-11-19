@@ -321,10 +321,10 @@ component_sequencing_reads_and_molecules <-
     sample_levels <- es_data$sample_aliases
 
     if ("qc_files" %in% names(sample_qc_metrics)) {
-      qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
-        sample_qc_metrics$qc_files
-      } else {
+      qc_data <- if (.has_pool_qc(sample_qc_metrics)) {
         sample_qc_metrics$pool_qc_files
+      } else {
+        sample_qc_metrics$qc_files
       }
     } else {
       qc_data <- sample_qc_metrics
@@ -489,10 +489,10 @@ component_reads_per_stage <- function(es_data) {
   sample_levels <- es_data$sample_aliases
 
   if ("qc_files" %in% names(sample_qc_metrics)) {
-    qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
-      sample_qc_metrics$qc_files
-    } else {
+    qc_data <- if (.has_pool_qc(sample_qc_metrics)) {
       sample_qc_metrics$pool_qc_files
+    } else {
+      sample_qc_metrics$qc_files
     }
   } else {
     qc_data <- sample_qc_metrics
@@ -984,12 +984,12 @@ component_cell_recovery <-
     sample_qc_metrics <- es_data$qc_raw
     sample_levels <- es_data$sample_aliases
 
-    if (is.null(sample_qc_metrics$pool_qc_files)) {
-      qc_data <- sample_qc_metrics$qc_files
-      hashed_experiment <- FALSE
-    } else {
+    if (.has_pool_qc(sample_qc_metrics)) {
       qc_data <- sample_qc_metrics$pool_qc_files
       hashed_experiment <- TRUE
+    } else {
+      qc_data <- sample_qc_metrics$qc_files
+      hashed_experiment <- FALSE
     }
 
     # Number of components before and after filtering, and size thresholds

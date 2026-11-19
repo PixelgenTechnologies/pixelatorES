@@ -279,8 +279,9 @@ get_file_paths <-
 
     if ("pool" %in% names(sample_sheet)) {
       pool_ids <- unique(sample_sheet$pool)
+      pool_ids <- pool_ids[!is.na(pool_ids) & nzchar(as.character(pool_ids))]
     } else {
-      pool_ids <- c()
+      pool_ids <- character()
     }
 
     all_files <-
@@ -288,7 +289,9 @@ get_file_paths <-
       left_join(select(sample_sheet, sample, sample_alias),
         by = c("file_alias" = "sample")
       ) %>%
-      mutate(is_pool = ifelse(file_alias %in% pool_ids, TRUE, FALSE))
+      # `%in%` stays FALSE when pool_ids is empty. ifelse() would turn a
+      # comparison against NA pool ids into NA and drop every file.
+      mutate(is_pool = file_alias %in% pool_ids)
 
     unattributed_qc_files <-
       all_files %>%
@@ -607,6 +610,26 @@ add_pct_of_pool_to_samplesheet <-
     return(sample_sheet)
   }
 
+#' Whether QC metrics include loaded pool-level reports
+#'
+#' An empty list is treated as absent. A samplesheet can contain a `pool`
+#' column for an unhashed run; that must not be confused with pool QC.
+#'
+#' @param sample_qc_metrics A nested QC list (`qc_files`, `pool_qc_files`),
+#'   or `NULL`.
+#'
+#' @return `TRUE` when at least one pool QC group was loaded.
+#'
+#' @noRd
+.has_pool_qc <- function(sample_qc_metrics) {
+  if (is.null(sample_qc_metrics) || !is.list(sample_qc_metrics)) {
+    return(FALSE)
+  }
+
+  pool_qc <- sample_qc_metrics$pool_qc_files
+  return(!is.null(pool_qc) && length(pool_qc) > 0)
+}
+
 #' Extract scalar QC metrics for one stage
 #'
 #' Pulls scalar fields from one QC stage into a tibble with one row per sample
@@ -639,7 +662,7 @@ add_pct_of_pool_to_samplesheet <-
 
     # Check if the sample_qc_metrics a sample qc list, if so extract the correct sample/pool type
     if ("qc_files" %in% names(sample_qc_metrics)) {
-      if (stage %in% stages$pool && !is.null(sample_qc_metrics$pool_qc_files)) {
+      if (stage %in% stages$pool && .has_pool_qc(sample_qc_metrics)) {
         sample_qc_metrics <- sample_qc_metrics$pool_qc_files
       } else {
         sample_qc_metrics <- sample_qc_metrics$qc_files

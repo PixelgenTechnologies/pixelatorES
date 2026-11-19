@@ -368,14 +368,27 @@ test_es_data <- function(
 
   pool_qc_files <- NULL
   pool_diagnostics <- list()
-  if ("pool" %in% names(object$samplesheet)) {
+  # A pool column does not make the run hashed. Only load pool QC when
+  # discovery found files whose names match the pool ids. Otherwise an
+  # unhashed samplesheet that happens to have a pool column stores an empty
+  # list, and later steps treat that empty list as pool-level data and fail.
+  discovered_pool_files <- file_paths$pool_qc_files
+  if (
+    "pool" %in% names(object$samplesheet) &&
+      !is.null(discovered_pool_files) &&
+      nrow(discovered_pool_files) > 0
+  ) {
+    pool_aliases <- unique(object$samplesheet$pool)
+    pool_aliases <- pool_aliases[!is.na(pool_aliases)]
     pool_result <- .read_qc_groups_soft(
-      files = file_paths$pool_qc_files,
-      aliases = sort(unique(object$samplesheet$pool)),
+      files = discovered_pool_files,
+      aliases = sort(pool_aliases),
       alias_column = "pool_alias",
       target_label = "pool"
     )
-    pool_qc_files <- pool_result$value
+    if (length(pool_result$value) > 0) {
+      pool_qc_files <- pool_result$value
+    }
     pool_diagnostics <- pool_result$diagnostics
   }
 
@@ -645,7 +658,7 @@ test_es_data <- function(
   sample_qc_metrics <- object$qc_raw
   pixelatorR:::assert_class(sample_qc_metrics, "list")
 
-  if (!is.null(sample_qc_metrics$pool_qc_files)) {
+  if (.has_pool_qc(sample_qc_metrics)) {
     group_col <- "pool"
     qc_data <- sample_qc_metrics$pool_qc_files
   } else {
@@ -935,7 +948,9 @@ build_es_data <- function(params) {
 
   unattributed_qc_files <- attr(file_paths, "unattributed_qc_files")
   if (!is.null(unattributed_qc_files) && nrow(unattributed_qc_files) > 0) {
-    has_pools <- "pool" %in% names(object$samplesheet)
+    discovered_pool_files <- file_paths$pool_qc_files
+    has_pools <-
+      !is.null(discovered_pool_files) && nrow(discovered_pool_files) > 0
     target_kind <- if (has_pools) "pool" else "sample"
     for (i in seq_len(nrow(unattributed_qc_files))) {
       filepath <- unattributed_qc_files$filename[[i]]
