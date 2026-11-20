@@ -6,11 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [0.17.1] 2026-11-19
+## [0.18.0] 2026-11-20
+
+### Added
+
+- `technology` parameter (`proxiome-v1` or `proxiome-v2`). Pass it with the other Quarto parameters (`-P technology=proxiome-v1`). The Experiment Summary uses this value instead of inferring hashing from the samplesheet or the output files.
+
+### Changed
+
+- Breaking: `build_es_data()` and the report require `technology`. `proxiome-v1` drops a samplesheet `pool` column. `proxiome-v2` requires a non-empty `pool` value for every sample.
 
 ### Fixed
 
-- Unhashed data no longer fails when the samplesheet has a `pool` column. Pool-level QC and the hashing section are used only when pool files or hash statistics are actually present. An empty or non-matching `pool` column is ignored for file discovery.
+- Unhashed (`proxiome-v1`) runs no longer fail when the samplesheet includes a `pool` column. The column is ignored.
 
 ## [0.17.0] 2026-11-16
 

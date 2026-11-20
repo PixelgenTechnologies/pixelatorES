@@ -203,7 +203,8 @@ test_es_data <- function(
 #'
 #' @noRd
 .extract_samplesheet <- function(object) {
-  return(read_samplesheet(object$params$sample_sheet))
+  sample_sheet <- read_samplesheet(object$params$sample_sheet)
+  return(apply_es_technology(sample_sheet, object$params$technology))
 }
 
 #' Extract merged pixel data
@@ -368,10 +369,10 @@ test_es_data <- function(
 
   pool_qc_files <- NULL
   pool_diagnostics <- list()
-  # A pool column does not make the run hashed. Only load pool QC when
-  # discovery found files whose names match the pool ids. Otherwise an
-  # unhashed samplesheet that happens to have a pool column stores an empty
-  # list, and later steps treat that empty list as pool-level data and fail.
+  # `proxiome-v1` drops the pool column before this runs. A remaining pool
+  # column means `proxiome-v2`, and pool QC is loaded only when discovery
+  # found files for those pool ids. An empty list would otherwise be treated
+  # as pool-level data by later steps.
   discovered_pool_files <- file_paths$pool_qc_files
   if (
     "pool" %in% names(object$samplesheet) &&
@@ -866,12 +867,15 @@ run_es_data_extractors <- function(
 #' Samplesheet errors are not caught and stop the build; remaining extractor
 #' errors are recorded as diagnostics.
 #'
-#' @param params A list of Experiment Summary parameters.
+#' @param params A list of Experiment Summary parameters. `technology` is
+#'   required: `proxiome-v1` (unhashed; a samplesheet `pool` column is ignored)
+#'   or `proxiome-v2` (hashed; a samplesheet `pool` column is required).
 #'
 #' @return An `es_data` object.
 #'
 #' @export
 build_es_data <- function(params) {
+  validate_es_technology(params$technology)
   object <- new_es_data(params)
 
   if (is.null(object$extractors$samplesheet)) {

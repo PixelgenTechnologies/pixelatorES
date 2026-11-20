@@ -7,7 +7,9 @@
 build_es_data(params)
 }
 \arguments{
-\item{params}{A list of Experiment Summary parameters.}
+\item{params}{A list of Experiment Summary parameters. \code{technology} is
+required: \code{proxiome-v1} (unhashed; a samplesheet \code{pool} column is ignored)
+or \code{proxiome-v2} (hashed; a samplesheet \code{pool} column is required).}
 }
 \value{
 An \code{es_data} object.

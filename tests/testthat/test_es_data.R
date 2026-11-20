@@ -49,7 +49,10 @@ test_that("es_data construction works as expected", {
     pixelatorES:::new_es_data(list(workflow = "unknown"))
   )
 
-  params <- list(sample_sheet = test_samplesheet())
+  params <- list(
+    sample_sheet = test_samplesheet(),
+    technology = "proxiome-v1"
+  )
   object <- pixelatorES:::new_es_data(params)
   object$samplesheet <- object$extractors$samplesheet(object)
 
@@ -62,6 +65,7 @@ test_that("es_data construction works as expected", {
     list(
       params = list(
         sample_sheet = test_samplesheet(),
+        technology = "proxiome-v1",
         workflow = "edgelist_aggregate"
       ),
       samplesheet = structure(
@@ -77,7 +81,14 @@ test_that("es_data construction works as expected", {
     )
   )
   expect_error(
-    build_es_data(list(sample_sheet = tempfile(fileext = ".csv")))
+    build_es_data(list(sample_sheet = test_samplesheet())),
+    "technology"
+  )
+  expect_error(
+    build_es_data(list(
+      sample_sheet = tempfile(fileext = ".csv"),
+      technology = "proxiome-v1"
+    ))
   )
 })
 
@@ -512,7 +523,8 @@ test_that("File discovery uses the object's stage vocabulary", {
   object <- pixelatorES:::new_es_data(list(
     sample_sheet = test_samplesheet(),
     data_folder = test_data_folder(type = "default"),
-    workflow = "amplicon_demux"
+    workflow = "amplicon_demux",
+    technology = "proxiome-v1"
   ))
   object$samplesheet <- object$extractors$samplesheet(object)
 
@@ -760,7 +772,8 @@ test_that("Partial input failures work as expected", {
   object <- pixelatorES:::new_es_data(list(
     sample_sheet = test_samplesheet(),
     data_folder = data_folder,
-    workflow = "amplicon_demux"
+    workflow = "amplicon_demux",
+    technology = "proxiome-v1"
   ))
   object$samplesheet <- object$extractors$samplesheet(object)
   object <- pixelatorES:::.fill_es_data_file_paths(object)
@@ -843,7 +856,8 @@ test_that("Duplicate PXL matches soft-fail as expected", {
       sample_sheet = test_samplesheet(),
       data_folder = data_folder,
       test_mode = TRUE,
-      workflow = "amplicon_demux"
+      workflow = "amplicon_demux",
+      technology = "proxiome-v1"
     )),
     "Multiple PXL files"
   )
@@ -906,7 +920,8 @@ test_that("Unknown-stage files soft-fail as expected", {
         sample_sheet = test_samplesheet(),
         data_folder = data_folder,
         test_mode = TRUE,
-        workflow = "amplicon_demux"
+        workflow = "amplicon_demux",
+        technology = "proxiome-v1"
       )),
       "Could not determine stage of file"
     ),
@@ -964,7 +979,8 @@ test_that("QC-only builds work as expected", {
       sample_sheet = test_samplesheet(),
       data_folder = data_folder,
       test_mode = TRUE,
-      workflow = "amplicon_demux"
+      workflow = "amplicon_demux",
+      technology = "proxiome-v1"
     )
   )
   object <- suppressWarnings(build_es_data(params))
@@ -1015,7 +1031,10 @@ test_that("QC-only builds work as expected", {
 
 test_that("build_es_data matches direct extractors", {
   .direct_preprocessing <- function(params) {
-    sample_sheet <- read_samplesheet(params$sample_sheet)
+    sample_sheet <- apply_es_technology(
+      read_samplesheet(params$sample_sheet),
+      params$technology
+    )
     sample_aliases <-
       pixelatorES:::.sample_aliases_from_samplesheet(sample_sheet)
 
@@ -1094,7 +1113,8 @@ test_that("build_es_data matches direct extractors", {
         sample_sheet = test_samplesheet(type = data_type),
         data_folder = .copy_es_data_test_folder(data_type),
         test_mode = TRUE,
-        workflow = "amplicon_demux"
+        workflow = "amplicon_demux",
+        technology = if (data_type == "hashing") "proxiome-v2" else "proxiome-v1"
       )
     )
 

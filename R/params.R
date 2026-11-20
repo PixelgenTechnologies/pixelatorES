@@ -29,7 +29,9 @@ print_params <-
     pixelatorR:::assert_class(es_data, "es_data")
     params <- es_data$params
 
-    params[!names(params) %in% c("metadata", "sample_aliases", "sample_sheet", "data_folder")] %>%
+    params[!names(params) %in% c(
+      "metadata", "sample_aliases", "sample_sheet", "data_folder", "technology"
+    )] %>%
       enframe("Parameter", "Value") %>%
       left_join(
         default_params %>%
