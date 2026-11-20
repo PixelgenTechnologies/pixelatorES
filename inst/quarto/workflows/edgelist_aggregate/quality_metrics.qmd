@@ -31,7 +31,9 @@ close_tabset()
 #| label: key_metrics_sample
 #| eval: !expr is_unhashed_experiment
 #| results: 'asis'
-section_table(key_tables$sample, "Sample metrics", 3)
+if (!is.null(key_tables$sample)) {
+  section_table(key_tables$sample, "Sample metrics", 3)
+}
 ```
 
 ```{r}
