@@ -9,13 +9,13 @@ apply_es_technology(sample_sheet, technology)
 \arguments{
 \item{sample_sheet}{A samplesheet, as returned by \code{\link[=read_samplesheet]{read_samplesheet()}}.}
 
-\item{technology}{\code{proxiome-v1} or \code{proxiome-v2}. See
-\code{\link[=validate_es_technology]{validate_es_technology()}}.}
+\item{technology}{A pipeline technology name. See \code{\link[=validate_es_technology]{validate_es_technology()}}.}
 }
 \value{
-The samplesheet used for the rest of the run. For \code{proxiome-v1} the
-\code{pool} column is removed when present. For \code{proxiome-v2} the \code{pool}
-column is kept and must contain a non-empty value on every row.
+The samplesheet used for the rest of the run. For an unhashed
+technology the \code{pool} column is removed when present. For a hashed
+technology the \code{pool} column is kept and must contain a non-empty value
+on every row.
 }
 \description{
 Apply a technology to a samplesheet

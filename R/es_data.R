@@ -863,8 +863,10 @@ run_es_data_extractors <- function(
 #' errors are recorded as diagnostics.
 #'
 #' @param params A list of Experiment Summary parameters. `technology` is
-#'   required: `proxiome-v1` (unhashed; a samplesheet `pool` column is ignored)
-#'   or `proxiome-v2` (hashed; a samplesheet `pool` column is required).
+#'   required and must be a pipeline technology name. `proxiome-v1` and
+#'   `nonhashed_samples` are unhashed: a samplesheet `pool` column is ignored.
+#'   `proxiome-v2` and `hashed_samples` are hashed: a samplesheet `pool`
+#'   column is required.
 #'
 #' @return An `es_data` object.
 #'

@@ -865,7 +865,9 @@ test_that("technology decides whether a samplesheet pool column is used", {
   expect_error(validate_es_technology(NULL), "technology")
   expect_error(validate_es_technology("proxiome-v3"), "technology")
   expect_false(is_hashed_technology("proxiome-v1"))
+  expect_false(is_hashed_technology("nonhashed_samples"))
   expect_true(is_hashed_technology("proxiome-v2"))
+  expect_true(is_hashed_technology("hashed_samples"))
 
   hashed_sheet <- read_samplesheet(test_samplesheet("hashing"))
   stages <- get_es_workflow_stages("amplicon_demux")
@@ -901,6 +903,14 @@ test_that("technology decides whether a samplesheet pool column is used", {
 
   v2_sheet <- apply_es_technology(hashed_sheet, "proxiome-v2")
   expect_equal(v2_sheet$pool, hashed_sheet$pool)
+  expect_false(
+    "pool" %in% names(apply_es_technology(hashed_sheet, "nonhashed_samples"))
+  )
+  expect_equal(
+    apply_es_technology(hashed_sheet, "hashed_samples")$pool,
+    hashed_sheet$pool
+  )
+  expect_error(apply_es_technology(empty_pool, "hashed_samples"), "pool")
   v2_paths <- get_file_paths(
     data_folder = test_data_folder("hashing"),
     sample_sheet = v2_sheet,

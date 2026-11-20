@@ -7,10 +7,11 @@
 is_hashed_technology(technology)
 }
 \arguments{
-\item{technology}{Technology name, \code{proxiome-v1} or \code{proxiome-v2}.}
+\item{technology}{Technology name. See \code{\link[=validate_es_technology]{validate_es_technology()}}.}
 }
 \value{
-\code{TRUE} for \code{proxiome-v2}, \code{FALSE} for \code{proxiome-v1}.
+\code{TRUE} for \code{proxiome-v2} and \code{hashed_samples}. \code{FALSE} for
+\code{proxiome-v1} and \code{nonhashed_samples}.
 }
 \description{
 Whether a technology uses sample hashing

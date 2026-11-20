@@ -533,6 +533,13 @@ for (data_type in data_types) {
           colors = cherry_gradient
         )
       )
+
+      missing_confidence <- es_data
+      missing_confidence$qc$sample_hash_stats$component_sample_confidence <- NULL
+      expect_error(
+        component_hashing(missing_confidence, colors = cherry_gradient),
+        "pool QC"
+      )
     }
   })
 }

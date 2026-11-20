@@ -2,7 +2,7 @@
 % Please edit documentation in R/technology.R
 \name{validate_es_technology}
 \alias{validate_es_technology}
-\title{Check a Proxiome technology value}
+\title{Check a technology value}
 \usage{
 validate_es_technology(technology)
 }
@@ -10,9 +10,11 @@ validate_es_technology(technology)
 \item{technology}{Technology name supplied with the report parameters.}
 }
 \value{
-\code{technology} when it is \code{proxiome-v1} or \code{proxiome-v2}.
+\code{technology} when it is one of \code{proxiome-v1}, \code{nonhashed_samples},
+\code{proxiome-v2}, or \code{hashed_samples}.
 }
 \description{
 The Experiment Summary does not infer hashing from the samplesheet or from
-the files in the data folder. The caller sets \code{technology} up front.
+the files in the data folder. The caller sets \code{technology} up front, using
+one of the pipeline values.
 }

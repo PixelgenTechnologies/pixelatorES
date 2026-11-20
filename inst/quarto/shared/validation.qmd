@@ -20,6 +20,5 @@ if (!is.null(params$data_folder) && !dir.exists(params$data_folder)) {
   )
 }
 
-# Hashing is not inferred from the samplesheet or the data folder
 validate_es_technology(params$technology)
 ```
