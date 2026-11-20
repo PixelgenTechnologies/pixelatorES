@@ -10,6 +10,7 @@ key_tables <-
 # Hashed technologies include pool metrics and the hashing section.
 # Unhashed technologies include sample metrics only.
 is_hashed_experiment <- is_hashed_technology(params$technology)
+is_unhashed_experiment <- !is_hashed_experiment
 ```
 
 ```{r}
@@ -28,7 +29,7 @@ close_tabset()
 
 ```{r}
 #| label: key_metrics_sample
-#| eval: !expr !is_hashed_experiment
+#| eval: !expr is_unhashed_experiment
 #| results: 'asis'
 section_table(key_tables$sample, "Sample metrics", 3)
 ```
