@@ -628,14 +628,17 @@ test_that("File reading works as expected", {
     )
   )
 
-  # Error out when duplicates between pool and samples
+  # A pool id that matches a sample id is ignored for proxiome-v1 and
+  # rejected for proxiome-v2, where it would hide that sample's files
   temp_file <- tempfile(fileext = ".csv")
   sample_sheet_hashing %>%
     mutate(pool = sample) %>%
-    write.csv(temp_file)
+    write.csv(temp_file, row.names = FALSE)
+  colliding_sheet <- suppressMessages(read_samplesheet(temp_file))
+  expect_false("pool" %in% names(apply_es_technology(colliding_sheet, "proxiome-v1")))
   expect_error(
-    suppressMessages(read_samplesheet(temp_file)),
-    regexp = "The `pool` column.*cannot contain.*also present"
+    apply_es_technology(colliding_sheet, "proxiome-v2"),
+    regexp = "pool"
   )
 
   expect_no_error(data_paths <-
@@ -864,6 +867,65 @@ test_that("Edgelist discovery and multi-FASTQ QC aggregation work as expected", 
       )
     )
   )
+})
+
+test_that("technology decides whether a samplesheet pool column is used", {
+  expect_error(validate_es_technology(NULL), "technology")
+  expect_error(validate_es_technology("proxiome-v3"), "technology")
+  expect_false(is_hashed_technology("proxiome-v1"))
+  expect_true(is_hashed_technology("proxiome-v2"))
+
+  hashed_sheet <- read_samplesheet(test_samplesheet("hashing"))
+  stages <- get_es_workflow_stages("amplicon_demux")
+  v1_sheet <- apply_es_technology(hashed_sheet, "proxiome-v1")
+  expect_false("pool" %in% names(v1_sheet))
+
+  v1_paths <- get_file_paths(
+    data_folder = test_data_folder("hashing"),
+    sample_sheet = v1_sheet,
+    stages = stages
+  )
+  expect_null(v1_paths$pool_qc_files)
+  expect_gt(nrow(v1_paths$qc_files), 0)
+  expect_true(all(v1_paths$qc_files$sample_alias %in% v1_sheet$sample_alias))
+
+  expect_error(
+    apply_es_technology(
+      read_samplesheet(test_samplesheet()),
+      "proxiome-v2"
+    ),
+    "pool"
+  )
+  empty_pool <- hashed_sheet
+  empty_pool$pool <- NA_character_
+  expect_error(apply_es_technology(empty_pool, "proxiome-v2"), "pool")
+  blank_pool <- hashed_sheet
+  blank_pool$pool <- ""
+  expect_error(apply_es_technology(blank_pool, "proxiome-v2"), "pool")
+  colliding_pool <- hashed_sheet
+  colliding_pool$pool <- colliding_pool$sample
+  expect_false("pool" %in% names(apply_es_technology(colliding_pool, "proxiome-v1")))
+  expect_error(apply_es_technology(colliding_pool, "proxiome-v2"), "pool")
+
+  v2_sheet <- apply_es_technology(hashed_sheet, "proxiome-v2")
+  expect_equal(v2_sheet$pool, hashed_sheet$pool)
+  v2_paths <- get_file_paths(
+    data_folder = test_data_folder("hashing"),
+    sample_sheet = v2_sheet,
+    stages = stages
+  )
+  expect_gt(nrow(v2_paths$pool_qc_files), 0)
+
+  sheet_path <- tempfile(fileext = ".csv")
+  write.csv(hashed_sheet, sheet_path, row.names = FALSE)
+  extracted_v1 <- pixelatorES:::.extract_samplesheet(list(
+    params = list(sample_sheet = sheet_path, technology = "proxiome-v1")
+  ))
+  expect_false("pool" %in% names(extracted_v1))
+  extracted_v2 <- pixelatorES:::.extract_samplesheet(list(
+    params = list(sample_sheet = sheet_path, technology = "proxiome-v2")
+  ))
+  expect_equal(as.character(extracted_v2$pool), as.character(hashed_sheet$pool))
 })
 
 test_that("Unhashed data with a samplesheet pool column stays sample-level", {

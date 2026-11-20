@@ -704,7 +704,8 @@ add_pct_of_pool_to_samplesheet <-
 #' @param filepath A character string specifying the path to the sample sheet CSV file.
 #'
 #' @return A tibble with columns `sample`, `sample_alias`, `condition`. Columns `pool`, `lot_role`, and `kit_lot_id` are
-#' included if present in the CSV file.
+#' included if present in the CSV file. Whether `pool` is used is decided later
+#' by [apply_es_technology()].
 #'
 #' @export
 #'
@@ -737,13 +738,6 @@ read_samplesheet <-
         condition = ifelse(is.na(condition), sample_alias, condition)
       ) %>%
       distinct()
-
-    if ("pool" %in% names(sample_sheet)) {
-      if (any(c(sample_sheet$sample, sample_sheet$sample_alias) %in% sample_sheet$pool)) {
-        cli_abort("The `pool` column in the sample sheet cannot contain values that are also present in the `sample`
-                  or `sample_alias` columns.")
-      }
-    }
 
     return(sample_sheet)
   }

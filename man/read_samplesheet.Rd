@@ -11,7 +11,8 @@ read_samplesheet(filepath)
 }
 \value{
 A tibble with columns \code{sample}, \code{sample_alias}, \code{condition}. Columns \code{pool}, \code{lot_role}, and \code{kit_lot_id} are
-included if present in the CSV file.
+included if present in the CSV file. Whether \code{pool} is used is decided later
+by \code{\link[=apply_es_technology]{apply_es_technology()}}.
 }
 \description{
 Reads a sample sheet from a CSV file and returns it as a tibble.

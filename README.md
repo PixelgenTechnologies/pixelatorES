@@ -16,6 +16,7 @@ Parameters are defined in the YAML header of the Quarto file:
 params:
   sample_sheet: "../../../ES_test_data/test_samplesheet.csv"
   data_folder: "../../../ES_test_data/"
+  technology: "proxiome-v1"
   norm_method: "CLR"
   clustering_resolution: 1
   annotation_method: "Seurat"
@@ -28,6 +29,7 @@ Users can modify parameters in the YAML header or pass them as arguments when re
 
 - **`sample_sheet`**: Path to the sample sheet `.csv` file. Must contain the columns `sample`, `sample_alias`, and `condition`.
 - **`data_folder`**: Path to the input data folder.
+- **`technology`**: Proxiome technology, set up front. `proxiome-v1` is an unhashed run: a `pool` column in the samplesheet is ignored. `proxiome-v2` is a hashed run: the samplesheet must include a non-empty `pool` value for every sample. The report does not infer this from the samplesheet or the data folder.
 - **`norm_method`**: Normalization method (`'CLR'`).
 - **`clustering_resolution`**: Resolution for clustering analysis.
 - **`annotation_method`**: Method for cell type annotation (`'Seurat'` or `'nmf'`).
@@ -46,7 +48,7 @@ The sample sheet should have the following columns, but may have additional colu
 | pool1 | Exp1_PBMC_unstimulated_sample01_S1 | S1 | Unstim_PBMC | 
 | pool1 | Exp1_PBMC_stimulated_sample02_S2 | S2 | Stim_PBMC |
 
-`pool` is the name of the hashing pool (if running hashed sampled), and must match the pool file base name in the data folder.
+`pool` is the name of the hashing pool for `technology=proxiome-v2`, and must match the pool file base name in the data folder. For `technology=proxiome-v1` the column is ignored when it is present.
 
 `sample` is the name of the sample, and must match the sample file base name in the data folder., i.e. the name of the sample file without the .pxl extension.
 
@@ -77,13 +79,13 @@ The ES will read `.json` files to collect statistics and metadata for each sampl
 To run the report, execute the following command in the terminal, passing parameters as arguments when rendering the file. For example:
 
 ```bash
-quarto render pixelatorES.qmd -P sample_sheet="a_samplesheet.csv" -P data_folder="./data/"
+quarto render pixelatorES.qmd -P sample_sheet="a_samplesheet.csv" -P data_folder="./data/" -P technology=proxiome-v1
 ```
 
 To specify the output file name, use the `--output` flag. For example:
 
 ```bash
-quarto render pixelatorES.qmd -P sample_sheet="a_samplesheet.csv" -P data_folder="./data/" --output name-of-report.html
+quarto render pixelatorES.qmd -P sample_sheet="a_samplesheet.csv" -P data_folder="./data/" -P technology=proxiome-v2 --output name-of-report.html
 ```
 
 The report can also be rendered in RStudio by opening a copy of the `.qmd` file and pressing "Render" in the top toolbar. This will generate a report in the same directory as the `.qmd` file with the same name (e.g., `pixelatorES.html`). 
