@@ -947,10 +947,12 @@ build_es_data <- function(params) {
 
   unattributed_qc_files <- attr(file_paths, "unattributed_qc_files")
   if (!is.null(unattributed_qc_files) && nrow(unattributed_qc_files) > 0) {
-    discovered_pool_files <- file_paths$pool_qc_files
-    has_pools <-
-      !is.null(discovered_pool_files) && nrow(discovered_pool_files) > 0
-    target_kind <- if (has_pools) "pool" else "sample"
+    # A remaining pool column means proxiome-v2, even when no pool files matched
+    target_kind <- if ("pool" %in% names(object$samplesheet)) {
+      "pool"
+    } else {
+      "sample"
+    }
     for (i in seq_len(nrow(unattributed_qc_files))) {
       filepath <- unattributed_qc_files$filename[[i]]
       sample_id <- unattributed_qc_files$sample_id[[i]]

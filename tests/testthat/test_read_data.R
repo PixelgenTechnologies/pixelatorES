@@ -956,6 +956,38 @@ test_that("proxiome-v2 records a diagnostic when pool QC files are missing", {
   expect_true(all(unique(hashed_sheet$pool) %in% missing_pools))
 })
 
+test_that("unattributed edgelist QC names pools from the samplesheet", {
+  stages <- list(
+    all = c("edgelist", "aggregate"),
+    pool = "edgelist",
+    pxl_preference = "aggregate"
+  )
+  sheet <- tibble(
+    sample = "S1",
+    sample_alias = "S1",
+    condition = "A",
+    pool = "pool1"
+  )
+  run_dir <- tempfile("pixelatorES_unattributed_")
+  dir.create(file.path(run_dir, "edgelist"), recursive = TRUE)
+  writeLines(
+    '{"sample_id": "pool9", "report_type": "edgelist", "input_reads": 1, "output_reads": 1}',
+    file.path(run_dir, "edgelist", "stray.report.json")
+  )
+
+  object <- pixelatorES:::new_es_data(list(data_folder = run_dir))
+  object$samplesheet <- sheet
+  object$stages <- stages
+  expect_warning(
+    object <- pixelatorES:::.fill_es_data_file_paths(object),
+    "not a pool"
+  )
+  expect_true(any(grepl(
+    "not a pool in the samplesheet",
+    vapply(object$diagnostics, function(diagnostic) diagnostic$message, character(1))
+  )))
+})
+
 test_that("Unhashed data with a samplesheet pool column stays sample-level", {
   stages <- get_es_workflow_stages("amplicon_demux")
   plain_sheet <- read_samplesheet(test_samplesheet())
