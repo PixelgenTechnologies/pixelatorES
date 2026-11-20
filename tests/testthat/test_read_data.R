@@ -398,6 +398,14 @@ test_that("File reading works as expected", {
   expect_error(merge_data(unname(seur_list), sample_sheet))
   expect_error(merge_data(unname(seur_list[1]), sample_sheet))
 
+  # Single sample data keeps the file-sample map in sync with the cell IDs
+  seur_single <- merge_data(seur_list[1], sample_sheet[1, ])
+  expect_equal(colnames(seur_single), paste0("S1_", colnames(seur_list[[1]])))
+  expect_equal(
+    sort(FSMap(seur_single)$id_map[[1]]$current_id),
+    sort(colnames(seur_single))
+  )
+
   # Data downsampling
   expect_no_error(seur_down <- downsample_data(seur_comb,
     control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
