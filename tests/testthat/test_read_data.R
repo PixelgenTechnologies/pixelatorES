@@ -620,14 +620,17 @@ test_that("File reading works as expected", {
     )
   )
 
-  # Error out when duplicates between pool and samples
+  # A pool id that matches a sample id is ignored for proxiome-v1 and
+  # rejected for proxiome-v2, where it would hide that sample's files
   temp_file <- tempfile(fileext = ".csv")
   sample_sheet_hashing %>%
     mutate(pool = sample) %>%
-    write.csv(temp_file)
+    write.csv(temp_file, row.names = FALSE)
+  colliding_sheet <- suppressMessages(read_samplesheet(temp_file))
+  expect_false("pool" %in% names(apply_es_technology(colliding_sheet, "proxiome-v1")))
   expect_error(
-    suppressMessages(read_samplesheet(temp_file)),
-    regexp = "The `pool` column.*cannot contain.*also present"
+    apply_es_technology(colliding_sheet, "proxiome-v2"),
+    regexp = "pool"
   )
 
   expect_no_error(data_paths <-
@@ -856,4 +859,222 @@ test_that("Edgelist discovery and multi-FASTQ QC aggregation work as expected", 
       )
     )
   )
+})
+
+test_that("technology decides whether a samplesheet pool column is used", {
+  expect_error(validate_es_technology(NULL), "technology")
+  expect_error(validate_es_technology("proxiome-v3"), "technology")
+  expect_false(is_hashed_technology("proxiome-v1"))
+  expect_false(is_hashed_technology("nonhashed_samples"))
+  expect_true(is_hashed_technology("proxiome-v2"))
+  expect_true(is_hashed_technology("hashed_samples"))
+
+  hashed_sheet <- read_samplesheet(test_samplesheet("hashing"))
+  stages <- get_es_workflow_stages("amplicon_demux")
+  v1_sheet <- apply_es_technology(hashed_sheet, "proxiome-v1")
+  expect_false("pool" %in% names(v1_sheet))
+
+  v1_paths <- get_file_paths(
+    data_folder = test_data_folder("hashing"),
+    sample_sheet = v1_sheet,
+    stages = stages
+  )
+  expect_null(v1_paths$pool_qc_files)
+  expect_gt(nrow(v1_paths$qc_files), 0)
+  expect_true(all(v1_paths$qc_files$sample_alias %in% v1_sheet$sample_alias))
+
+  expect_error(
+    apply_es_technology(
+      read_samplesheet(test_samplesheet()),
+      "proxiome-v2"
+    ),
+    "pool"
+  )
+  empty_pool <- hashed_sheet
+  empty_pool$pool <- NA_character_
+  expect_error(apply_es_technology(empty_pool, "proxiome-v2"), "pool")
+  blank_pool <- hashed_sheet
+  blank_pool$pool <- ""
+  expect_error(apply_es_technology(blank_pool, "proxiome-v2"), "pool")
+  colliding_pool <- hashed_sheet
+  colliding_pool$pool <- colliding_pool$sample
+  expect_false("pool" %in% names(apply_es_technology(colliding_pool, "proxiome-v1")))
+  expect_error(apply_es_technology(colliding_pool, "proxiome-v2"), "pool")
+
+  v2_sheet <- apply_es_technology(hashed_sheet, "proxiome-v2")
+  expect_equal(v2_sheet$pool, hashed_sheet$pool)
+  expect_false(
+    "pool" %in% names(apply_es_technology(hashed_sheet, "nonhashed_samples"))
+  )
+  expect_equal(
+    apply_es_technology(hashed_sheet, "hashed_samples")$pool,
+    hashed_sheet$pool
+  )
+  expect_error(apply_es_technology(empty_pool, "hashed_samples"), "pool")
+  v2_paths <- get_file_paths(
+    data_folder = test_data_folder("hashing"),
+    sample_sheet = v2_sheet,
+    stages = stages
+  )
+  expect_gt(nrow(v2_paths$pool_qc_files), 0)
+
+  sheet_path <- tempfile(fileext = ".csv")
+  write.csv(hashed_sheet, sheet_path, row.names = FALSE)
+  extracted_v1 <- pixelatorES:::.extract_samplesheet(list(
+    params = list(sample_sheet = sheet_path, technology = "proxiome-v1")
+  ))
+  expect_false("pool" %in% names(extracted_v1))
+  extracted_v2 <- pixelatorES:::.extract_samplesheet(list(
+    params = list(sample_sheet = sheet_path, technology = "proxiome-v2")
+  ))
+  expect_equal(as.character(extracted_v2$pool), as.character(hashed_sheet$pool))
+})
+
+test_that("proxiome-v2 records a diagnostic when pool QC files are missing", {
+  hashed_sheet <- read_samplesheet(test_samplesheet("hashing"))
+  expect_warning(
+    qc_result <- pixelatorES:::.extract_qc_raw(list(
+      file_paths = list(
+        qc_files = NULL,
+        pool_qc_files = NULL
+      ),
+      samplesheet = hashed_sheet
+    )),
+    "No QC files were found",
+    all = TRUE
+  )
+
+  expect_null(qc_result$value$pool_qc_files)
+  missing_pools <- vapply(
+    Filter(
+      function(diagnostic) {
+        return(identical(diagnostic$message, "No QC files were found."))
+      },
+      qc_result$diagnostics
+    ),
+    function(diagnostic) diagnostic$target,
+    character(1)
+  )
+  expect_true(all(unique(hashed_sheet$pool) %in% missing_pools))
+})
+
+test_that("unattributed edgelist QC names pools from the samplesheet", {
+  stages <- list(
+    all = c("edgelist", "aggregate"),
+    pool = "edgelist",
+    pxl_preference = "aggregate"
+  )
+  sheet <- tibble(
+    sample = "S1",
+    sample_alias = "S1",
+    condition = "A",
+    pool = "pool1"
+  )
+  run_dir <- tempfile("pixelatorES_unattributed_")
+  dir.create(file.path(run_dir, "edgelist"), recursive = TRUE)
+  writeLines(
+    '{"sample_id": "pool9", "report_type": "edgelist", "input_reads": 1, "output_reads": 1}',
+    file.path(run_dir, "edgelist", "stray.report.json")
+  )
+
+  object <- pixelatorES:::new_es_data(list(data_folder = run_dir))
+  object$samplesheet <- sheet
+  object$stages <- stages
+  expect_warning(
+    object <- pixelatorES:::.fill_es_data_file_paths(object),
+    "not a pool"
+  )
+  expect_true(any(grepl(
+    "not a pool in the samplesheet",
+    vapply(object$diagnostics, function(diagnostic) diagnostic$message, character(1))
+  )))
+})
+
+test_that("Unhashed data with a samplesheet pool column stays sample-level", {
+  stages <- get_es_workflow_stages("amplicon_demux")
+  plain_sheet <- read_samplesheet(test_samplesheet())
+  plain_paths <- get_file_paths(
+    data_folder = test_data_folder(),
+    sample_sheet = plain_sheet,
+    stages = stages
+  )
+
+  named_sheet <- plain_sheet %>%
+    mutate(pool = "not_a_real_pool")
+  named_paths <- get_file_paths(
+    data_folder = test_data_folder(),
+    sample_sheet = named_sheet,
+    stages = stages
+  )
+  expect_null(named_paths$pool_qc_files)
+  expect_equal(named_paths$qc_files, plain_paths$qc_files)
+  expect_equal(named_paths$data_files, plain_paths$data_files)
+
+  # An empty pool column used to make is_pool NA and drop every file
+  empty_sheet <- plain_sheet %>%
+    mutate(pool = NA_character_)
+  expect_no_error(
+    empty_paths <- get_file_paths(
+      data_folder = test_data_folder(),
+      sample_sheet = empty_sheet,
+      stages = stages
+    )
+  )
+  expect_null(empty_paths$pool_qc_files)
+  expect_equal(empty_paths$qc_files, plain_paths$qc_files)
+
+  # A remaining pool column is a hashed run. Missing pool files stay off
+  # the pool path and are recorded, rather than being skipped silently.
+  expect_warning(
+    qc_result <- pixelatorES:::.extract_qc_raw(list(
+      file_paths = named_paths,
+      samplesheet = named_sheet
+    )),
+    "No QC files were found"
+  )
+  expect_null(qc_result$value$pool_qc_files)
+  expect_equal(
+    qc_result$diagnostics,
+    list(list(
+      type = "qc_load",
+      target = "not_a_real_pool",
+      message = "No QC files were found."
+    ))
+  )
+
+  seur <- get_test_data()
+  expect_no_error(seqsat <- get_seq_saturation(seur, qc_result$value))
+  expect_true("sample_alias" %in% names(seqsat))
+  expect_false("pool" %in% names(seqsat))
+
+  expect_no_error(edges <- get_crossing_edges(qc_result$value))
+  expect_true("sample_alias" %in% names(edges))
+
+  expect_no_error(degree <- get_degree_distribution(qc_result$value))
+  expect_true("sample_alias" %in% names(degree))
+
+  expect_null(
+    pixelatorES:::.extract_sample_hash_stats(list(
+      pxl_data = seur,
+      qc_raw = qc_result$value,
+      samplesheet = named_sheet
+    ))
+  )
+
+  # An empty pool list must not switch components onto the hashed path
+  empty_pool_qc <- qc_result$value
+  empty_pool_qc$pool_qc_files <- list()
+  expect_false(pixelatorES:::.has_pool_qc(empty_pool_qc))
+  expect_no_error(seqsat_empty <- get_seq_saturation(seur, empty_pool_qc))
+  expect_true("sample_alias" %in% names(seqsat_empty))
+
+  es_data <- test_es_data(
+    samplesheet = named_sheet,
+    qc_raw = empty_pool_qc,
+    qc = list(sample_hash_stats = NULL, seq_saturation = seqsat_empty),
+    pxl_data_processed = seur,
+    stages = stages
+  )
+  expect_no_error(component_cell_recovery(es_data))
+  expect_no_error(component_sequencing_reads_and_molecules(es_data))
 })

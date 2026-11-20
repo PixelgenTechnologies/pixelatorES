@@ -7,7 +7,11 @@
 build_es_data(params)
 }
 \arguments{
-\item{params}{A list of Experiment Summary parameters.}
+\item{params}{A list of Experiment Summary parameters. \code{technology} is
+required and must be a pipeline technology name. \code{proxiome-v1} and
+\code{nonhashed_samples} are unhashed: a samplesheet \code{pool} column is ignored.
+\code{proxiome-v2} and \code{hashed_samples} are hashed: a samplesheet \code{pool}
+column is required.}
 }
 \value{
 An \code{es_data} object.

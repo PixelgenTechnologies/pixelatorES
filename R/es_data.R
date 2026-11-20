@@ -203,7 +203,8 @@ test_es_data <- function(
 #'
 #' @noRd
 .extract_samplesheet <- function(object) {
-  return(read_samplesheet(object$params$sample_sheet))
+  sample_sheet <- read_samplesheet(object$params$sample_sheet)
+  return(apply_es_technology(sample_sheet, object$params$technology))
 }
 
 #' Extract merged pixel data
@@ -368,14 +369,22 @@ test_es_data <- function(
 
   pool_qc_files <- NULL
   pool_diagnostics <- list()
+  # `proxiome-v1` drops the pool column before this runs. A remaining pool
+  # column means `proxiome-v2`. Always ask for those pools, even when
+  # discovery found no pool files, so a missing pool report is recorded.
+  # An empty result stays NULL: an empty list would be treated as pool data.
   if ("pool" %in% names(object$samplesheet)) {
+    pool_aliases <- unique(as.character(object$samplesheet$pool))
+    pool_aliases <- pool_aliases[!is.na(pool_aliases) & nzchar(pool_aliases)]
     pool_result <- .read_qc_groups_soft(
       files = file_paths$pool_qc_files,
-      aliases = sort(unique(object$samplesheet$pool)),
+      aliases = sort(pool_aliases),
       alias_column = "pool_alias",
       target_label = "pool"
     )
-    pool_qc_files <- pool_result$value
+    if (length(pool_result$value) > 0) {
+      pool_qc_files <- pool_result$value
+    }
     pool_diagnostics <- pool_result$diagnostics
   }
 
@@ -645,7 +654,7 @@ test_es_data <- function(
   sample_qc_metrics <- object$qc_raw
   pixelatorR:::assert_class(sample_qc_metrics, "list")
 
-  if (!is.null(sample_qc_metrics$pool_qc_files)) {
+  if (.has_pool_qc(sample_qc_metrics)) {
     group_col <- "pool"
     qc_data <- sample_qc_metrics$pool_qc_files
   } else {
@@ -853,12 +862,17 @@ run_es_data_extractors <- function(
 #' Samplesheet errors are not caught and stop the build; remaining extractor
 #' errors are recorded as diagnostics.
 #'
-#' @param params A list of Experiment Summary parameters.
+#' @param params A list of Experiment Summary parameters. `technology` is
+#'   required and must be a pipeline technology name. `proxiome-v1` and
+#'   `nonhashed_samples` are unhashed: a samplesheet `pool` column is ignored.
+#'   `proxiome-v2` and `hashed_samples` are hashed: a samplesheet `pool`
+#'   column is required.
 #'
 #' @return An `es_data` object.
 #'
 #' @export
 build_es_data <- function(params) {
+  validate_es_technology(params$technology)
   object <- new_es_data(params)
 
   if (is.null(object$extractors$samplesheet)) {
@@ -935,8 +949,12 @@ build_es_data <- function(params) {
 
   unattributed_qc_files <- attr(file_paths, "unattributed_qc_files")
   if (!is.null(unattributed_qc_files) && nrow(unattributed_qc_files) > 0) {
-    has_pools <- "pool" %in% names(object$samplesheet)
-    target_kind <- if (has_pools) "pool" else "sample"
+    # A remaining pool column means proxiome-v2, even when no pool files matched
+    target_kind <- if ("pool" %in% names(object$samplesheet)) {
+      "pool"
+    } else {
+      "sample"
+    }
     for (i in seq_len(nrow(unattributed_qc_files))) {
       filepath <- unattributed_qc_files$filename[[i]]
       sample_id <- unattributed_qc_files$sample_id[[i]]

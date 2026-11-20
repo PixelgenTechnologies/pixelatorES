@@ -961,3 +961,27 @@ test_that("Parameterized QC extractors and graph_collapse key table work as expe
   styled <- key_metric_table(es_with_gc)
   expect_true(any(startsWith(names(styled$pool$x$data), "% Nodes collapsed <i")))
 })
+
+test_that("get_hash_stats keeps sample tables when pool QC is missing", {
+  counts <- matrix(
+    c(1, 1, 1, 1),
+    nrow = 2,
+    dimnames = list(c("CD3", "CD4"), c("c1", "c2"))
+  )
+  object <- suppressWarnings(SeuratObject::CreateSeuratObject(counts = counts))
+  object$hash_counts_B2M.1 <- c(8, 1)
+  object$hash_counts_B2M.2 <- c(2, 9)
+  object$sample_alias <- factor(c("S1", "S1"), levels = "S1")
+  object$n_umi <- c(10, 10)
+
+  expect_no_error(
+    stats <- get_hash_stats(
+      object,
+      list(qc_files = list(), pool_qc_files = NULL)
+    )
+  )
+  expect_null(stats$pool_stats)
+  expect_null(stats$component_sample_confidence)
+  expect_s3_class(stats$sample_stats, "tbl_df")
+  expect_equal(stats$sample_stats$sample_alias, factor("S1"))
+})

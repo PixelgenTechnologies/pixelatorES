@@ -7,17 +7,15 @@
 key_tables <-
   key_metric_table(es_data, detailed = FALSE)
 
-is_hashed_experiment <- "pool" %in% names(es_data$samplesheet)
-has_key_metrics <-
-  !is.null(key_tables$pool) || !is.null(key_tables$sample)
-eval_hashed_key_metrics <- is_hashed_experiment && has_key_metrics
-eval_standard_key_metrics <-
-  !is_hashed_experiment && !is.null(key_tables$sample)
+# Hashed technologies include pool metrics and the hashing section.
+# Unhashed technologies include sample metrics only.
+is_hashed_experiment <- is_hashed_technology(params$technology)
+is_unhashed_experiment <- !is_hashed_experiment
 ```
 
 ```{r}
 #| label: key_metrics_pool
-#| eval: !expr eval_hashed_key_metrics
+#| eval: !expr is_hashed_experiment
 #| results: 'asis'
 open_tabset()
 if (!is.null(key_tables$pool)) {
@@ -31,9 +29,11 @@ close_tabset()
 
 ```{r}
 #| label: key_metrics_sample
-#| eval: !expr eval_standard_key_metrics
+#| eval: !expr is_unhashed_experiment
 #| results: 'asis'
-section_table(key_tables$sample, "Sample metrics", 3)
+if (!is.null(key_tables$sample)) {
+  section_table(key_tables$sample, "Sample metrics", 3)
+}
 ```
 
 ```{r}

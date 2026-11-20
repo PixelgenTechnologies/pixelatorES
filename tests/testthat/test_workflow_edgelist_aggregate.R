@@ -222,7 +222,8 @@ test_that("edgelist_aggregate debug mode works for panels without control marker
       sample_sheet = test_samplesheet("edgelist_aggregate"),
       data_folder = test_data_folder("edgelist_aggregate"),
       debug_mode = TRUE,
-      test_mode = TRUE
+      test_mode = TRUE,
+      technology = "proxiome-v2"
     )
   )
 
