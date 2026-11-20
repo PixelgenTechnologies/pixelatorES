@@ -138,6 +138,7 @@
 #' @importFrom SeuratObject FetchData
 #' @importFrom SeuratObject JoinLayers
 #' @importFrom SeuratObject LayerData
+#' @importFrom SeuratObject RenameCells
 #' @importFrom SeuratObject Reductions
 #' @importFrom stats aov
 #' @importFrom stats as.formula

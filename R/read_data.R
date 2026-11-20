@@ -409,9 +409,7 @@ merge_data <-
 
 
     if (length(pg_data) == 1) {
-      pg_data <- pg_data[[1]]
-      colnames(pg_data) <-
-        paste(sample_aliases[[1]], colnames(pg_data), sep = "_")
+      pg_data <- RenameCells(pg_data[[1]], add.cell.id = sample_aliases[[1]])
     } else {
       pg_data <-
         merge(
