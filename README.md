@@ -29,7 +29,7 @@ Users can modify parameters in the YAML header or pass them as arguments when re
 
 - **`sample_sheet`**: Path to the sample sheet `.csv` file. Must contain the columns `sample`, `sample_alias`, and `condition`.
 - **`data_folder`**: Path to the input data folder.
-- **`technology`**: Proxiome technology, set up front. `proxiome-v1` is an unhashed run: a `pool` column in the samplesheet is ignored. `proxiome-v2` is a hashed run: the samplesheet must include a non-empty `pool` value for every sample. The report does not infer this from the samplesheet or the data folder.
+- **`technology`**: Pipeline technology, set up front. `proxiome-v1` and `nonhashed_samples` are unhashed: a `pool` column in the samplesheet is ignored. `proxiome-v2` and `hashed_samples` are hashed: the samplesheet must include a non-empty `pool` value for every sample. The report uses this value to choose hashed or unhashed sections. It does not infer hashing from the samplesheet or the data folder.
 - **`norm_method`**: Normalization method (`'CLR'`).
 - **`clustering_resolution`**: Resolution for clustering analysis.
 - **`annotation_method`**: Method for cell type annotation (`'Seurat'` or `'nmf'`).
@@ -48,7 +48,7 @@ The sample sheet should have the following columns, but may have additional colu
 | pool1 | Exp1_PBMC_unstimulated_sample01_S1 | S1 | Unstim_PBMC | 
 | pool1 | Exp1_PBMC_stimulated_sample02_S2 | S2 | Stim_PBMC |
 
-`pool` is the name of the hashing pool for `technology=proxiome-v2`, and must match the pool file base name in the data folder. For `technology=proxiome-v1` the column is ignored when it is present.
+`pool` is the name of the hashing pool for `technology=proxiome-v2` or `technology=hashed_samples`, and must match the pool file base name in the data folder. For `technology=proxiome-v1` or `technology=nonhashed_samples` the column is ignored when it is present.
 
 `sample` is the name of the sample, and must match the sample file base name in the data folder., i.e. the name of the sample file without the .pxl extension.
 

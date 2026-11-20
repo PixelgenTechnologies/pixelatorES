@@ -3151,10 +3151,17 @@ component_hashing <-
       p1 +
       scale_y_continuous(limits = plot_limits, labels = scales::percent)
 
-    # Sample confidence comes from pool QC and is omitted when that QC is missing
+    # Hashed technologies always include the sample confidence plots.
     confidence <- qc_metrics_tables$sample_hash_stats$component_sample_confidence
     if (is.null(confidence)) {
-      p2 <- NULL
+      cli_abort(
+        c(
+          "x" = paste(
+            "Sample confidence plots require pool QC.",
+            "A hashed technology includes these plots."
+          )
+        )
+      )
     } else {
       plot_data <-
         confidence %>%

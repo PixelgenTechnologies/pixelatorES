@@ -7,42 +7,31 @@
 key_tables <-
   key_metric_table(es_data, detailed = FALSE)
 
-# Hashing follows the technology parameter, not a samplesheet pool column.
-# A hashed run still shows sample metrics when the pool table is missing.
+# Hashed technologies include pool metrics and the hashing section.
+# Unhashed technologies include sample metrics only.
 is_hashed_experiment <- is_hashed_technology(params$technology)
-has_hash_stats <- !is.null(es_data$qc$sample_hash_stats)
-eval_hashed_key_metrics <-
-  is_hashed_experiment &&
-  (!is.null(key_tables$pool) || !is.null(key_tables$sample))
-eval_standard_key_metrics <-
-  !is_hashed_experiment && !is.null(key_tables$sample)
-eval_sample_hashing <- is_hashed_experiment && has_hash_stats
 ```
 
 ```{r}
 #| label: key_metrics_pool
-#| eval: !expr eval_hashed_key_metrics
+#| eval: !expr is_hashed_experiment
 #| results: 'asis'
 open_tabset()
-if (!is.null(key_tables$pool)) {
-  section_table(key_tables$pool, "Hash pool metrics", 3)
-}
-if (!is.null(key_tables$sample)) {
-  section_table(key_tables$sample, "Sample metrics", 3)
-}
+section_table(key_tables$pool, "Hash pool metrics", 3)
+section_table(key_tables$sample, "Sample metrics", 3)
 close_tabset()
 ```
 
 ```{r}
 #| label: key_metrics_sample
-#| eval: !expr eval_standard_key_metrics
+#| eval: !expr !is_hashed_experiment
 #| results: 'asis'
 section_table(key_tables$sample, "Sample metrics", 3)
 ```
 
 ```{r}
 #| label: sample_hashing_section_intro
-#| eval: !expr eval_sample_hashing
+#| eval: !expr is_hashed_experiment
 #| results: 'asis'
 section_intro(
   "Sample hashing",
@@ -58,7 +47,7 @@ section_intro(
 
 ```{r}
 #| label: sample_hashing
-#| eval: !expr eval_sample_hashing
+#| eval: !expr is_hashed_experiment
 #| results: 'asis'
 component <-
   component_hashing(es_data, colors = cherry_gradient)
@@ -70,9 +59,7 @@ tabset_figure_table(
 )
 close_tabset()
 
-if (!is.null(component$sample_confidence_plots)) {
-  tabset_plotlist(component$sample_confidence_plots, level = 4)
-}
+tabset_plotlist(component$sample_confidence_plots, level = 4)
 ```
 
 ### Sequencing

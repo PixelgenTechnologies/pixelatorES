@@ -1,25 +1,29 @@
-#' Proxiome technologies accepted by the Experiment Summary
+#' Technologies accepted by the Experiment Summary
 #'
-#' `proxiome-v1` is an unhashed run: a samplesheet `pool` column is ignored.
-#' `proxiome-v2` is a hashed run: a samplesheet `pool` column is required.
+#' These are the same values as the pipeline `--technology` parameter.
+#' `proxiome-v1` and `nonhashed_samples` are unhashed: a samplesheet `pool`
+#' column is ignored. `proxiome-v2` and `hashed_samples` are hashed: a
+#' samplesheet `pool` column is required.
 #'
 #' @noRd
-.es_technology_unhashed <- "proxiome-v1"
+.es_technology_unhashed <- c("proxiome-v1", "nonhashed_samples")
 
 #' @noRd
-.es_technology_hashed <- "proxiome-v2"
+.es_technology_hashed <- c("proxiome-v2", "hashed_samples")
 
 #' @noRd
 .es_technologies <- c(.es_technology_unhashed, .es_technology_hashed)
 
-#' Check a Proxiome technology value
+#' Check a technology value
 #'
 #' The Experiment Summary does not infer hashing from the samplesheet or from
-#' the files in the data folder. The caller sets `technology` up front.
+#' the files in the data folder. The caller sets `technology` up front, using
+#' one of the pipeline values.
 #'
 #' @param technology Technology name supplied with the report parameters.
 #'
-#' @return `technology` when it is `proxiome-v1` or `proxiome-v2`.
+#' @return `technology` when it is one of `proxiome-v1`, `nonhashed_samples`,
+#'   `proxiome-v2`, or `hashed_samples`.
 #'
 #' @export
 #'
@@ -33,13 +37,11 @@ validate_es_technology <- function(technology) {
   if (!technology_ok) {
     cli_abort(
       c(
-        "x" = paste(
-          "{.arg technology} must be {.val { .es_technology_unhashed }}",
-          "or {.val { .es_technology_hashed }}."
-        ),
+        "x" = "{.arg technology} must be one of {.val { .es_technologies }}.",
         "i" = paste(
-          "{.val { .es_technology_unhashed }} ignores a samplesheet {.field pool} column.",
-          "{.val { .es_technology_hashed }} requires one."
+          "{.val { .es_technology_unhashed }} ignore a samplesheet",
+          "{.field pool} column.",
+          "{.val { .es_technology_hashed }} require one."
         )
       )
     )
@@ -50,28 +52,26 @@ validate_es_technology <- function(technology) {
 
 #' Whether a technology uses sample hashing
 #'
-#' @param technology Technology name, `proxiome-v1` or `proxiome-v2`.
+#' @param technology Technology name. See [validate_es_technology()].
 #'
-#' @return `TRUE` for `proxiome-v2`, `FALSE` for `proxiome-v1`.
+#' @return `TRUE` for `proxiome-v2` and `hashed_samples`. `FALSE` for
+#'   `proxiome-v1` and `nonhashed_samples`.
 #'
 #' @export
 #'
 is_hashed_technology <- function(technology) {
-  return(identical(
-    validate_es_technology(technology),
-    .es_technology_hashed
-  ))
+  return(validate_es_technology(technology) %in% .es_technology_hashed)
 }
 
 #' Apply a technology to a samplesheet
 #'
 #' @param sample_sheet A samplesheet, as returned by [read_samplesheet()].
-#' @param technology `proxiome-v1` or `proxiome-v2`. See
-#'   [validate_es_technology()].
+#' @param technology A pipeline technology name. See [validate_es_technology()].
 #'
-#' @return The samplesheet used for the rest of the run. For `proxiome-v1` the
-#'   `pool` column is removed when present. For `proxiome-v2` the `pool`
-#'   column is kept and must contain a non-empty value on every row.
+#' @return The samplesheet used for the rest of the run. For an unhashed
+#'   technology the `pool` column is removed when present. For a hashed
+#'   technology the `pool` column is kept and must contain a non-empty value
+#'   on every row.
 #'
 #' @export
 #'
@@ -88,7 +88,7 @@ apply_es_technology <- function(sample_sheet, technology) {
     cli_abort(
       c(
         "x" = paste(
-          "Technology {.val { .es_technology_hashed }} requires a",
+          "Technology {.val {technology}} requires a",
           "{.field pool} column in the samplesheet."
         )
       )
@@ -101,7 +101,7 @@ apply_es_technology <- function(sample_sheet, technology) {
     cli_abort(
       c(
         "x" = paste(
-          "Technology {.val { .es_technology_hashed }} requires a non-empty",
+          "Technology {.val {technology}} requires a non-empty",
           "{.field pool} value for every sample."
         )
       )

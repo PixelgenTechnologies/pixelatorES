@@ -19,17 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `technology` parameter (`proxiome-v1` or `proxiome-v2`). Pass it with the other Quarto parameters (`-P technology=proxiome-v1`). The Experiment Summary uses this value instead of inferring hashing from the samplesheet or the output files.
+- `technology` parameter, using the same values as the pipeline: `proxiome-v1`, `nonhashed_samples`, `proxiome-v2`, and `hashed_samples`. Pass it with the other Quarto parameters (`-P technology=proxiome-v1`). The Experiment Summary uses this value instead of inferring hashing from the samplesheet or the output files.
 
 ### Changed
 
-- Breaking: `build_es_data()` and the report require `technology`. `proxiome-v1` drops a samplesheet `pool` column. `proxiome-v2` requires a non-empty `pool` value for every sample.
+- Breaking: `build_es_data()` and the report require `technology`. `proxiome-v1` and `nonhashed_samples` drop a samplesheet `pool` column. `proxiome-v2` and `hashed_samples` require a non-empty `pool` value for every sample.
+- Report sections follow `technology`. Hashed technologies show pool and sample key metrics and the sample hashing plots, including sample confidence. Unhashed technologies show sample key metrics only.
 
 ### Fixed
 
-- Unhashed (`proxiome-v1`) runs no longer fail when the samplesheet includes a `pool` column. The column is ignored.
-- A `proxiome-v2` run with no pool QC files records a missing-pool diagnostic for each pool, and the hashed key-metrics section still shows sample metrics when the pool table is absent.
-- Sample hash tables from the PXL data are still returned when pool QC is missing, and unattributed edgelist reports on a hashed run are described as missing pools.
+- Unhashed runs no longer fail when the samplesheet includes a `pool` column. The column is ignored.
+- A hashed run with no pool QC files records a missing-pool diagnostic for each pool.
+- Sample hash tables from the PXL data are still returned when pool QC is missing, and unattributed edgelist reports on a hashed run are described as missing pools. The hashing section requires those pool QC files in order to draw the sample confidence plots.
 
 ## [0.17.0] 2026-11-16
 
