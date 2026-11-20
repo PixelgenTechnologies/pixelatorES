@@ -17,8 +17,12 @@ is_hashed_experiment <- is_hashed_technology(params$technology)
 #| eval: !expr is_hashed_experiment
 #| results: 'asis'
 open_tabset()
-section_table(key_tables$pool, "Hash pool metrics", 3)
-section_table(key_tables$sample, "Sample metrics", 3)
+if (!is.null(key_tables$pool)) {
+  section_table(key_tables$pool, "Hash pool metrics", 3)
+}
+if (!is.null(key_tables$sample)) {
+  section_table(key_tables$sample, "Sample metrics", 3)
+}
 close_tabset()
 ```
 
