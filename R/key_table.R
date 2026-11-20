@@ -665,6 +665,19 @@ get_hash_stats <- function(object, sample_qc_metrics) {
     pivot_wider(names_from = id, values_from = mean_purity, names_prefix = "mean_purity_") %>%
     left_join(sample_hash_counts %>% select(sample_alias, hash_pct), by = "sample_alias")
 
+  # Pool QC supplies confidence and pool totals. Sample hash tables come from
+  # the PXL data and are still returned when those reports are missing.
+  if (!.has_pool_qc(sample_qc_metrics)) {
+    return(list(
+      pool_stats = NULL,
+      component_stats = component_stats,
+      component_stats_heatmap_purity = component_stats_heatmap_purity,
+      component_stats_heatmap_fraction = component_stats_heatmap_fraction,
+      sample_stats = sample_stats,
+      component_sample_confidence = NULL
+    ))
+  }
+
   # Sample confidence per component and sample
   component_sample_confidence <-
     sample_qc_metrics$pool_qc_files %>%
