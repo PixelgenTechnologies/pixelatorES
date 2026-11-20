@@ -928,6 +928,34 @@ test_that("technology decides whether a samplesheet pool column is used", {
   expect_equal(as.character(extracted_v2$pool), as.character(hashed_sheet$pool))
 })
 
+test_that("proxiome-v2 records a diagnostic when pool QC files are missing", {
+  hashed_sheet <- read_samplesheet(test_samplesheet("hashing"))
+  expect_warning(
+    qc_result <- pixelatorES:::.extract_qc_raw(list(
+      file_paths = list(
+        qc_files = NULL,
+        pool_qc_files = NULL
+      ),
+      samplesheet = hashed_sheet
+    )),
+    "No QC files were found",
+    all = TRUE
+  )
+
+  expect_null(qc_result$value$pool_qc_files)
+  missing_pools <- vapply(
+    Filter(
+      function(diagnostic) {
+        return(identical(diagnostic$message, "No QC files were found."))
+      },
+      qc_result$diagnostics
+    ),
+    function(diagnostic) diagnostic$target,
+    character(1)
+  )
+  expect_true(all(unique(hashed_sheet$pool) %in% missing_pools))
+})
+
 test_that("Unhashed data with a samplesheet pool column stays sample-level", {
   stages <- get_es_workflow_stages("amplicon_demux")
   plain_sheet <- read_samplesheet(test_samplesheet())
@@ -961,14 +989,24 @@ test_that("Unhashed data with a samplesheet pool column stays sample-level", {
   expect_null(empty_paths$pool_qc_files)
   expect_equal(empty_paths$qc_files, plain_paths$qc_files)
 
-  expect_no_warning(
+  # A remaining pool column is a hashed run. Missing pool files stay off
+  # the pool path and are recorded, rather than being skipped silently.
+  expect_warning(
     qc_result <- pixelatorES:::.extract_qc_raw(list(
       file_paths = named_paths,
       samplesheet = named_sheet
-    ))
+    )),
+    "No QC files were found"
   )
   expect_null(qc_result$value$pool_qc_files)
-  expect_equal(qc_result$diagnostics, list())
+  expect_equal(
+    qc_result$diagnostics,
+    list(list(
+      type = "qc_load",
+      target = "not_a_real_pool",
+      message = "No QC files were found."
+    ))
+  )
 
   seur <- get_test_data()
   expect_no_error(seqsat <- get_seq_saturation(seur, qc_result$value))

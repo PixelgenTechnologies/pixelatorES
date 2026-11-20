@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Unhashed (`proxiome-v1`) runs no longer fail when the samplesheet includes a `pool` column. The column is ignored.
+- A `proxiome-v2` run with no pool QC files records a missing-pool diagnostic for each pool, and the hashed key-metrics section still shows sample metrics when the pool table is absent.
 
 ## [0.17.0] 2026-11-16
 
