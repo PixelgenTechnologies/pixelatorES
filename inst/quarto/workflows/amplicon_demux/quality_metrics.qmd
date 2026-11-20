@@ -8,10 +8,12 @@ key_tables <-
   key_metric_table(es_data, detailed = FALSE)
 
 # Hashing follows the technology parameter, not a samplesheet pool column.
+# A hashed run still shows sample metrics when the pool table is missing.
 is_hashed_experiment <- is_hashed_technology(params$technology)
 has_hash_stats <- !is.null(es_data$qc$sample_hash_stats)
 eval_hashed_key_metrics <-
-  is_hashed_experiment && !is.null(key_tables$pool)
+  is_hashed_experiment &&
+  (!is.null(key_tables$pool) || !is.null(key_tables$sample))
 eval_standard_key_metrics <-
   !is_hashed_experiment && !is.null(key_tables$sample)
 eval_sample_hashing <- is_hashed_experiment && has_hash_stats

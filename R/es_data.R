@@ -370,19 +370,14 @@ test_es_data <- function(
   pool_qc_files <- NULL
   pool_diagnostics <- list()
   # `proxiome-v1` drops the pool column before this runs. A remaining pool
-  # column means `proxiome-v2`, and pool QC is loaded only when discovery
-  # found files for those pool ids. An empty list would otherwise be treated
-  # as pool-level data by later steps.
-  discovered_pool_files <- file_paths$pool_qc_files
-  if (
-    "pool" %in% names(object$samplesheet) &&
-      !is.null(discovered_pool_files) &&
-      nrow(discovered_pool_files) > 0
-  ) {
-    pool_aliases <- unique(object$samplesheet$pool)
-    pool_aliases <- pool_aliases[!is.na(pool_aliases)]
+  # column means `proxiome-v2`. Always ask for those pools, even when
+  # discovery found no pool files, so a missing pool report is recorded.
+  # An empty result stays NULL: an empty list would be treated as pool data.
+  if ("pool" %in% names(object$samplesheet)) {
+    pool_aliases <- unique(as.character(object$samplesheet$pool))
+    pool_aliases <- pool_aliases[!is.na(pool_aliases) & nzchar(pool_aliases)]
     pool_result <- .read_qc_groups_soft(
-      files = discovered_pool_files,
+      files = file_paths$pool_qc_files,
       aliases = sort(pool_aliases),
       alias_column = "pool_alias",
       target_label = "pool"
