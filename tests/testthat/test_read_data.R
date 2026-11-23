@@ -402,7 +402,7 @@ test_that("File reading works as expected", {
   seur_single <- merge_data(seur_list[1], sample_sheet[1, ])
   expect_equal(colnames(seur_single), paste0("S1_", colnames(seur_list[[1]])))
   expect_equal(
-    sort(FSMap(seur_single)$id_map[[1]]$current_id),
+    sort(unname(FSMap(seur_single)$id_map[[1]]$current_id)),
     sort(colnames(seur_single))
   )
 
