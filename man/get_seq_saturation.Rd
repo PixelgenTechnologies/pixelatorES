@@ -7,6 +7,7 @@
 get_seq_saturation(
   object,
   sample_qc_metrics,
+  technology,
   read_stage = "amplicon",
   collapse_stage = "collapse",
   final_stage = NULL
@@ -16,6 +17,9 @@ get_seq_saturation(
 \item{object}{A Seurat object.}
 
 \item{sample_qc_metrics}{A list containing quality control metrics for each sample.}
+
+\item{technology}{A technology name, required. See \code{\link[=validate_es_technology]{validate_es_technology()}}. A hashed technology
+reports per pool from the pool QC reports. An unhashed technology reports per sample.}
 
 \item{read_stage}{Name of the stage reporting raw input reads (default is \code{"amplicon"}).}
 

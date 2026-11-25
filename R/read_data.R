@@ -170,7 +170,7 @@ find_stage <-
 #' @param data_folder A character string specifying the path to the data folder.
 #' @param file_paths A character vector with file paths including all data files.
 #' @param sample_sheet A sample sheet [tibble::tibble()] including `sample`, `sample_alias`, and
-#'   optionally `pool` for hashed experiments. When supplied, pool-level QC files are detected.
+#'   `pool` for hashed technologies.
 #' @param allow_unknown A logical indicating whether to allow files from unknown stages (default: FALSE).
 #'   When `TRUE`, the parent directory name is used as the stage. When `FALSE`, unknown stages
 #'   are handled by `on_unknown_stage`.
@@ -184,8 +184,11 @@ find_stage <-
 #'   [get_es_workflow_stages()], required. `all` decides which stages are recognised, and
 #'   `pxl_preference` picks the PXL file when a sample has several. Inside a build pass
 #'   `es_data$stages`.
+#' @param technology A technology name, required. See [validate_es_technology()]. A hashed technology
+#'   reads pool files for the `pool` ids in `sample_sheet`. An unhashed technology looks for sample files
+#'   only. Hashing is never inferred from the samplesheet columns or the files in the data folder.
 #'
-#' @return A list with `data_files`, `qc_files`, and `pool_qc_files` (the last is `NULL` when absent).
+#' @return A list with `data_files`, `qc_files`, and `pool_qc_files` (the last is `NULL` for an unhashed technology).
 #'   When `on_duplicate_samples = "omit"`, attribute `duplicate_data_samples` is a character
 #'   vector of omitted sample aliases. When `on_unknown_stage = "omit"`, attribute
 #'   `unknown_stage_files` is a character vector of skipped file paths. When `edgelist` QC
@@ -202,7 +205,8 @@ get_file_paths <-
     allow_unknown = FALSE,
     on_duplicate_samples = c("error", "omit"),
     on_unknown_stage = c("error", "omit"),
-    stages
+    stages,
+    technology
   ) {
     pixelatorR:::assert_single_value(data_folder, type = "string", allow_null = TRUE)
     pixelatorR:::assert_vector(file_paths, "character", allow_null = TRUE)
@@ -210,6 +214,7 @@ get_file_paths <-
     on_duplicate_samples <- match.arg(on_duplicate_samples)
     on_unknown_stage <- match.arg(on_unknown_stage)
     .validate_es_workflow_stages(stages)
+    hashed <- is_hashed_technology(technology)
 
     if (is.null(file_paths)) {
       file_paths <- list.files(data_folder, recursive = TRUE, full.names = TRUE)
@@ -277,7 +282,12 @@ get_file_paths <-
       )
     }
 
-    if ("pool" %in% names(sample_sheet)) {
+    if (hashed) {
+      if (!"pool" %in% names(sample_sheet)) {
+        cli_abort(
+          "Technology {.val {technology}} requires a {.field pool} column in {.arg sample_sheet}."
+        )
+      }
       pool_ids <- unique(sample_sheet$pool)
       pool_ids <- pool_ids[!is.na(pool_ids) & nzchar(as.character(pool_ids))]
     } else {
@@ -353,7 +363,7 @@ get_file_paths <-
       filter(!is_pool) %>%
       select(sample_alias, filename, stage)
 
-    if (any(all_files$is_pool)) {
+    if (hashed) {
       pool_qc_files <-
         all_qc_files %>%
         filter(is_pool) %>%
@@ -388,7 +398,9 @@ get_file_paths <-
 #' @param pg_data A list of Seurat objects, each representing a sample. The list must be
 #'   named by sample alias, since the names are used to prefix component IDs.
 #' @param sample_sheet A data frame containing sample metadata, including `sample_alias` and
-#'   `condition`, and optionally `pool` for hashed experiments.
+#'   `condition`, and `pool` for hashed technologies.
+#' @param technology A technology name, required. See [validate_es_technology()]. A hashed technology
+#'   adds a `pool` metadata column from the samplesheet.
 #'
 #' @return A merged Seurat object with added metadata.
 #'
@@ -396,7 +408,9 @@ get_file_paths <-
 #'
 merge_data <-
   function(pg_data,
-           sample_sheet) {
+           sample_sheet,
+           technology) {
+    hashed <- is_hashed_technology(technology)
     sample_aliases <- names(pg_data)
     if (is.null(sample_aliases) || !all(nzchar(sample_aliases))) {
       cli_abort("{.arg pg_data} must be named by sample alias.")
@@ -425,7 +439,7 @@ merge_data <-
 
     metadata <-
       sample_sheet %>%
-      select(sample_alias, any_of("pool"), condition)
+      select(sample_alias, all_of(if (hashed) "pool"), condition)
 
     metadata_to_join <-
       tibble(comp_id = colnames(pg_data)) %>%
@@ -442,7 +456,7 @@ merge_data <-
         condition = factor(condition, unique(metadata$condition))
       )
 
-    if ("pool" %in% names(metadata)) {
+    if (hashed) {
       metadata_to_join <-
         metadata_to_join %>%
         mutate(pool = factor(pool, unique(metadata$pool)))
@@ -608,31 +622,40 @@ add_pct_of_pool_to_samplesheet <-
     return(sample_sheet)
   }
 
-#' Whether QC metrics include loaded pool-level reports
+#' Select the QC reports that carry the experiment-level metrics
 #'
-#' An empty list is treated as absent. A samplesheet can contain a `pool`
-#' column for an unhashed run; that must not be confused with pool QC.
+#' A hashed technology reports on pools, so its experiment-level metrics come
+#' from the pool QC reports. An unhashed technology reports on samples. The
+#' choice depends only on `technology`, never on which reports were loaded.
 #'
-#' @param sample_qc_metrics A nested QC list (`qc_files`, `pool_qc_files`),
-#'   or `NULL`.
+#' @param sample_qc_metrics A nested QC list (`qc_files`, `pool_qc_files`).
+#' @param technology A technology name. See [validate_es_technology()].
 #'
-#' @return `TRUE` when at least one pool QC group was loaded.
+#' @return A list with `qc_data` (the selected reports) and `id_column` (`"pool"`
+#'   or `"sample_alias"`).
 #'
 #' @noRd
-.has_pool_qc <- function(sample_qc_metrics) {
-  if (is.null(sample_qc_metrics) || !is.list(sample_qc_metrics)) {
-    return(FALSE)
+.select_qc_groups <- function(sample_qc_metrics, technology) {
+  if (is_hashed_technology(technology)) {
+    pool_qc <- sample_qc_metrics$pool_qc_files
+    if (length(pool_qc) == 0) {
+      cli_abort(c(
+        "Technology {.val {technology}} requires pool QC reports, but none were loaded.",
+        "i" = "Check that the pool {.file .report.json} files are present in the data folder."
+      ))
+    }
+    return(list(qc_data = pool_qc, id_column = "pool"))
   }
 
-  pool_qc <- sample_qc_metrics$pool_qc_files
-  return(!is.null(pool_qc) && length(pool_qc) > 0)
+  return(list(qc_data = sample_qc_metrics$qc_files, id_column = "sample_alias"))
 }
 
 #' Extract scalar QC metrics for one stage
 #'
 #' Pulls scalar fields from one QC stage into a tibble with one row per sample
 #' or pool. A nested `es_data$qc_raw` list is read from `pool_qc_files` when
-#' `stage` is a pool stage and pool QC is present, and from `qc_files` otherwise.
+#' `stage` is a pool stage and `technology` is hashed, and from `qc_files`
+#' otherwise.
 #'
 #' @param sample_qc_metrics Either the nested QC list stored in `es_data$qc_raw`
 #'   (`qc_files` and optionally `pool_qc_files`), or a named list of per-sample
@@ -644,13 +667,15 @@ add_pct_of_pool_to_samplesheet <-
 #'   as returned by [get_es_workflow_stages()]. `all` decides which stages are
 #'   legal, and `pool` decides whether `stage` is read from pool-level QC.
 #'   Inside a build pass `es_data$stages`.
+#' @param technology A technology name. Required when `sample_qc_metrics` is the
+#'   nested QC list; unused for a named list of per-sample stage reports.
 #'
 #' @return A tibble with `sample_alias` and the requested metrics.
 #'
 #' @noRd
 #'
 .extract_sample_qc_metrics <-
-  function(sample_qc_metrics, vars, stage = "graph", stages) {
+  function(sample_qc_metrics, vars, stage = "graph", stages, technology) {
     pixelatorR:::assert_vector(vars, "character", n = 1)
     pixelatorR:::assert_single_value(stage, type = "string")
     pixelatorR:::assert_class(sample_qc_metrics, "list")
@@ -660,8 +685,8 @@ add_pct_of_pool_to_samplesheet <-
 
     # Check if the sample_qc_metrics a sample qc list, if so extract the correct sample/pool type
     if ("qc_files" %in% names(sample_qc_metrics)) {
-      if (stage %in% stages$pool && .has_pool_qc(sample_qc_metrics)) {
-        sample_qc_metrics <- sample_qc_metrics$pool_qc_files
+      if (stage %in% stages$pool) {
+        sample_qc_metrics <- .select_qc_groups(sample_qc_metrics, technology)$qc_data
       } else {
         sample_qc_metrics <- sample_qc_metrics$qc_files
       }
@@ -775,6 +800,30 @@ test_samplesheet <-
     )
   }
 
+#' Get the technology of a test dataset
+#'
+#' @param type A character string specifying the type of test data. Options are `"default"`,
+#' `"hashing"`, and `"edgelist_aggregate"`.
+#'
+#' @return `"proxiome-v1"` for `"default"` and `"proxiome-v2"` for `"hashing"` and
+#' `"edgelist_aggregate"`, the technologies the bundled test data was produced with.
+#'
+#' @export
+#'
+test_technology <-
+  function(type = c("default", "hashing", "edgelist_aggregate")) {
+    pixelatorR:::assert_vector(type, type = "character", n = 1)
+    type <- match.arg(type, c("default", "hashing", "edgelist_aggregate"))
+
+    technology <- switch(type,
+      "default" = "proxiome-v1",
+      "hashing" = "proxiome-v2",
+      "edgelist_aggregate" = "proxiome-v2"
+    )
+
+    return(technology)
+  }
+
 #' Get the path to the test data folder
 #'
 #' Returns the path to the test data folder containing QC JSON files included in the package.
@@ -843,7 +892,8 @@ get_test_data <-
     data_files <- get_file_paths(
       data_folder,
       sample_sheet = samplesheet,
-      stages = get_es_workflow_stages(workflow)
+      stages = get_es_workflow_stages(workflow),
+      technology = test_technology(type)
     )$data_files
 
     # Copy PXL files to a unique tempdir to avoid duckdb
@@ -881,7 +931,10 @@ get_test_data <-
         # pixelatorR's default cell-metadata subset.
         detailed_meta_data = TRUE
       ) %>%
-      merge_data(sample_sheet = samplesheet)
+      merge_data(
+        sample_sheet = samplesheet,
+        technology = test_technology(type)
+      )
 
     seur <-
       seur %>%

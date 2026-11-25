@@ -4,10 +4,12 @@
 \alias{get_degree_distribution}
 \title{Get degree distribution data}
 \usage{
-get_degree_distribution(sample_qc_metrics, stage = "collapse")
+get_degree_distribution(sample_qc_metrics, technology, stage = "collapse")
 }
 \arguments{
 \item{sample_qc_metrics}{A list containing quality control metrics for each sample.}
+
+\item{technology}{A technology name, required. See \code{\link[=validate_es_technology]{validate_es_technology()}}.}
 
 \item{stage}{Name of the stage reporting UMI degree distributions (default is \code{"collapse"}).}
 }

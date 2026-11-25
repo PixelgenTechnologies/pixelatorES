@@ -64,7 +64,8 @@ test_that("File location works as expected", {
   expect_no_error(res <- get_file_paths(
     file_paths = file_paths,
     sample_sheet = sample_sheet,
-    stages = get_es_workflow_stages("amplicon_demux")
+    stages = get_es_workflow_stages("amplicon_demux"),
+    technology = "proxiome-v1"
   ))
 
   expect_equal(
@@ -194,7 +195,8 @@ test_that("Custom stage vocabularies drive file discovery as expected", {
     get_file_paths(
       file_paths = file_paths,
       sample_sheet = sample_sheet,
-      stages = custom_stages
+      stages = custom_stages,
+      technology = "proxiome-v1"
     )$data_files$filename,
     "run/A_sample_S1.graph.pxl"
   )
@@ -202,7 +204,8 @@ test_that("Custom stage vocabularies drive file discovery as expected", {
     get_file_paths(
       file_paths = file_paths,
       sample_sheet = sample_sheet,
-      stages = get_es_workflow_stages("amplicon_demux")
+      stages = get_es_workflow_stages("amplicon_demux"),
+      technology = "proxiome-v1"
     )$data_files$filename,
     "run/A_sample_S1.analysis.pxl"
   )
@@ -211,7 +214,8 @@ test_that("Custom stage vocabularies drive file discovery as expected", {
     get_file_paths(
       file_paths = file_paths,
       sample_sheet = sample_sheet,
-      stages = list(all = "graph")
+      stages = list(all = "graph"),
+      technology = "proxiome-v1"
     )
   )
 
@@ -227,7 +231,8 @@ test_that("Custom stage vocabularies drive file discovery as expected", {
     nrow(get_file_paths(
       file_paths = shard_paths,
       sample_sheet = sample_sheet,
-      stages = get_es_workflow_stages("amplicon_demux")
+      stages = get_es_workflow_stages("amplicon_demux"),
+      technology = "proxiome-v1"
     )$qc_files),
     2
   )
@@ -236,7 +241,8 @@ test_that("Custom stage vocabularies drive file discovery as expected", {
       file_paths = shard_paths,
       sample_sheet = sample_sheet,
       allow_unknown = TRUE,
-      stages = custom_stages
+      stages = custom_stages,
+      technology = "proxiome-v1"
     )$qc_files),
     3
   )
@@ -260,7 +266,8 @@ test_that("Unknown stages can be omitted as expected", {
     get_file_paths(
       file_paths = file_paths,
       sample_sheet = sample_sheet,
-      stages = stages
+      stages = stages,
+      technology = "proxiome-v1"
     ),
     "Could not determine stage for file"
   )
@@ -269,7 +276,8 @@ test_that("Unknown stages can be omitted as expected", {
     file_paths = file_paths,
     sample_sheet = sample_sheet,
     on_unknown_stage = "omit",
-    stages = stages
+    stages = stages,
+    technology = "proxiome-v1"
   )
 
   expect_equal(
@@ -321,7 +329,8 @@ test_that("Custom stage vocabularies drive QC extraction as expected", {
       qc_metrics,
       vars = "n",
       stage = "tally",
-      stages = custom_stages
+      stages = custom_stages,
+      technology = "proxiome-v2"
     ),
     tibble(sample_alias = "P1", n = 99L)
   )
@@ -391,12 +400,16 @@ test_that("File reading works as expected", {
   expect_s4_class(seur_list[[1]], "Seurat")
 
   # Data merging
-  expect_no_error(seur_comb <- merge_data(seur_list, sample_sheet))
+  expect_no_error(seur_comb <- merge_data(
+    seur_list,
+    sample_sheet,
+    technology = "proxiome-v1"
+  ))
   expect_s4_class(seur_comb, "Seurat")
   expect_equal(dim(seur_comb), dim(seur_list[[1]]) * c(1, 2))
 
-  expect_error(merge_data(unname(seur_list), sample_sheet))
-  expect_error(merge_data(unname(seur_list[1]), sample_sheet))
+  expect_error(merge_data(unname(seur_list), sample_sheet, technology = "proxiome-v1"))
+  expect_error(merge_data(unname(seur_list[1]), sample_sheet, technology = "proxiome-v1"))
 
   # Single sample data keeps the file-sample map in sync with the cell IDs
   seur_single <- merge_data(seur_list[1], sample_sheet[1, ])
@@ -464,7 +477,8 @@ test_that("File reading works as expected", {
     get_file_paths(
       data_folder = test_data_folder(),
       sample_sheet = sample_sheet,
-      stages = get_es_workflow_stages("amplicon_demux")
+      stages = get_es_workflow_stages("amplicon_demux"),
+      technology = "proxiome-v1"
     ))
   expect_equal(
     data_paths$data_files %>%
@@ -530,6 +544,7 @@ test_that("File reading works as expected", {
 
   # QC data reading
   expect_no_error(qc_metrics <- pixelatorES:::.extract_qc_raw(list(
+    params = list(technology = "proxiome-v1"),
     file_paths = data_paths,
     samplesheet = sample_sheet
   ))$value)
@@ -568,7 +583,8 @@ test_that("File reading works as expected", {
     extracted_qc_metrics <-
       .extract_sample_qc_metrics(qc_metrics, "amplicon",
         vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads"),
-        stages = get_es_workflow_stages("amplicon_demux")
+        stages = get_es_workflow_stages("amplicon_demux"),
+        technology = "proxiome-v1"
       )
   )
 
@@ -592,7 +608,8 @@ test_that("File reading works as expected", {
   )
   expect_error(.extract_sample_qc_metrics(qc_metrics, "amplicon",
     vars = c("q30_statistics"),
-    stages = get_es_workflow_stages("amplicon_demux")
+    stages = get_es_workflow_stages("amplicon_demux"),
+    technology = "proxiome-v1"
   ))
 
   expect_no_error(
@@ -602,7 +619,8 @@ test_that("File reading works as expected", {
           "a" = "total_failed_reads",
           "b" = "failed_partial_upi1_umi1_reads"
         ),
-        stages = get_es_workflow_stages("amplicon_demux")
+        stages = get_es_workflow_stages("amplicon_demux"),
+        technology = "proxiome-v1"
       )
   )
   expect_equal(
@@ -645,7 +663,8 @@ test_that("File reading works as expected", {
     get_file_paths(
       data_folder = test_data_folder(type = "hashing"),
       sample_sheet = sample_sheet_hashing,
-      stages = get_es_workflow_stages("amplicon_demux")
+      stages = get_es_workflow_stages("amplicon_demux"),
+      technology = "proxiome-v2"
     ))
 
   expect_equal(
@@ -696,6 +715,7 @@ test_that("File reading works as expected", {
 
   # QC data reading
   expect_no_error(qc_metrics <- pixelatorES:::.extract_qc_raw(list(
+    params = list(technology = "proxiome-v2"),
     file_paths = data_paths,
     samplesheet = sample_sheet_hashing
   ))$value)
@@ -734,7 +754,8 @@ test_that("File reading works as expected", {
       .extract_sample_qc_metrics(qc_metrics,
         stage = "amplicon",
         vars = c("total_failed_reads", "failed_partial_upi1_umi1_reads"),
-        stages = get_es_workflow_stages("amplicon_demux")
+        stages = get_es_workflow_stages("amplicon_demux"),
+        technology = "proxiome-v2"
       )
   )
 
@@ -750,7 +771,8 @@ test_that("File reading works as expected", {
   )
   expect_error(.extract_sample_qc_metrics(qc_metrics, "amplicon",
     vars = c("q30_statistics"),
-    stages = get_es_workflow_stages("amplicon_demux")
+    stages = get_es_workflow_stages("amplicon_demux"),
+    technology = "proxiome-v2"
   ))
 
   expect_no_error(
@@ -760,7 +782,8 @@ test_that("File reading works as expected", {
           "a" = "total_failed_reads",
           "b" = "failed_partial_upi1_umi1_reads"
         ),
-        stages = get_es_workflow_stages("amplicon_demux")
+        stages = get_es_workflow_stages("amplicon_demux"),
+        technology = "proxiome-v2"
       )
   )
   expect_equal(
@@ -812,7 +835,8 @@ test_that("Edgelist discovery and multi-FASTQ QC aggregation work as expected", 
   paths <- get_file_paths(
     data_folder = run_dir,
     sample_sheet = sample_sheet,
-    stages = edgelist_stages
+    stages = edgelist_stages,
+    technology = "proxiome-v2"
   )
 
   expect_equal(
@@ -847,7 +871,10 @@ test_that("Edgelist discovery and multi-FASTQ QC aggregation work as expected", 
   )
 
   # .fill_es_data_file_paths records qc_load diagnostics for unattributed edgelist reports
-  object <- pixelatorES:::new_es_data(list(data_folder = run_dir))
+  object <- pixelatorES:::new_es_data(list(
+    data_folder = run_dir,
+    technology = "proxiome-v2"
+  ))
   object$samplesheet <- sample_sheet
   object$stages <- edgelist_stages
   warnings <- capture_warnings(
@@ -885,7 +912,8 @@ test_that("technology decides whether a samplesheet pool column is used", {
   v1_paths <- get_file_paths(
     data_folder = test_data_folder("hashing"),
     sample_sheet = v1_sheet,
-    stages = stages
+    stages = stages,
+    technology = "proxiome-v1"
   )
   expect_null(v1_paths$pool_qc_files)
   expect_gt(nrow(v1_paths$qc_files), 0)
@@ -922,7 +950,8 @@ test_that("technology decides whether a samplesheet pool column is used", {
   v2_paths <- get_file_paths(
     data_folder = test_data_folder("hashing"),
     sample_sheet = v2_sheet,
-    stages = stages
+    stages = stages,
+    technology = "proxiome-v2"
   )
   expect_gt(nrow(v2_paths$pool_qc_files), 0)
 
@@ -942,6 +971,7 @@ test_that("proxiome-v2 records a diagnostic when pool QC files are missing", {
   hashed_sheet <- read_samplesheet(test_samplesheet("hashing"))
   expect_warning(
     qc_result <- pixelatorES:::.extract_qc_raw(list(
+      params = list(technology = "proxiome-v2"),
       file_paths = list(
         qc_files = NULL,
         pool_qc_files = NULL
@@ -985,7 +1015,10 @@ test_that("unattributed edgelist QC names pools from the samplesheet", {
     file.path(run_dir, "edgelist", "stray.report.json")
   )
 
-  object <- pixelatorES:::new_es_data(list(data_folder = run_dir))
+  object <- pixelatorES:::new_es_data(list(
+    data_folder = run_dir,
+    technology = "proxiome-v2"
+  ))
   object$samplesheet <- sheet
   object$stages <- stages
   expect_warning(
@@ -1004,7 +1037,8 @@ test_that("Unhashed data with a samplesheet pool column stays sample-level", {
   plain_paths <- get_file_paths(
     data_folder = test_data_folder(),
     sample_sheet = plain_sheet,
-    stages = stages
+    stages = stages,
+    technology = "proxiome-v1"
   )
 
   named_sheet <- plain_sheet %>%
@@ -1012,7 +1046,8 @@ test_that("Unhashed data with a samplesheet pool column stays sample-level", {
   named_paths <- get_file_paths(
     data_folder = test_data_folder(),
     sample_sheet = named_sheet,
-    stages = stages
+    stages = stages,
+    technology = "proxiome-v1"
   )
   expect_null(named_paths$pool_qc_files)
   expect_equal(named_paths$qc_files, plain_paths$qc_files)
@@ -1025,58 +1060,67 @@ test_that("Unhashed data with a samplesheet pool column stays sample-level", {
     empty_paths <- get_file_paths(
       data_folder = test_data_folder(),
       sample_sheet = empty_sheet,
-      stages = stages
+      stages = stages,
+      technology = "proxiome-v1"
     )
   )
   expect_null(empty_paths$pool_qc_files)
   expect_equal(empty_paths$qc_files, plain_paths$qc_files)
 
-  # A remaining pool column is a hashed run. Missing pool files stay off
-  # the pool path and are recorded, rather than being skipped silently.
-  expect_warning(
+  # The technology, not the samplesheet column, decides that no pool files
+  # are expected.
+  expect_no_warning(
     qc_result <- pixelatorES:::.extract_qc_raw(list(
+      params = list(technology = "proxiome-v1"),
       file_paths = named_paths,
       samplesheet = named_sheet
-    )),
-    "No QC files were found"
-  )
-  expect_null(qc_result$value$pool_qc_files)
-  expect_equal(
-    qc_result$diagnostics,
-    list(list(
-      type = "qc_load",
-      target = "not_a_real_pool",
-      message = "No QC files were found."
     ))
   )
+  expect_null(qc_result$value$pool_qc_files)
+  expect_equal(qc_result$diagnostics, list())
 
   seur <- get_test_data()
-  expect_no_error(seqsat <- get_seq_saturation(seur, qc_result$value))
+  expect_no_error(seqsat <- get_seq_saturation(
+    seur,
+    qc_result$value,
+    technology = "proxiome-v1"
+  ))
   expect_true("sample_alias" %in% names(seqsat))
   expect_false("pool" %in% names(seqsat))
 
-  expect_no_error(edges <- get_crossing_edges(qc_result$value))
+  expect_no_error(edges <- get_crossing_edges(
+    qc_result$value,
+    technology = "proxiome-v1"
+  ))
   expect_true("sample_alias" %in% names(edges))
 
-  expect_no_error(degree <- get_degree_distribution(qc_result$value))
+  expect_no_error(degree <- get_degree_distribution(
+    qc_result$value,
+    technology = "proxiome-v1"
+  ))
   expect_true("sample_alias" %in% names(degree))
 
   expect_null(
     pixelatorES:::.extract_sample_hash_stats(list(
+      params = list(technology = "proxiome-v1"),
       pxl_data = seur,
       qc_raw = qc_result$value,
       samplesheet = named_sheet
     ))
   )
 
-  # An empty pool list must not switch components onto the hashed path
+  # An empty pool list is ignored by an unhashed technology
   empty_pool_qc <- qc_result$value
   empty_pool_qc$pool_qc_files <- list()
-  expect_false(pixelatorES:::.has_pool_qc(empty_pool_qc))
-  expect_no_error(seqsat_empty <- get_seq_saturation(seur, empty_pool_qc))
+  expect_no_error(seqsat_empty <- get_seq_saturation(
+    seur,
+    empty_pool_qc,
+    technology = "nonhashed_samples"
+  ))
   expect_true("sample_alias" %in% names(seqsat_empty))
 
   es_data <- test_es_data(
+    params = list(technology = "proxiome-v1"),
     samplesheet = named_sheet,
     qc_raw = empty_pool_qc,
     qc = list(sample_hash_stats = NULL, seq_saturation = seqsat_empty),
@@ -1085,4 +1129,34 @@ test_that("Unhashed data with a samplesheet pool column stays sample-level", {
   )
   expect_no_error(component_cell_recovery(es_data))
   expect_no_error(component_sequencing_reads_and_molecules(es_data))
+})
+
+test_that("Hashed technologies do not fall back to sample QC when pool QC is missing", {
+  stages <- get_es_workflow_stages("amplicon_demux")
+  sample_qc <- list(
+    qc_files = list(S1 = list(graph = list(n = 1L))),
+    pool_qc_files = NULL
+  )
+
+  expect_error(
+    .extract_sample_qc_metrics(
+      sample_qc,
+      vars = "n",
+      stage = "graph",
+      stages = stages,
+      technology = "proxiome-v2"
+    ),
+    "requires pool QC reports"
+  )
+
+  es_data <- test_es_data(
+    params = list(technology = "proxiome-v2"),
+    qc_raw = sample_qc,
+    stages = stages
+  )
+  expect_error(component_cell_recovery(es_data), "requires pool QC reports")
+  expect_error(
+    component_sequencing_reads_and_molecules(es_data),
+    "requires pool QC reports"
+  )
 })

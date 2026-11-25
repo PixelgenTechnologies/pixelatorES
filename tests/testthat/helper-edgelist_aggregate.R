@@ -32,13 +32,17 @@ edgelist_aggregate_file_paths <- function(run_dir) {
   return(get_file_paths(
     data_folder = run_dir,
     sample_sheet = read_samplesheet(test_samplesheet("edgelist_aggregate")),
-    stages = get_es_workflow_stages("edgelist_aggregate")
+    stages = get_es_workflow_stages("edgelist_aggregate"),
+    technology = test_technology("edgelist_aggregate")
   ))
 }
 
 edgelist_aggregate_es_data_stub <- function(run_dir) {
   return(list(
-    params = list(data_folder = run_dir),
+    params = list(
+      data_folder = run_dir,
+      technology = test_technology("edgelist_aggregate")
+    ),
     samplesheet = read_samplesheet(test_samplesheet("edgelist_aggregate")),
     stages = get_es_workflow_stages("edgelist_aggregate"),
     file_paths = edgelist_aggregate_file_paths(run_dir)

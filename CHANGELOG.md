@@ -20,9 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `technology` parameter, using the same values as the pipeline: `proxiome-v1`, `nonhashed_samples`, `proxiome-v2`, and `hashed_samples`. Pass it with the other Quarto parameters (`-P technology=proxiome-v1`). The Experiment Summary uses this value instead of inferring hashing from the samplesheet or the output files.
+- `test_technology()` returns the technology of the bundled test datasets.
 
 ### Changed
 
+- Breaking: `get_file_paths()`, `merge_data()`, `get_qc_metrics()`, `get_seq_saturation()`, `get_crossing_edges()`, `get_degree_distribution()`, and `get_hash_stats()` take a required `technology` argument. Components read it from `es_data$params$technology`. Hashing is never inferred from loaded pool QC reports, samplesheet columns, or hash count columns.
 - Breaking: `build_es_data()` and the report require `technology`. `proxiome-v1` and `nonhashed_samples` drop a samplesheet `pool` column. `proxiome-v2` and `hashed_samples` require a non-empty `pool` value for every sample.
 - Report sections follow `technology`. Hashed technologies show pool and sample key metrics and the sample hashing plots, including sample confidence. Unhashed technologies show sample key metrics only.
 
@@ -30,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Unhashed runs no longer fail when the samplesheet includes a `pool` column. The column is ignored.
 - A hashed run with no pool QC files records a missing-pool diagnostic for each pool.
-- Sample hash tables from the PXL data are still returned when pool QC is missing, and unattributed edgelist reports on a hashed run are described as missing pools. The hashing section requires those pool QC files in order to draw the sample confidence plots.
+- A hashed technology without pool QC reports fails with an explicit error instead of silently reporting per sample. Unattributed edgelist reports on a hashed run are described as missing pools.
 
 ## [0.17.0] 2026-11-16
 

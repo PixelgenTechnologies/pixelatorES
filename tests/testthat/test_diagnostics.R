@@ -6,7 +6,10 @@ test_that("Sample diagnostics work as expected", {
     condition = c("A", "B")
   )
 
-  clean <- test_es_data(samplesheet = samplesheet)
+  clean <- test_es_data(
+    params = list(technology = "proxiome-v2"),
+    samplesheet = samplesheet
+  )
   expect_equal(
     list(
       tibble = diagnostics_to_tibble(clean),
@@ -29,6 +32,7 @@ test_that("Sample diagnostics work as expected", {
   )
 
   loading <- test_es_data(
+    params = list(technology = "proxiome-v2"),
     samplesheet = samplesheet,
     diagnostics = list(
       list(
@@ -73,6 +77,7 @@ test_that("Sample diagnostics work as expected", {
   )
 
   extractor_only <- test_es_data(
+    params = list(technology = "proxiome-v2"),
     samplesheet = samplesheet,
     diagnostics = list(list(
       type = "extractor",
@@ -108,6 +113,7 @@ test_that("Sample diagnostics work as expected", {
   )
 
   mixed <- test_es_data(
+    params = list(technology = "proxiome-v2"),
     samplesheet = samplesheet,
     diagnostics = list(
       list(
@@ -140,6 +146,7 @@ test_that("Sample diagnostics work as expected", {
   )
 
   file_discovery <- test_es_data(
+    params = list(technology = "proxiome-v2"),
     samplesheet = samplesheet,
     diagnostics = list(list(
       type = "file_discovery",
@@ -223,7 +230,8 @@ test_that("Relative QC stage completeness diagnostics work as expected", {
   file_paths <- get_file_paths(
     data_folder = data_folder,
     sample_sheet = sample_sheet,
-    stages = get_es_workflow_stages("amplicon_demux")
+    stages = get_es_workflow_stages("amplicon_demux"),
+    technology = test_technology("hashing")
   )
 
   expect_warning(
@@ -313,7 +321,8 @@ test_that("Relative QC stage completeness diagnostics work as expected", {
   default_paths <- get_file_paths(
     data_folder = test_data_folder(type = "default"),
     sample_sheet = default_sheet,
-    stages = get_es_workflow_stages("amplicon_demux")
+    stages = get_es_workflow_stages("amplicon_demux"),
+    technology = test_technology("default")
   )
   default_result <- pixelatorES:::.read_qc_groups_soft(
     files = default_paths$qc_files,

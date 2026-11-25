@@ -4,7 +4,7 @@
 \alias{get_qc_metrics}
 \title{Get quality control metrics for samples}
 \usage{
-get_qc_metrics(object, sample_qc_metrics, sample_sheet)
+get_qc_metrics(object, sample_qc_metrics, sample_sheet, technology)
 }
 \arguments{
 \item{object}{A Seurat object containing the data.}
@@ -12,6 +12,8 @@ get_qc_metrics(object, sample_qc_metrics, sample_sheet)
 \item{sample_qc_metrics}{A list containing quality control metrics for each sample.}
 
 \item{sample_sheet}{A data frame containing sample metadata, including \code{sample_alias}.}
+
+\item{technology}{A technology name, required. See \code{\link[=validate_es_technology]{validate_es_technology()}}.}
 }
 \value{
 A list containing various quality control metrics for each sample.

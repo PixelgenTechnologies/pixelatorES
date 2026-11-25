@@ -182,7 +182,8 @@ test_that("Sample aliases work as expected", {
         sample = c("sample_1", "sample_2"),
         sample_alias = c("S1", "S2"),
         condition = c("A", "B")
-      )
+      ),
+      technology = "proxiome-v1"
     ),
     c(sample_1 = "S1", sample_2 = "S2")
   )
@@ -194,7 +195,8 @@ test_that("Sample aliases work as expected", {
         sample = c("sample_1", "sample_2", "sample_3"),
         sample_alias = c("S1", "S2", "S3"),
         condition = c("A", "B", "A")
-      )
+      ),
+      technology = "proxiome-v2"
     ),
     c(
       sample_1 = "S1",
@@ -847,7 +849,8 @@ test_that("Duplicate PXL matches soft-fail as expected", {
     get_file_paths(
       data_folder = data_folder,
       sample_sheet = sample_sheet,
-      stages = get_es_workflow_stages("amplicon_demux")
+      stages = get_es_workflow_stages("amplicon_demux"),
+      technology = "proxiome-v1"
     )
   )
 
@@ -909,7 +912,8 @@ test_that("Unknown-stage files soft-fail as expected", {
     get_file_paths(
       data_folder = data_folder,
       sample_sheet = sample_sheet,
-      stages = get_es_workflow_stages("amplicon_demux")
+      stages = get_es_workflow_stages("amplicon_demux"),
+      technology = "proxiome-v1"
     ),
     "Could not determine stage for file"
   )
@@ -1036,12 +1040,16 @@ test_that("build_es_data matches direct extractors", {
       params$technology
     )
     sample_aliases <-
-      pixelatorES:::.sample_aliases_from_samplesheet(sample_sheet)
+      pixelatorES:::.sample_aliases_from_samplesheet(
+        sample_sheet,
+        params$technology
+      )
 
     file_paths <- get_file_paths(
       data_folder = params$data_folder,
       sample_sheet = sample_sheet,
-      stages = get_es_workflow_stages("amplicon_demux")
+      stages = get_es_workflow_stages("amplicon_demux"),
+      technology = params$technology
     )
 
     object <- list(
@@ -1056,7 +1064,8 @@ test_that("build_es_data matches direct extractors", {
     qc_metrics_tables <- get_qc_metrics(
       pg_data,
       sample_qc_metrics,
-      sample_sheet
+      sample_sheet,
+      technology = params$technology
     )
 
     set.seed(37)

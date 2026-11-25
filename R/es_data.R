@@ -119,6 +119,8 @@ new_es_data <- function(params) {
 #' @param file_paths Discovered input file paths, or `NULL`.
 #' @param params Experiment Summary parameters passed to [new_es_data()].
 #'   Defaults to an empty list (`workflow` defaults to `"edgelist_aggregate"`).
+#'   When `technology` is absent, the fixture uses the unhashed `"proxiome-v1"`.
+#'   Pass `technology` explicitly for hashed fixtures.
 #' @param diagnostics List of diagnostics. Defaults to an empty list.
 #' @param ... Named overrides for any other existing `es_data` slot (for
 #'   example `stages` or `extractors`). Unknown names are an error.
@@ -147,6 +149,9 @@ test_es_data <- function(
   diagnostics = list(),
   ...
 ) {
+  if (is.null(params$technology)) {
+    params$technology <- "proxiome-v1"
+  }
   object <- new_es_data(params)
 
   dots <- list(...)
@@ -185,7 +190,10 @@ test_es_data <- function(
       !is.null(object$samplesheet) &&
       "sample_alias" %in% names(object$samplesheet)
   ) {
-    object$sample_aliases <- .sample_aliases_from_samplesheet(object$samplesheet)
+    object$sample_aliases <- .sample_aliases_from_samplesheet(
+      object$samplesheet,
+      object$params$technology
+    )
   }
 
   if (is.null(object$effective_samplesheet) && !is.null(object$samplesheet)) {
@@ -297,7 +305,11 @@ test_es_data <- function(
   # Detected per sample, since merging may not keep the panel's feature metadata
   control_markers <- .get_control_markers_union(pxl_data)
 
-  pxl_data <- merge_data(pxl_data, effective_samplesheet)
+  pxl_data <- merge_data(
+    pxl_data,
+    effective_samplesheet,
+    technology = object$params$technology
+  )
 
   if (isTRUE(object$params$debug_mode)) {
     pxl_data <- downsample_data(
@@ -369,11 +381,9 @@ test_es_data <- function(
 
   pool_qc_files <- NULL
   pool_diagnostics <- list()
-  # `proxiome-v1` drops the pool column before this runs. A remaining pool
-  # column means `proxiome-v2`. Always ask for those pools, even when
-  # discovery found no pool files, so a missing pool report is recorded.
-  # An empty result stays NULL: an empty list would be treated as pool data.
-  if ("pool" %in% names(object$samplesheet)) {
+  # A hashed technology always asks for its pools, even when discovery found no
+  # pool files, so a missing pool report is recorded.
+  if (is_hashed_technology(object$params$technology)) {
     pool_aliases <- unique(as.character(object$samplesheet$pool))
     pool_aliases <- pool_aliases[!is.na(pool_aliases) & nzchar(pool_aliases)]
     pool_result <- .read_qc_groups_soft(
@@ -538,7 +548,11 @@ test_es_data <- function(
 #'
 #' @noRd
 .extract_sample_hash_stats <- function(object) {
-  metric <- get_hash_stats(object$pxl_data, object$qc_raw)
+  metric <- get_hash_stats(
+    object$pxl_data,
+    object$qc_raw,
+    technology = object$params$technology
+  )
 
   return(.format_qc_metric(metric, object$samplesheet))
 }
@@ -551,7 +565,11 @@ test_es_data <- function(
 #'
 #' @noRd
 .extract_seq_saturation <- function(object) {
-  metric <- get_seq_saturation(object$pxl_data, object$qc_raw)
+  metric <- get_seq_saturation(
+    object$pxl_data,
+    object$qc_raw,
+    technology = object$params$technology
+  )
 
   return(.format_qc_metric(metric, object$samplesheet))
 }
@@ -564,7 +582,7 @@ test_es_data <- function(
 #'
 #' @noRd
 .extract_crossing_edges <- function(object) {
-  metric <- get_crossing_edges(object$qc_raw)
+  metric <- get_crossing_edges(object$qc_raw, technology = object$params$technology)
 
   return(.format_qc_metric(metric, object$samplesheet))
 }
@@ -577,7 +595,7 @@ test_es_data <- function(
 #'
 #' @noRd
 .extract_degree_distribution <- function(object) {
-  metric <- get_degree_distribution(object$qc_raw)
+  metric <- get_degree_distribution(object$qc_raw, technology = object$params$technology)
 
   return(.format_qc_metric(metric, object$samplesheet))
 }
@@ -654,13 +672,9 @@ test_es_data <- function(
   sample_qc_metrics <- object$qc_raw
   pixelatorR:::assert_class(sample_qc_metrics, "list")
 
-  if (.has_pool_qc(sample_qc_metrics)) {
-    group_col <- "pool"
-    qc_data <- sample_qc_metrics$pool_qc_files
-  } else {
-    group_col <- "sample_alias"
-    qc_data <- sample_qc_metrics$qc_files
-  }
+  qc_groups <- .select_qc_groups(sample_qc_metrics, object$params$technology)
+  group_col <- qc_groups$id_column
+  qc_data <- qc_groups$qc_data
 
   if (length(qc_data) == 0) {
     return(NULL)
@@ -698,17 +712,18 @@ test_es_data <- function(
 #' report components.
 #'
 #' @param samplesheet An Experiment Summary samplesheet.
+#' @param technology A technology name. A hashed technology adds the pool aliases.
 #'
 #' @return A named character vector of sample and pool aliases.
 #'
 #' @noRd
-.sample_aliases_from_samplesheet <- function(samplesheet) {
+.sample_aliases_from_samplesheet <- function(samplesheet, technology) {
   sample_aliases <-
     samplesheet %>%
     select(sample, sample_alias) %>%
     deframe()
 
-  if ("pool" %in% names(samplesheet)) {
+  if (is_hashed_technology(technology)) {
     pool_aliases <- unique(samplesheet$pool)
     sample_aliases <-
       c(
@@ -883,7 +898,7 @@ build_es_data <- function(params) {
 
   object$samplesheet <- object$extractors$samplesheet(object)
   object$sample_aliases <-
-    .sample_aliases_from_samplesheet(object$samplesheet)
+    .sample_aliases_from_samplesheet(object$samplesheet, object$params$technology)
   object <- .fill_es_data_file_paths(object)
   remaining_extractors <- object$extractors[
     setdiff(names(object$extractors), "samplesheet")
@@ -910,7 +925,8 @@ build_es_data <- function(params) {
     sample_sheet = object$samplesheet,
     on_duplicate_samples = "omit",
     on_unknown_stage = "omit",
-    stages = object$stages
+    stages = object$stages,
+    technology = object$params$technology
   )
 
   duplicate_samples <- attr(file_paths, "duplicate_data_samples")
@@ -949,8 +965,7 @@ build_es_data <- function(params) {
 
   unattributed_qc_files <- attr(file_paths, "unattributed_qc_files")
   if (!is.null(unattributed_qc_files) && nrow(unattributed_qc_files) > 0) {
-    # A remaining pool column means proxiome-v2, even when no pool files matched
-    target_kind <- if ("pool" %in% names(object$samplesheet)) {
+    target_kind <- if (is_hashed_technology(object$params$technology)) {
       "pool"
     } else {
       "sample"

@@ -59,6 +59,7 @@ test_that("Parameter tables work as expected", {
 
   hashed_sheet <- read_samplesheet(test_samplesheet(type = "hashing"))
   hashed_es_data <- test_es_data(
+    params = list(technology = "proxiome-v2"),
     samplesheet = hashed_sheet,
     pxl_data_processed = NULL,
     diagnostics = list(list(

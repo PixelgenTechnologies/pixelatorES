@@ -45,7 +45,9 @@ the panel metadata, or \code{NULL}.}
 \item{file_paths}{Discovered input file paths, or \code{NULL}.}
 
 \item{params}{Experiment Summary parameters passed to \code{\link[=new_es_data]{new_es_data()}}.
-Defaults to an empty list (\code{workflow} defaults to \code{"edgelist_aggregate"}).}
+Defaults to an empty list (\code{workflow} defaults to \code{"edgelist_aggregate"}).
+When \code{technology} is absent, the fixture uses the unhashed \code{"proxiome-v1"}.
+Pass \code{technology} explicitly for hashed fixtures.}
 
 \item{diagnostics}{List of diagnostics. Defaults to an empty list.}
 

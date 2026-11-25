@@ -68,7 +68,7 @@ print_metadata_table <-
     pixelatorR:::assert_class(es_data, "es_data")
     sample_sheet <- es_data$samplesheet
     if (
-      "pool" %in% names(sample_sheet) &&
+      is_hashed_technology(es_data$params$technology) &&
         !is.null(es_data$pxl_data_processed)
     ) {
       sample_sheet <- add_pct_of_pool_to_samplesheet(

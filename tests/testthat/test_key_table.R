@@ -13,11 +13,13 @@ for (data_type in data_types) {
       get_file_paths(
         data_folder = test_data_folder(type = data_type),
         sample_sheet = sample_sheet,
-        stages = get_es_workflow_stages("amplicon_demux")
+        stages = get_es_workflow_stages("amplicon_demux"),
+        technology = test_technology(data_type)
       )
 
     sample_qc_metrics <-
       pixelatorES:::.extract_qc_raw(list(
+        params = list(technology = test_technology(data_type)),
         file_paths = data_paths,
         samplesheet = sample_sheet
       ))$value
@@ -60,7 +62,11 @@ for (data_type in data_types) {
     )
 
     # Sequencing saturation
-    expect_no_error(res <- get_seq_saturation(seur, sample_qc_metrics))
+    expect_no_error(res <- get_seq_saturation(
+      seur,
+      sample_qc_metrics,
+      technology = test_technology(data_type)
+    ))
     expect_equal(
       res,
       switch(data_type,
@@ -180,7 +186,10 @@ for (data_type in data_types) {
     )
 
     # Crossing edges
-    expect_no_error(res <- get_crossing_edges(sample_qc_metrics))
+    expect_no_error(res <- get_crossing_edges(
+      sample_qc_metrics,
+      technology = test_technology(data_type)
+    ))
     expect_equal(
       res,
       switch(data_type,
@@ -225,7 +234,10 @@ for (data_type in data_types) {
 
     # Degree distribution
 
-    expect_no_error(res <- get_degree_distribution(sample_qc_metrics))
+    expect_no_error(res <- get_degree_distribution(
+      sample_qc_metrics,
+      technology = test_technology(data_type)
+    ))
     expect_equal(
       head(res),
       switch(data_type,
@@ -486,7 +498,11 @@ for (data_type in data_types) {
 
     # Hash stats
     if (data_type == "hashing") {
-      expect_no_error(res <- get_hash_stats(seur, sample_qc_metrics))
+      expect_no_error(res <- get_hash_stats(
+        seur,
+        sample_qc_metrics,
+        technology = test_technology(data_type)
+      ))
 
       expect_equal(
         lapply(res[-6], head),
@@ -654,7 +670,12 @@ for (data_type in data_types) {
     # Key table
     expect_no_error(
       sample_qc_tables <-
-        get_qc_metrics(seur, sample_qc_metrics, sample_sheet)
+        get_qc_metrics(
+          seur,
+          sample_qc_metrics,
+          sample_sheet,
+          technology = test_technology(data_type)
+        )
     )
 
     # Regression test: undetermined entries in component_sample_confidence are
@@ -872,7 +893,11 @@ test_that("Parameterized QC extractors and graph_collapse key table work as expe
     )
   )
 
-  deg <- get_degree_distribution(qc_raw_pool, stage = "aggregate")
+  deg <- get_degree_distribution(
+    qc_raw_pool,
+    technology = "proxiome-v2",
+    stage = "aggregate"
+  )
   expect_equal(
     deg,
     structure(
@@ -896,7 +921,11 @@ test_that("Parameterized QC extractors and graph_collapse key table work as expe
   )
 
   gc_res <- pixelatorES:::.extract_graph_collapse(
-    test_es_data(samplesheet = samplesheet_pool, qc_raw = qc_raw_pool)
+    test_es_data(
+      params = list(technology = "proxiome-v2"),
+      samplesheet = samplesheet_pool,
+      qc_raw = qc_raw_pool
+    )
   )
   expect_equal(
     gc_res,
@@ -913,6 +942,7 @@ test_that("Parameterized QC extractors and graph_collapse key table work as expe
   expect_null(
     pixelatorES:::.extract_graph_collapse(
       test_es_data(
+        params = list(technology = "proxiome-v2"),
         samplesheet = samplesheet_pool,
         qc_raw = list(
           qc_files = list(S1 = list(analysis = list(a = 1))),
@@ -962,7 +992,7 @@ test_that("Parameterized QC extractors and graph_collapse key table work as expe
   expect_true(any(startsWith(names(styled$pool$x$data), "% Nodes collapsed <i")))
 })
 
-test_that("get_hash_stats keeps sample tables when pool QC is missing", {
+hash_stats_test_object <- function() {
   counts <- matrix(
     c(1, 1, 1, 1),
     nrow = 2,
@@ -974,14 +1004,58 @@ test_that("get_hash_stats keeps sample tables when pool QC is missing", {
   object$sample_alias <- factor(c("S1", "S1"), levels = "S1")
   object$n_umi <- c(10, 10)
 
-  expect_no_error(
-    stats <- get_hash_stats(
-      object,
-      list(qc_files = list(), pool_qc_files = NULL)
+  return(object)
+}
+
+test_that("get_hash_stats ignores hash columns for unhashed technologies", {
+  expect_null(
+    get_hash_stats(
+      hash_stats_test_object(),
+      list(qc_files = list(), pool_qc_files = NULL),
+      technology = "proxiome-v1"
     )
   )
-  expect_null(stats$pool_stats)
-  expect_null(stats$component_sample_confidence)
-  expect_s3_class(stats$sample_stats, "tbl_df")
-  expect_equal(stats$sample_stats$sample_alias, factor("S1"))
+})
+
+test_that("hashed technologies require pool QC instead of falling back to samples", {
+  object <- hash_stats_test_object()
+  sample_only_qc <- list(
+    qc_files = list(S1 = list(graph = list())),
+    pool_qc_files = NULL
+  )
+
+  expect_error(
+    get_hash_stats(object, sample_only_qc, technology = "proxiome-v2"),
+    "requires pool QC reports"
+  )
+  expect_error(
+    get_crossing_edges(sample_only_qc, technology = "hashed_samples"),
+    "requires pool QC reports"
+  )
+  expect_error(
+    get_degree_distribution(sample_only_qc, technology = "proxiome-v2"),
+    "requires pool QC reports"
+  )
+})
+
+test_that("unhashed technologies report on samples even when pool QC is loaded", {
+  qc <- list(
+    qc_files = list(S1 = list(graph = list(
+      crossing_edges_removed = 2,
+      crossing_edges_removed_initial_stage = 1,
+      edge_count_pre_recovery = 10
+    ))),
+    pool_qc_files = list(pool1 = list(graph = list(
+      crossing_edges_removed = 4,
+      crossing_edges_removed_initial_stage = 2,
+      edge_count_pre_recovery = 20
+    )))
+  )
+
+  edges <- get_crossing_edges(qc, technology = "nonhashed_samples")
+  expect_true("sample_alias" %in% names(edges))
+  expect_false("pool" %in% names(edges))
+
+  pool_edges <- get_crossing_edges(qc, technology = "proxiome-v2")
+  expect_true("pool" %in% names(pool_edges))
 })

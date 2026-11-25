@@ -4,16 +4,18 @@
 \alias{get_hash_stats}
 \title{Get sample hashing statistics for each sample}
 \usage{
-get_hash_stats(object, sample_qc_metrics)
+get_hash_stats(object, sample_qc_metrics, technology)
 }
 \arguments{
 \item{object}{A Seurat object containing the data.}
 
-\item{sample_qc_metrics}{A list containing quality control metrics for each sample, which may include hashing
-information.}
+\item{sample_qc_metrics}{A list containing quality control metrics for each sample, including pool QC
+reports for hashed technologies.}
+
+\item{technology}{A technology name, required. See \code{\link[=validate_es_technology]{validate_es_technology()}}.}
 }
 \value{
-A list of summary tables, or \code{NULL} when no hash count columns exist in metadata.
+\code{NULL} for an unhashed technology, otherwise a list of summary tables.
 }
 \description{
 Get sample hashing statistics for each sample
