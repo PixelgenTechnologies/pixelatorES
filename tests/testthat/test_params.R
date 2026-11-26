@@ -53,6 +53,15 @@ test_that("Parameter tables work as expected", {
     print_params(es_data)
   )
 
+  params_table <- print_params(
+    test_es_data(params = list(technology = "proxiome-v2"))
+  )
+  expect_true("technology" %in% params_table$x$data$Parameter)
+  expect_equal(
+    unlist(params_table$x$data$Value[params_table$x$data$Parameter == "technology"]),
+    "proxiome-v2"
+  )
+
   expect_no_error(print_metadata_table(es_data))
 
   expect_no_error(print_session_info())

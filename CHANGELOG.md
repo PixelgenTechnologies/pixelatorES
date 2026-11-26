@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `technology` parameter, using the same values as the pipeline: `proxiome-v1`, `nonhashed_samples`, `proxiome-v2`, and `hashed_samples`. Pass it with the other Quarto parameters (`-P technology=proxiome-v1`). The Experiment Summary uses this value instead of inferring hashing from the samplesheet or the output files.
 - `test_technology()` returns the technology of the bundled test datasets.
+- `print_params()` lists `technology` in the analysis parameters table of the Run info.
 
 ### Changed
 

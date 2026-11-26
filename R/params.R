@@ -30,7 +30,7 @@ print_params <-
     params <- es_data$params
 
     params[!names(params) %in% c(
-      "metadata", "sample_aliases", "sample_sheet", "data_folder", "technology"
+      "metadata", "sample_aliases", "sample_sheet", "data_folder"
     )] %>%
       enframe("Parameter", "Value") %>%
       left_join(
