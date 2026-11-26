@@ -4,10 +4,12 @@
 \alias{get_crossing_edges}
 \title{Get crossing edges data}
 \usage{
-get_crossing_edges(sample_qc_metrics)
+get_crossing_edges(sample_qc_metrics, technology)
 }
 \arguments{
 \item{sample_qc_metrics}{A list containing quality control metrics for each sample.}
+
+\item{technology}{A technology name, required. See \code{\link[=validate_es_technology]{validate_es_technology()}}.}
 }
 \value{
 A tibble containing the crossing edges data for each sample.

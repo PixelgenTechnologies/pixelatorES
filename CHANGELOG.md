@@ -5,14 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.17.1] 2026-11-26
+## [0.18.0] 2026-11-20
+
+### Added
+
+- `technology` parameter, using the same values as the pipeline: `proxiome-v1`, `nonhashed_samples`, `proxiome-v2`, and `hashed_samples`. Pass it with the other Quarto parameters (`-P technology=proxiome-v1`). The Experiment Summary uses this value instead of inferring hashing from the samplesheet or the output files.
+- `test_technology()` returns the technology of the bundled test datasets.
+- `print_params()` lists `technology` in the analysis parameters table of the Run info.
 
 ### Changed
 
+- Breaking: `get_file_paths()`, `merge_data()`, `get_qc_metrics()`, `get_seq_saturation()`, `get_crossing_edges()`, `get_degree_distribution()`, and `get_hash_stats()` take a required `technology` argument. Components read it from `es_data$params$technology`. Hashing is never inferred from loaded pool QC reports, samplesheet columns, or hash count columns.
+- Breaking: `build_es_data()` and the report require `technology`. `proxiome-v1` and `nonhashed_samples` drop a samplesheet `pool` column. `proxiome-v2` and `hashed_samples` require a non-empty `pool` value for every sample.
+- Report sections follow `technology`. Hashed technologies show pool and sample key metrics and the sample hashing plots, including sample confidence. Unhashed technologies show sample key metrics only.
 - The package now depends on `pixelatorR` >= 0.27.0, and the Docker image is based on `pixelatorr:sha-5de8433` (v0.27.0).
 
 ### Fixed
 
+- Unhashed runs no longer fail when the samplesheet includes a `pool` column. The column is ignored.
+- A hashed run with no pool QC files records a missing-pool diagnostic for each pool.
+- A hashed technology without pool QC reports fails with an explicit error instead of silently reporting per sample. Unattributed edgelist reports on a hashed run are described as missing pools.
 - Single-sample runs no longer report an empty proximity table in the experiment summary. Cells are now renamed with `RenameCells()` so that proximity scores can still be matched to cells.
 
 ## [0.17.0] 2026-11-16

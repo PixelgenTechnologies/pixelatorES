@@ -78,7 +78,7 @@ sample_diagnostic_targets <- function(es_data) {
     diagnostics$target %in% sample_aliases
   ]
 
-  if ("pool" %in% names(sample_sheet)) {
+  if (is_hashed_technology(es_data$params$technology)) {
     affected_pools <- diagnostics$target[
       diagnostics$target %in% as.character(sample_sheet$pool)
     ]
@@ -130,7 +130,7 @@ format_sample_diagnostics_summary <- function(es_data) {
   sample_sheet <- es_data$samplesheet
   if (is.null(sample_sheet) || nrow(sample_sheet) == 0) {
     valid_targets <- character()
-  } else if ("pool" %in% names(sample_sheet)) {
+  } else if (is_hashed_technology(es_data$params$technology)) {
     valid_targets <- c(
       as.character(sample_sheet$sample_alias),
       as.character(sample_sheet$pool)

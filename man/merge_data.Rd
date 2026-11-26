@@ -4,14 +4,17 @@
 \alias{merge_data}
 \title{Merge data from multiple samples into a single Seurat object}
 \usage{
-merge_data(pg_data, sample_sheet)
+merge_data(pg_data, sample_sheet, technology)
 }
 \arguments{
 \item{pg_data}{A list of Seurat objects, each representing a sample. The list must be
 named by sample alias, since the names are used to prefix component IDs.}
 
 \item{sample_sheet}{A data frame containing sample metadata, including \code{sample_alias} and
-\code{condition}, and optionally \code{pool} for hashed experiments.}
+\code{condition}, and \code{pool} for hashed technologies.}
+
+\item{technology}{A technology name, required. See \code{\link[=validate_es_technology]{validate_es_technology()}}. A hashed technology
+adds a \code{pool} metadata column from the samplesheet.}
 }
 \value{
 A merged Seurat object with added metadata.

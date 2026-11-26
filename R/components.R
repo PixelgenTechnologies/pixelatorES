@@ -321,11 +321,10 @@ component_sequencing_reads_and_molecules <-
     sample_levels <- es_data$sample_aliases
 
     if ("qc_files" %in% names(sample_qc_metrics)) {
-      qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
-        sample_qc_metrics$qc_files
-      } else {
-        sample_qc_metrics$pool_qc_files
-      }
+      qc_data <- .select_qc_groups(
+        sample_qc_metrics,
+        es_data$params$technology
+      )$qc_data
     } else {
       qc_data <- sample_qc_metrics
     }
@@ -489,11 +488,10 @@ component_reads_per_stage <- function(es_data) {
   sample_levels <- es_data$sample_aliases
 
   if ("qc_files" %in% names(sample_qc_metrics)) {
-    qc_data <- if (is.null(sample_qc_metrics$pool_qc_files)) {
-      sample_qc_metrics$qc_files
-    } else {
-      sample_qc_metrics$pool_qc_files
-    }
+    qc_data <- .select_qc_groups(
+      sample_qc_metrics,
+      es_data$params$technology
+    )$qc_data
   } else {
     qc_data <- sample_qc_metrics
   }
@@ -984,13 +982,11 @@ component_cell_recovery <-
     sample_qc_metrics <- es_data$qc_raw
     sample_levels <- es_data$sample_aliases
 
-    if (is.null(sample_qc_metrics$pool_qc_files)) {
-      qc_data <- sample_qc_metrics$qc_files
-      hashed_experiment <- FALSE
-    } else {
-      qc_data <- sample_qc_metrics$pool_qc_files
-      hashed_experiment <- TRUE
-    }
+    hashed_experiment <- is_hashed_technology(es_data$params$technology)
+    qc_data <- .select_qc_groups(
+      sample_qc_metrics,
+      es_data$params$technology
+    )$qc_data
 
     # Number of components before and after filtering, and size thresholds
 
@@ -1289,7 +1285,8 @@ component_node_edge_count <-
           edge_count_post_recovery = "edge_count_post_recovery"
         ),
         "graph",
-        stages = es_data$stages
+        stages = es_data$stages,
+        technology = es_data$params$technology
       )
 
     plot_data <- set_sample_levels(plot_data, sample_levels)
@@ -3151,98 +3148,110 @@ component_hashing <-
       p1 +
       scale_y_continuous(limits = plot_limits, labels = scales::percent)
 
-    # Sample confidence plot
-    plot_data <-
-      qc_metrics_tables$sample_hash_stats$component_sample_confidence %>%
-      arrange(pool) %>%
-      group_by(pool)
+    # Hashed technologies always include the sample confidence plots.
+    confidence <- qc_metrics_tables$sample_hash_stats$component_sample_confidence
+    if (is.null(confidence)) {
+      cli_abort(
+        c(
+          "x" = paste(
+            "Sample confidence plots require pool QC.",
+            "A hashed technology includes these plots."
+          )
+        )
+      )
+    } else {
+      plot_data <-
+        confidence %>%
+        arrange(pool) %>%
+        group_by(pool)
 
-    .generate_confidence_plots <- function(plot_data, metric, yes_no_palette) {
-      # 1. Define metric-specific plot settings
-      if (metric == "hash_enrichment_factor") {
-        rect_ymin <- 0
-        rect_ymax <- 1
-        text_y <- 1
-        y_scale <- scale_y_log10()
-        y_axis_label <- "Hash enrichment factor"
-        plot_title <- "Component hash enrichment factor"
-      } else if (metric == "sample_confidence") {
-        rect_ymin <- -Inf
-        rect_ymax <- 0
-        text_y <- 0
-        y_scale <- scale_y_continuous(limits = c(0, 1), labels = scales::percent)
-        y_axis_label <- "Hash purity"
-        plot_title <- "Component sample confidence"
+      .generate_confidence_plots <- function(plot_data, metric, yes_no_palette) {
+        # 1. Define metric-specific plot settings
+        if (metric == "hash_enrichment_factor") {
+          rect_ymin <- 0
+          rect_ymax <- 1
+          text_y <- 1
+          y_scale <- scale_y_log10()
+          y_axis_label <- "Hash enrichment factor"
+          plot_title <- "Component hash enrichment factor"
+        } else if (metric == "sample_confidence") {
+          rect_ymin <- -Inf
+          rect_ymax <- 0
+          text_y <- 0
+          y_scale <- scale_y_continuous(limits = c(0, 1), labels = scales::percent)
+          y_axis_label <- "Hash purity"
+          plot_title <- "Component sample confidence"
+        }
+
+        # 2. Generate the split lists and plots
+        plot_data %>%
+          group_split() %>%
+          set_names(group_keys(plot_data)$pool) %>%
+          lapply(function(g_data) {
+            # Use tidy evaluation (!!sym(metric)) to arrange dynamically
+            g_data <- g_data %>%
+              arrange(desc(!!sym(metric))) %>%
+              mutate(
+                rank = row_number(),
+                type = ifelse(sample_alias == "undetermined",
+                  "Undetermined", "Sample assigned"
+                )
+              )
+
+            g_data_sum <- g_data %>%
+              group_by(type) %>%
+              count() %>%
+              ungroup() %>%
+              mutate(
+                cumsum_n = cumsum(n),
+                x = cumsum_n - n,
+                hjust = c(0, 1)[seq_len(n())],
+                text_pos = range(c(x, cumsum_n))[seq_len(n())]
+              )
+
+            # Use tidy evaluation (!!sym(metric)) for the y-axis aesthetic
+            g_data %>%
+              ggplot(aes(x = rank, y = !!sym(metric), color = type)) +
+              geom_point(size = 0.5) +
+              geom_rect(
+                data = g_data_sum,
+                aes(xmin = x, xmax = cumsum_n, ymin = rect_ymin, ymax = rect_ymax, fill = type),
+                inherit.aes = FALSE,
+                color = NA
+              ) +
+              geom_text(
+                data = g_data_sum,
+                aes(
+                  x = text_pos, y = text_y, label = paste0(type, "\n", n, " cells"),
+                  hjust = hjust
+                ),
+                vjust = -0.5,
+                inherit.aes = FALSE,
+                size = 3
+              ) +
+              theme_bw() +
+              scale_color_manual(values = yes_no_palette, name = "") +
+              scale_fill_manual(values = yes_no_palette, name = "") +
+              y_scale + # Apply the dynamic scale defined earlier
+              labs(x = "Component rank", y = y_axis_label, title = plot_title) +
+              theme(
+                legend.position = "none",
+                panel.grid = element_blank()
+              )
+          })
       }
 
-      # 2. Generate the split lists and plots
-      plot_data %>%
-        group_split() %>%
-        set_names(group_keys(plot_data)$pool) %>%
-        lapply(function(g_data) {
-          # Use tidy evaluation (!!sym(metric)) to arrange dynamically
-          g_data <- g_data %>%
-            arrange(desc(!!sym(metric))) %>%
-            mutate(
-              rank = row_number(),
-              type = ifelse(sample_alias == "undetermined",
-                "Undetermined", "Sample assigned"
-              )
-            )
+      metric <- intersect(c("sample_confidence", "hash_enrichment_factor"), names(plot_data))
+      if (length(metric) == 0) {
+        cli_abort("component_sample_confidence must contain either 'sample_confidence' or 'hash_enrichment_factor'.")
+      }
 
-          g_data_sum <- g_data %>%
-            group_by(type) %>%
-            count() %>%
-            ungroup() %>%
-            mutate(
-              cumsum_n = cumsum(n),
-              x = cumsum_n - n,
-              hjust = c(0, 1)[seq_len(n())],
-              text_pos = range(c(x, cumsum_n))[seq_len(n())]
-            )
-
-          # Use tidy evaluation (!!sym(metric)) for the y-axis aesthetic
-          g_data %>%
-            ggplot(aes(x = rank, y = !!sym(metric), color = type)) +
-            geom_point(size = 0.5) +
-            geom_rect(
-              data = g_data_sum,
-              aes(xmin = x, xmax = cumsum_n, ymin = rect_ymin, ymax = rect_ymax, fill = type),
-              inherit.aes = FALSE,
-              color = NA
-            ) +
-            geom_text(
-              data = g_data_sum,
-              aes(
-                x = text_pos, y = text_y, label = paste0(type, "\n", n, " cells"),
-                hjust = hjust
-              ),
-              vjust = -0.5,
-              inherit.aes = FALSE,
-              size = 3
-            ) +
-            theme_bw() +
-            scale_color_manual(values = yes_no_palette, name = "") +
-            scale_fill_manual(values = yes_no_palette, name = "") +
-            y_scale + # Apply the dynamic scale defined earlier
-            labs(x = "Component rank", y = y_axis_label, title = plot_title) +
-            theme(
-              legend.position = "none",
-              panel.grid = element_blank()
-            )
-        })
+      p2 <- .generate_confidence_plots(
+        plot_data,
+        metric[[1]],
+        yes_no_palette = yes_no_palette
+      )
     }
-
-    metric <- intersect(c("sample_confidence", "hash_enrichment_factor"), names(plot_data))
-    if (length(metric) == 0) {
-      cli_abort("component_sample_confidence must contain either 'sample_confidence' or 'hash_enrichment_factor'.")
-    }
-
-    p2 <- .generate_confidence_plots(
-      plot_data,
-      metric[[1]],
-      yes_no_palette = yes_no_palette
-    )
 
     tabl <-
       sample_stats %>%

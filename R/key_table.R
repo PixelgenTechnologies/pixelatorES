@@ -56,6 +56,8 @@ get_top_markers <-
 #'
 #' @param object A Seurat object.
 #' @param sample_qc_metrics A list containing quality control metrics for each sample.
+#' @param technology A technology name, required. See [validate_es_technology()]. A hashed technology
+#'   reports per pool from the pool QC reports. An unhashed technology reports per sample.
 #' @param read_stage Name of the stage reporting raw input reads (default is `"amplicon"`).
 #' @param collapse_stage Name of the stage reporting molecule collapse counts (default is `"collapse"`).
 #' @param final_stage Optional name of the final stage reporting retained output reads
@@ -71,6 +73,7 @@ get_seq_saturation <-
   function(
     object,
     sample_qc_metrics,
+    technology,
     read_stage = "amplicon",
     collapse_stage = "collapse",
     final_stage = NULL
@@ -92,11 +95,11 @@ get_seq_saturation <-
       return(count)
     }
 
-    if (!is.null(sample_qc_metrics$pool_qc_files)) {
+    if (is_hashed_technology(technology)) {
       group_col <- "pool"
 
       fetched_data <-
-        sample_qc_metrics$pool_qc_files %>%
+        .select_qc_groups(sample_qc_metrics, technology)$qc_data %>%
         lapply(function(sample_qc_data) {
           return(tibble(
             total_reads = .scalar_qc_count(sample_qc_data[[read_stage]]$input_reads),
@@ -203,20 +206,21 @@ get_seq_saturation <-
 #' This function retrieves the crossing edges data from the sample quality control metrics.
 #'
 #' @param sample_qc_metrics A list containing quality control metrics for each sample.
+#' @param technology A technology name, required. See [validate_es_technology()].
 #'
 #' @return A tibble containing the crossing edges data for each sample.
 #'
 #' @export
 #'
 get_crossing_edges <-
-  function(sample_qc_metrics) {
+  function(sample_qc_metrics, technology) {
     pixelatorR:::assert_class(sample_qc_metrics, "list")
 
-    if (!is.null(sample_qc_metrics$pool_qc_files)) {
+    if (is_hashed_technology(technology)) {
       group_col <- "pool"
 
       fetched_data <-
-        sample_qc_metrics$pool_qc_files %>%
+        .select_qc_groups(sample_qc_metrics, technology)$qc_data %>%
         lapply(function(sample_qc_data) {
           tibble(
             `Initial stage` =
@@ -460,6 +464,7 @@ get_coreness_data <-
 #' This function retrieves degree distribution data from the sample quality control metrics.
 #'
 #' @param sample_qc_metrics A list containing quality control metrics for each sample.
+#' @param technology A technology name, required. See [validate_es_technology()].
 #' @param stage Name of the stage reporting UMI degree distributions (default is `"collapse"`).
 #'
 #' @return A tibble containing the degree distribution data for each sample.
@@ -467,21 +472,13 @@ get_coreness_data <-
 #' @export
 #'
 get_degree_distribution <-
-  function(sample_qc_metrics, stage = "collapse") {
+  function(sample_qc_metrics, technology, stage = "collapse") {
     pixelatorR:::assert_class(sample_qc_metrics, "list")
     pixelatorR:::assert_single_value(stage, type = "string")
 
-    if (!is.null(sample_qc_metrics$pool_qc_files)) {
-      group_col <- "pool"
-
-      qc_data <-
-        sample_qc_metrics$pool_qc_files
-    } else {
-      group_col <- "sample_alias"
-
-      qc_data <-
-        sample_qc_metrics$qc_files
-    }
+    qc_groups <- .select_qc_groups(sample_qc_metrics, technology)
+    group_col <- qc_groups$id_column
+    qc_data <- qc_groups$qc_data
 
     result <-
       qc_data %>%
@@ -549,22 +546,29 @@ get_read_stats <-
 #' Get sample hashing statistics for each sample
 #'
 #' @param object A Seurat object containing the data.
-#' @param sample_qc_metrics A list containing quality control metrics for each sample, which may include hashing
-#' information.
+#' @param sample_qc_metrics A list containing quality control metrics for each sample, including pool QC
+#' reports for hashed technologies.
+#' @param technology A technology name, required. See [validate_es_technology()].
 #'
-#' @return A list of summary tables, or `NULL` when no hash count columns exist in metadata.
+#' @return `NULL` for an unhashed technology, otherwise a list of summary tables.
 #'
 #' @export
 #'
-get_hash_stats <- function(object, sample_qc_metrics) {
+get_hash_stats <- function(object, sample_qc_metrics, technology) {
   pixelatorR:::assert_class(object, "Seurat")
   pixelatorR:::assert_class(sample_qc_metrics, "list")
+
+  if (!is_hashed_technology(technology)) {
+    return(NULL)
+  }
 
   hash_counts <- object[[]] %>%
     select(matches("hash_counts"))
 
   if (ncol(hash_counts) == 0) {
-    return(NULL)
+    cli_abort(
+      "Technology {.val {technology}} requires hash count columns in the PXL data, but none were found."
+    )
   }
 
   sample_hash_counts <- tibble(
@@ -665,9 +669,11 @@ get_hash_stats <- function(object, sample_qc_metrics) {
     pivot_wider(names_from = id, values_from = mean_purity, names_prefix = "mean_purity_") %>%
     left_join(sample_hash_counts %>% select(sample_alias, hash_pct), by = "sample_alias")
 
+  pool_qc_files <- .select_qc_groups(sample_qc_metrics, technology)$qc_data
+
   # Sample confidence per component and sample
   component_sample_confidence <-
-    sample_qc_metrics$pool_qc_files %>%
+    pool_qc_files %>%
     lapply(function(pool) {
       sample_confidence <-
         pool$sample_calling$sample_confidences_per_sample
@@ -700,7 +706,7 @@ get_hash_stats <- function(object, sample_qc_metrics) {
 
   # Pool Stats
   pool_stats <-
-    sample_qc_metrics$pool_qc_files %>%
+    pool_qc_files %>%
     lapply(function(pool) {
       tibble(
         cells_in_pool = pool$sample_calling$number_of_components,
@@ -812,20 +818,21 @@ get_hash_stats <- function(object, sample_qc_metrics) {
 #' @param object A Seurat object containing the data.
 #' @param sample_qc_metrics A list containing quality control metrics for each sample.
 #' @param sample_sheet A data frame containing sample metadata, including `sample_alias`.
+#' @param technology A technology name, required. See [validate_es_technology()].
 #'
 #' @return A list containing various quality control metrics for each sample.
 #'
 #' @export
 #'
 get_qc_metrics <-
-  function(object, sample_qc_metrics, sample_sheet) {
+  function(object, sample_qc_metrics, sample_sheet, technology) {
     outdata <-
       list(
         read_stats = get_read_stats(object),
-        sample_hash_stats = get_hash_stats(object, sample_qc_metrics),
-        seq_saturation = get_seq_saturation(object, sample_qc_metrics),
-        crossing_edges = get_crossing_edges(sample_qc_metrics),
-        degree_distribution = get_degree_distribution(sample_qc_metrics),
+        sample_hash_stats = get_hash_stats(object, sample_qc_metrics, technology),
+        seq_saturation = get_seq_saturation(object, sample_qc_metrics, technology),
+        crossing_edges = get_crossing_edges(sample_qc_metrics, technology),
+        degree_distribution = get_degree_distribution(sample_qc_metrics, technology),
         denoising = get_denoising_data(sample_qc_metrics),
         denoising_detail = get_denoising_detail_data(object),
         coreness = get_coreness_data(object),

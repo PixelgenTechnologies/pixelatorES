@@ -11,7 +11,8 @@ get_file_paths(
   allow_unknown = FALSE,
   on_duplicate_samples = c("error", "omit"),
   on_unknown_stage = c("error", "omit"),
-  stages
+  stages,
+  technology
 )
 }
 \arguments{
@@ -20,7 +21,7 @@ get_file_paths(
 \item{file_paths}{A character vector with file paths including all data files.}
 
 \item{sample_sheet}{A sample sheet \code{\link[tibble:tibble]{tibble::tibble()}} including \code{sample}, \code{sample_alias}, and
-optionally \code{pool} for hashed experiments. When supplied, pool-level QC files are detected.}
+\code{pool} for hashed technologies.}
 
 \item{allow_unknown}{A logical indicating whether to allow files from unknown stages (default: FALSE).
 When \code{TRUE}, the parent directory name is used as the stage. When \code{FALSE}, unknown stages
@@ -38,9 +39,13 @@ records them in attribute \code{unknown_stage_files} on the returned list.}
 \code{\link[=get_es_workflow_stages]{get_es_workflow_stages()}}, required. \code{all} decides which stages are recognised, and
 \code{pxl_preference} picks the PXL file when a sample has several. Inside a build pass
 \code{es_data$stages}.}
+
+\item{technology}{A technology name, required. See \code{\link[=validate_es_technology]{validate_es_technology()}}. A hashed technology
+reads pool files for the \code{pool} ids in \code{sample_sheet}. An unhashed technology looks for sample files
+only. Hashing is never inferred from the samplesheet columns or the files in the data folder.}
 }
 \value{
-A list with \code{data_files}, \code{qc_files}, and \code{pool_qc_files} (the last is \code{NULL} when absent).
+A list with \code{data_files}, \code{qc_files}, and \code{pool_qc_files} (the last is \code{NULL} for an unhashed technology).
 When \code{on_duplicate_samples = "omit"}, attribute \code{duplicate_data_samples} is a character
 vector of omitted sample aliases. When \code{on_unknown_stage = "omit"}, attribute
 \code{unknown_stage_files} is a character vector of skipped file paths. When \code{edgelist} QC

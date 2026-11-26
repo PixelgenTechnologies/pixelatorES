@@ -19,19 +19,27 @@ for (data_type in data_types) {
     get_file_paths(
       data_folder = data_folder,
       sample_sheet = sample_sheet,
-      stages = get_es_workflow_stages("amplicon_demux")
+      stages = get_es_workflow_stages("amplicon_demux"),
+      technology = test_technology(data_type)
     )
 
   sample_qc_metrics <- pixelatorES:::.extract_qc_raw(list(
+    params = list(technology = test_technology(data_type)),
     file_paths = file_paths,
     samplesheet = sample_sheet
   ))$value
 
 
   qc_metrics_tables <-
-    get_qc_metrics(pg_data, sample_qc_metrics, sample_sheet)
+    get_qc_metrics(
+      pg_data,
+      sample_qc_metrics,
+      sample_sheet,
+      technology = test_technology(data_type)
+    )
 
   es_data <- test_es_data(
+    params = list(technology = test_technology(data_type)),
     control_markers = c("mIgG1", "mIgG2a", "mIgG2b"),
     samplesheet = sample_sheet,
     effective_samplesheet = sample_sheet,
@@ -533,6 +541,13 @@ for (data_type in data_types) {
           colors = cherry_gradient
         )
       )
+
+      missing_confidence <- es_data
+      missing_confidence$qc$sample_hash_stats$component_sample_confidence <- NULL
+      expect_error(
+        component_hashing(missing_confidence, colors = cherry_gradient),
+        "pool QC"
+      )
     }
   })
 }
@@ -571,7 +586,7 @@ test_that("component_reads_per_stage works across all filtering stages and omits
     test_es_data(
       samplesheet = samplesheet,
       qc_raw = qc_raw_full,
-      params = list(workflow = "edgelist_aggregate")
+      params = list(workflow = "edgelist_aggregate", technology = "proxiome-v2")
     )
   )
 
@@ -639,7 +654,7 @@ test_that("component_reads_per_stage works across all filtering stages and omits
     test_es_data(
       samplesheet = samplesheet,
       qc_raw = qc_raw_minimal,
-      params = list(workflow = "edgelist_aggregate")
+      params = list(workflow = "edgelist_aggregate", technology = "proxiome-v2")
     )
   )
   expect_equal(

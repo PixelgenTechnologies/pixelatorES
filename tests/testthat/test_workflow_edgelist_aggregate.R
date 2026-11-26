@@ -120,7 +120,7 @@ test_that("edgelist_aggregate QC extractors, key table, and reads per stage work
     samplesheet = samplesheet,
     qc_raw = qc_raw,
     pxl_data = pxl_data,
-    params = list(workflow = "edgelist_aggregate")
+    params = list(workflow = "edgelist_aggregate", technology = "proxiome-v2")
   )
 
   seq_sat <- pixelatorES:::.extract_edgelist_aggregate_seq_saturation(object)
@@ -156,7 +156,7 @@ test_that("edgelist_aggregate QC extractors, key table, and reads per stage work
       samplesheet = samplesheet,
       qc_raw = qc_raw_no_summary,
       pxl_data = pxl_data,
-      params = list(workflow = "edgelist_aggregate")
+      params = list(workflow = "edgelist_aggregate", technology = "proxiome-v2")
     )
   )
   expect_equal(
@@ -222,7 +222,8 @@ test_that("edgelist_aggregate debug mode works for panels without control marker
       sample_sheet = test_samplesheet("edgelist_aggregate"),
       data_folder = test_data_folder("edgelist_aggregate"),
       debug_mode = TRUE,
-      test_mode = TRUE
+      test_mode = TRUE,
+      technology = "proxiome-v2"
     )
   )
 

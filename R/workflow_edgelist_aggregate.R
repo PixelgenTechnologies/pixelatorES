@@ -9,6 +9,7 @@
   metric <- get_seq_saturation(
     object$pxl_data,
     object$qc_raw,
+    technology = object$params$technology,
     read_stage = "edgelist",
     collapse_stage = "aggregate",
     final_stage = "sample_calling"
@@ -25,7 +26,11 @@
 #'
 #' @noRd
 .extract_edgelist_aggregate_degree_distribution <- function(object) {
-  metric <- get_degree_distribution(object$qc_raw, stage = "aggregate")
+  metric <- get_degree_distribution(
+    object$qc_raw,
+    technology = object$params$technology,
+    stage = "aggregate"
+  )
 
   return(.format_qc_metric(metric, object$samplesheet))
 }

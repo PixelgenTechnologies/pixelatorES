@@ -9,6 +9,7 @@ params:
   # One run's output folder only: extdata holds fixtures for several stage vocabularies
   data_folder: "../extdata/qc_jsons_edgelist_aggregate/"
   workflow: "edgelist_aggregate"
+  technology: "proxiome-v2"
   norm_method: "CLR"
   clustering_resolution: 1
   annotation_method: "nmf"
