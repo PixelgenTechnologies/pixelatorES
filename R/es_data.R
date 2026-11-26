@@ -225,17 +225,11 @@ test_es_data <- function(
   pxl_data <- list()
   diagnostics <- list()
   expected_aliases <- object$samplesheet$sample_alias
-  available_aliases <- file_paths$data_files$sample_alias[
-    file_paths$data_files$sample_alias %in% expected_aliases
-  ]
   duplicate_samples <- attr(file_paths, "duplicate_data_samples")
   if (is.null(duplicate_samples)) {
     duplicate_samples <- character()
   }
-  aliases_to_load <- c(
-    available_aliases,
-    setdiff(expected_aliases, c(available_aliases, duplicate_samples))
-  )
+  aliases_to_load <- setdiff(expected_aliases, duplicate_samples)
 
   for (current_sample_alias in aliases_to_load) {
     sample_file <- file_paths$data_files$filename[

@@ -315,6 +315,7 @@ get_file_paths <-
       group_by(sample_alias) %>%
       top_n(1, stage_i) %>%
       ungroup() %>%
+      arrange(match(sample_alias, sample_sheet$sample_alias)) %>%
       select(sample_alias, filename)
 
     duplicate_data_samples <- character()
@@ -398,6 +399,9 @@ merge_data <-
     if (is.null(sample_aliases) || !all(nzchar(sample_aliases))) {
       cli_abort("{.arg pg_data} must be named by sample alias.")
     }
+
+    pg_data <- pg_data[order(match(sample_aliases, sample_sheet$sample_alias))]
+    sample_aliases <- names(pg_data)
 
     pg_data <-
       pg_data %>%

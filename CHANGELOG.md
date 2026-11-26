@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Single-sample runs no longer report an empty proximity table in the experiment summary. Cells are now renamed with `RenameCells()` so that proximity scores can still be matched to cells.
 
+## [Unreleased]
+
+### Fixed
+
+- PXL files are now discovered, loaded, and merged in samplesheet order instead of alphabetical filename order, fixing a sample alias–sample name mismatch in `print_pixelator_version()`.
+
 ## [0.17.0] 2026-11-16
 
 ### Added

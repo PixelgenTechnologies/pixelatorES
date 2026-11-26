@@ -118,8 +118,76 @@ test_that("print_pixelator_version works on the test data", {
 
   expect_no_error(version_table <- print_pixelator_version(es_data))
   expect_equal(
-    names(version_table$x$data),
-    c("Sample alias", "Sample name", "Pixelator version", "Panel name")
+    version_table$x$data,
+    structure(
+      list(
+        `Sample alias` = c("S1", "S2"),
+        `Sample name` = c("samle1", "samle1"),
+        `Pixelator version` = c(
+          "0.22.1.post1.dev51+g6d64b43f4.d20251201",
+          "0.22.1.post1.dev51+g6d64b43f4.d20251201"
+        ),
+        `Panel name` = c("proxiome-immuno-155-v2", "proxiome-immuno-155-v2")
+      ),
+      row.names = c(NA, -2L),
+      class = "data.frame"
+    )
+  )
+
+  tmp_data_dir <- tempfile("pixelatorES_params_test_")
+  dir.create(tmp_data_dir)
+  file.copy(
+    list.files(test_data_folder(type = "hashing"), full.names = TRUE),
+    tmp_data_dir,
+    recursive = TRUE
+  )
+
+  custom_sheet <- tibble::tibble(
+    sample = c("S12", "S_missing", "S2", "S1", "S11"),
+    sample_alias = c("C1", "C3", "C2", "C4", "C5"),
+    condition = c("Raji", "PBMC", "Raji", "PBMC", "PBMC"),
+    pool = c("pool2", "pool1", "pool1", "pool1", "pool2")
+  )
+
+  reordered_es_data <- pixelatorES:::new_es_data(list(
+    data_folder = tmp_data_dir,
+    workflow = "amplicon_demux"
+  ))
+  reordered_es_data$samplesheet <- custom_sheet
+  reordered_es_data$sample_aliases <-
+    pixelatorES:::.sample_aliases_from_samplesheet(custom_sheet)
+  reordered_es_data <- pixelatorES:::.fill_es_data_file_paths(reordered_es_data)
+  expect_warning(
+    reordered_es_data <- pixelatorES:::run_es_data_extractors(
+      reordered_es_data,
+      reordered_es_data$extractors[c("pxl_data", "effective_samplesheet")]
+    ),
+    "Skipping PXL data for sample"
+  )
+  reordered_es_data$pxl_data_processed <- reordered_es_data$pxl_data
+
+  expect_equal(
+    print_pixelator_version(reordered_es_data)$x$data,
+    structure(
+      list(
+        `Sample alias` = c("C1", "C2", "C4", "C5"),
+        `Sample name` = c("S12", "S2", "S1", "S11"),
+        `Pixelator version` = c(
+          "0.23.0.post1.dev45+gd3f242c4b.d20260220",
+          "0.23.0.post1.dev45+gd3f242c4b.d20260220",
+          "0.23.0.post1.dev45+gd3f242c4b.d20260220",
+          "0.23.0.post1.dev45+gd3f242c4b.d20260220"
+        ),
+        `Panel name` = c(
+          "proxiome-rnd-hashing-5",
+          "proxiome-rnd-hashing-5",
+          "proxiome-rnd-hashing-5",
+          "proxiome-rnd-hashing-5"
+        )
+      ),
+      row.names = c(NA, -4L),
+      class = "data.frame"
+    )
   )
 })
 
