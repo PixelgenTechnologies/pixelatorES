@@ -182,6 +182,7 @@ print_session_info <- function() {
     fs_map$id_map,
     function(id_map) {
       matched_rows <- match(id_map$current_id, rownames(cell_meta))
+      matched_rows <- matched_rows[!is.na(matched_rows)]
       sample_alias <- unique(as.character(cell_meta$sample_alias[matched_rows]))
       if (length(sample_alias) != 1 || is.na(sample_alias)) {
         cli_abort(

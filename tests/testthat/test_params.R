@@ -166,6 +166,13 @@ test_that("print_pixelator_version works on the test data", {
   )
   reordered_es_data$pxl_data_processed <- reordered_es_data$pxl_data
 
+  reordered_fs_map <- pixelatorR::FSMap(reordered_es_data$pxl_data_processed)
+  reordered_fs_map$id_map[[1]] <- dplyr::bind_rows(
+    reordered_fs_map$id_map[[1]],
+    tibble::tibble(current_id = "C4_dropped_cell", original_id = "dropped_cell")
+  )
+  pixelatorR::FSMap(reordered_es_data$pxl_data_processed) <- reordered_fs_map
+
   expect_equal(
     print_pixelator_version(reordered_es_data)$x$data,
     structure(
