@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The package now depends on `pixelatorR` >= 0.27.0, and the Docker image is based on `pixelatorr:sha-5de8433` (v0.27.0).
+
 ### Fixed
 
 - Single-sample runs no longer report an empty proximity table in the experiment summary. Cells are now renamed with `RenameCells()` so that proximity scores can still be matched to cells.
