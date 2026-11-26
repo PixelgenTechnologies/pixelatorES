@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `print_pixelator_version()` now maps each PXL file to its sample alias via `FSMap` cell IDs instead of assuming `FSMap` matches the samplesheet order.
+- PXL files are now discovered, loaded, and merged in samplesheet order instead of alphabetical filename order, fixing a sample alias–sample name mismatch in `print_pixelator_version()`.
 
 ## [0.17.0] 2026-11-16
 

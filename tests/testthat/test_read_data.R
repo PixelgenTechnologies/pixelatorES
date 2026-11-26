@@ -394,6 +394,10 @@ test_that("File reading works as expected", {
   expect_no_error(seur_comb <- merge_data(seur_list, sample_sheet))
   expect_s4_class(seur_comb, "Seurat")
   expect_equal(dim(seur_comb), dim(seur_list[[1]]) * c(1, 2))
+  expect_equal(
+    colnames(merge_data(rev(seur_list), sample_sheet)),
+    colnames(seur_comb)
+  )
 
   expect_error(merge_data(unname(seur_list), sample_sheet))
   expect_error(merge_data(unname(seur_list[1]), sample_sheet))
@@ -640,10 +644,10 @@ test_that("File reading works as expected", {
   expect_equal(
     data_paths$data_files %>%
       mutate(filename = str_remove(filename, ".*extdata/")),
-    structure(list(sample_alias = c("S1", "S11", "S12", "S2"), filename = c(
+    structure(list(sample_alias = c("S1", "S2", "S11", "S12"), filename = c(
       "qc_jsons_hashing/S1.layout.pxl",
-      "qc_jsons_hashing/S11.layout.pxl", "qc_jsons_hashing/S12.layout.pxl",
-      "qc_jsons_hashing/S2.layout.pxl"
+      "qc_jsons_hashing/S2.layout.pxl", "qc_jsons_hashing/S11.layout.pxl",
+      "qc_jsons_hashing/S12.layout.pxl"
     )), row.names = c(NA, -4L), class = c(
       "tbl_df",
       "tbl", "data.frame"

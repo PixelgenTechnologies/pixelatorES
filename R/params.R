@@ -158,45 +158,6 @@ print_session_info <- function() {
   )
 }
 
-#' Resolve the sample alias for each PXL file in an `FSMap`
-#'
-#' Maps each row of `FSMap(object)` to its `sample_alias` using the cell IDs in
-#' `id_map$current_id` and `object`'s cell metadata, so file-to-alias pairing
-#' does not depend on the order in which PXL files were discovered or merged.
-#'
-#' @param object A `Seurat` object with `sample_alias` cell metadata.
-#' @param fs_map A file-sample map returned by [pixelatorR::FSMap()].
-#'
-#' @return A character vector of sample aliases, one per row of `fs_map`.
-#'
-#' @noRd
-.fs_map_sample_aliases <- function(object, fs_map) {
-  cell_meta <- object[[]]
-  if (!"sample_alias" %in% colnames(cell_meta)) {
-    cli_abort(
-      "{.arg es_data$pxl_data_processed} must contain {.field sample_alias} cell metadata."
-    )
-  }
-
-  aliases <- vapply(
-    fs_map$id_map,
-    function(id_map) {
-      matched_rows <- match(id_map$current_id, rownames(cell_meta))
-      matched_rows <- matched_rows[!is.na(matched_rows)]
-      sample_alias <- unique(as.character(cell_meta$sample_alias[matched_rows]))
-      if (length(sample_alias) != 1 || is.na(sample_alias)) {
-        cli_abort(
-          "Each PXL file in {.fn FSMap} must map to a single {.field sample_alias}."
-        )
-      }
-      return(sample_alias)
-    },
-    character(1)
-  )
-
-  return(aliases)
-}
-
 #' Print Pixelator Version table
 #'
 #' Print the Pixelator version information from the pxl files.
@@ -211,7 +172,6 @@ print_pixelator_version <-
   function(es_data) {
     pixelatorR:::assert_class(es_data, "es_data")
     object <- es_data$pxl_data_processed
-    pixelatorR:::assert_class(object, "Seurat")
     sample_sheet <- es_data$effective_samplesheet
 
     save_fields <-
@@ -224,25 +184,11 @@ print_pixelator_version <-
       )
 
     fs_map <- pixelatorR::FSMap(object)
-    fs_aliases <- .fs_map_sample_aliases(object, fs_map)
 
-    sample_order <-
-      if (!is.null(sample_sheet)) {
-        as.character(sample_sheet$sample_alias)
-      } else if (!is.null(es_data$sample_aliases)) {
-        unname(es_data$sample_aliases)
-      } else if (is.factor(object$sample_alias)) {
-        levels(object$sample_alias)
-      } else {
-        fs_aliases
-      }
-
-    version_table <-
-      fs_map$pxl_file %>%
-      set_names(fs_aliases) %>%
+    fs_map$pxl_file %>%
+      set_names(sample_sheet$sample_alias) %>%
       map(.read_pxl_run_info) %>%
       bind_rows(.id = "sample_alias") %>%
-      arrange(match(sample_alias, sample_order)) %>%
       select(all_of(save_fields$var)) %>%
       set_names(save_fields$display_name) %>%
       style_table(
@@ -251,6 +197,4 @@ print_pixelator_version <-
         interactive = FALSE,
         buttons = FALSE
       )
-
-    return(version_table)
   }
