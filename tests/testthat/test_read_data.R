@@ -412,7 +412,7 @@ test_that("File reading works as expected", {
   expect_error(merge_data(unname(seur_list[1]), sample_sheet, technology = "proxiome-v1"))
 
   # Single sample data keeps the file-sample map in sync with the cell IDs
-  seur_single <- merge_data(seur_list[1], sample_sheet[1, ])
+  seur_single <- merge_data(seur_list[1], sample_sheet[1, ], technology = "proxiome-v1")
   expect_equal(colnames(seur_single), paste0("S1_", colnames(seur_list[[1]])))
   expect_equal(
     sort(unname(FSMap(seur_single)$id_map[[1]]$current_id)),
