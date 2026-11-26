@@ -221,6 +221,9 @@ get_file_paths <-
     }
 
     pixelatorR:::assert_class(sample_sheet, "tbl_df", allow_null = TRUE)
+    if (!is.null(sample_sheet)) {
+      sample_sheet <- apply_es_technology(sample_sheet, technology)
+    }
 
     all_files <-
       file_paths %>%
@@ -282,14 +285,8 @@ get_file_paths <-
       )
     }
 
-    if (hashed) {
-      if (!"pool" %in% names(sample_sheet)) {
-        cli_abort(
-          "Technology {.val {technology}} requires a {.field pool} column in {.arg sample_sheet}."
-        )
-      }
-      pool_ids <- unique(sample_sheet$pool)
-      pool_ids <- pool_ids[!is.na(pool_ids) & nzchar(as.character(pool_ids))]
+    if (hashed && !is.null(sample_sheet)) {
+      pool_ids <- unique(as.character(sample_sheet$pool))
     } else {
       pool_ids <- character()
     }

@@ -936,6 +936,24 @@ test_that("technology decides whether a samplesheet pool column is used", {
   colliding_pool$pool <- colliding_pool$sample
   expect_false("pool" %in% names(apply_es_technology(colliding_pool, "proxiome-v1")))
   expect_error(apply_es_technology(colliding_pool, "proxiome-v2"), "pool")
+  expect_error(
+    get_file_paths(
+      data_folder = test_data_folder("hashing"),
+      sample_sheet = colliding_pool,
+      stages = stages,
+      technology = "proxiome-v2"
+    ),
+    "cannot contain values that are also present"
+  )
+  expect_error(
+    get_file_paths(
+      data_folder = test_data_folder("hashing"),
+      sample_sheet = empty_pool,
+      stages = stages,
+      technology = "proxiome-v2"
+    ),
+    "pool"
+  )
 
   v2_sheet <- apply_es_technology(hashed_sheet, "proxiome-v2")
   expect_equal(v2_sheet$pool, hashed_sheet$pool)
